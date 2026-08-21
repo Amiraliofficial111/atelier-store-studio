@@ -1,0 +1,19 @@
+HTTP/1.1 401 Unauthorized
+Content-Type: application/json
+Content-Length: 58
+Connection: keep-alive
+Date: Wed, 19 Aug 2026 21:36:16 GMT
+X-Frame-Options: SAMEORIGIN
+Server: gunicorn
+WWW-Authenticate: Token
+Allow: GET, HEAD, OPTIONS
+Cache-Control: public, max-age=300
+Content-Security-Policy-Report-Only: default-src 'unsafe-inline' 'unsafe-eval' * data: blob:
+Strict-Transport-Security: max-age=604800;
+X-XSS-Protection: 1; mode=block
+Vary: Cookie,origin
+X-Cache: Error from cloudfront
+Via: 1.1 d8458fc1c5841ba25e44d9ece4030638.cloudfront.net (CloudFront)
+X-Amz-Cf-Pop: DXB53-P1
+X-Amz-Cf-Id: BPoKPasq8gRlFO1DZGH4jBeYikUVjjXTGKeKX0Q7IklOgtkbgKnwIA==
+
