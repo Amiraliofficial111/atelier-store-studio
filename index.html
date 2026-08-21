@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atelier — Premium Store Studio</title>
+  <link rel="stylesheet" href="css/style.css?v=walkkeys1" />
+  <link rel="modulepreload" href="js/main.js?v=sofaoff2" />
+  <link rel="modulepreload" href="./node_modules/three/build/three.module.js" />
+</head>
+<body>
+  <div id="app">
+    <button type="button" class="menu-fab" id="btn-show-menu" data-icon="menu" title="Show menu"><span class="btn-label">Menu</span></button>
+    <header class="toolbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <div>
+          <h1>Atelier</h1>
+          <p>Store studio</p>
+        </div>
+      </div>
+
+      <div class="toolbar-cluster">
+        <div class="toolbar-group view-group icon-rail" data-label="Camera">
+          <button type="button" class="tool-btn active" data-view="orbit" data-icon="orbit" title="Orbit 3D"><span class="btn-label">Orbit</span></button>
+          <button type="button" class="tool-btn" data-view="top" data-icon="top" title="Top view"><span class="btn-label">Top</span></button>
+          <button type="button" class="tool-btn" data-view="ceiling" data-icon="ceiling" title="Full roof view"><span class="btn-label">Ceiling</span></button>
+          <button type="button" class="tool-btn" data-view="front" data-icon="front" title="Front view"><span class="btn-label">Front</span></button>
+          <button type="button" class="tool-btn" data-view="back" data-icon="back" title="Back view"><span class="btn-label">Back</span></button>
+          <button type="button" class="tool-btn" data-view="left" data-icon="left" title="Left view"><span class="btn-label">Left</span></button>
+          <button type="button" class="tool-btn" data-view="right" data-icon="right" title="Right view"><span class="btn-label">Right</span></button>
+          <button type="button" class="tool-btn" data-view="inside" data-icon="inside" title="Inside view"><span class="btn-label">Inside</span></button>
+          <button type="button" class="tool-btn" data-view="walk" data-icon="walk" title="Walk inside"><span class="btn-label">Walk</span></button>
+          <button type="button" class="tool-btn" data-walk-who="man" data-icon="mannequin" title="Walk as man (Ctrl+M)"><span class="btn-label">Man</span></button>
+          <button type="button" class="tool-btn" data-walk-who="girl" data-icon="girl" title="Walk as girl (Ctrl+G)"><span class="btn-label">Girl</span></button>
+          <button type="button" class="tool-btn" data-walk-who="both" data-icon="walk" title="Walk as both (Ctrl+B)"><span class="btn-label">Both</span></button>
+        </div>
+
+        <div class="toolbar-group icon-rail" data-label="Look">
+          <button type="button" class="tool-btn" id="btn-roof" data-icon="roof" title="Toggle roof"><span class="btn-label">Roof</span></button>
+          <button type="button" class="tool-btn" id="btn-grid" data-icon="grid" title="Toggle floor grid"><span class="btn-label">Grid</span></button>
+          <button type="button" class="tool-btn" id="btn-fs" data-icon="expand" title="Hide menu"><span class="btn-label">Focus</span></button>
+        </div>
+
+        <div class="toolbar-group transform-group icon-rail" data-label="Edit">
+          <button type="button" class="icon-btn active" id="mode-translate" data-icon="move" title="Move (1)"><span class="btn-label">Move</span></button>
+          <button type="button" class="icon-btn" id="mode-rotate" data-icon="rotate" title="Rotate (2)"><span class="btn-label">Rotate</span></button>
+          <button type="button" class="icon-btn" id="mode-scale" data-icon="scale" title="Scale (3)"><span class="btn-label">Scale</span></button>
+        </div>
+      </div>
+
+      <div class="toolbar-spacer"></div>
+
+      <div class="toolbar-group project-group" data-label="Project">
+        <button type="button" class="tool-btn" id="btn-reset-cam" data-icon="camera" title="Reset camera"><span class="btn-label">Reset</span></button>
+        <button type="button" class="tool-btn" id="btn-save" data-icon="save" title="Save layout — refresh par yahi rahega"><span class="btn-label">Save</span></button>
+        <button type="button" class="tool-btn" id="btn-load" data-icon="load" title="Load"><span class="btn-label">Load</span></button>
+        <button type="button" class="tool-btn" id="btn-export" data-icon="export" title="Export"><span class="btn-label">Export</span></button>
+        <label class="tool-btn file-label" data-icon="import" title="Import">
+          <span class="btn-label">Import</span>
+          <input type="file" id="input-import" accept="application/json" hidden />
+        </label>
+        <button type="button" class="tool-btn danger" id="btn-new" data-icon="plus" title="New store"><span class="btn-label">New</span></button>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <main class="viewport">
+        <canvas id="scene"></canvas>
+        <div class="viewport-fx" aria-hidden="true"></div>
+        <div class="hud hud-top">
+          <span class="view-badge" id="view-badge">Inside</span>
+          <span class="hud-store" id="hud-store">Your Store</span>
+        </div>
+        <div class="save-toast" id="save-toast" hidden>Saved</div>
+        <div class="viewport-hint" id="walk-hint" hidden style="display:none">
+          <div class="walk-pick">
+            <button type="button" class="walk-who" data-walk-who="man">Man</button>
+            <button type="button" class="walk-who" data-walk-who="girl">Girl</button>
+            <button type="button" class="walk-who" data-walk-who="both">Both</button>
+          </div>
+          <span>Ctrl+M man · Ctrl+G girl · Ctrl+B both · WASD · Esc</span>
+        </div>
+        <div class="viewport-legend">
+          <span class="legend-chip">Click a wall, floor or fixture to edit</span>
+          <span class="legend-chip">1 Move · 2 Rotate · 3 Scale · Del</span>
+        </div>
+      </main>
+
+      <aside class="panel panel-side">
+        <button type="button" class="panel-toggle" id="btn-panel" title="Hide panel" aria-label="Toggle panel">
+          <span class="ico panel-toggle-close"></span>
+          <span class="ico panel-toggle-open"></span>
+        </button>
+        <div class="panel-head">
+          <div class="panel-head-row">
+            <div>
+              <p class="eyebrow">Atelier studio</p>
+              <h2>Design console</h2>
+            </div>
+            <span class="status-pill" id="inspect-status">Ready</span>
+          </div>
+          <p class="panel-sub">Materials, fixtures and layout</p>
+        </div>
+        <div class="props props-idle" id="props-empty">
+          <h2>Inspector</h2>
+          <div class="empty-hint">
+            <span class="empty-mark" aria-hidden="true"></span>
+            <div>
+              <p class="empty-title">Nothing selected</p>
+              <p class="muted">Click a product on display, or a wall, door or fixture.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="props" id="props-surface" hidden>
+          <h2 id="surface-title">Wall</h2>
+          <label class="field color-row" id="surface-color-field">
+            <span>Color</span>
+            <input type="color" id="surface-color" value="#f3efe6" />
+          </label>
+          <div id="wall-finish-fields">
+            <label class="field">
+              <span>Wall finish</span>
+              <select id="surface-finish">
+                <option value="solid">Solid wall</option>
+                <option value="glass">Full glass</option>
+                <option value="mirror">Full mirror</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Glass opacity <em id="val-wall-op">5%</em></span>
+              <input type="range" id="surface-opacity" min="0.02" max="0.7" step="0.01" value="0.05" />
+            </label>
+          </div>
+          <div class="field">
+            <span id="material-presets-label">Material presets</span>
+            <div class="swatches" id="material-swatches"></div>
+          </div>
+          <label class="field">
+            <span>Upload image / logo</span>
+            <input type="file" id="surface-image" accept="image/*" />
+          </label>
+          <label class="field">
+            <span>Image repeat <em id="val-repeat">1.0</em></span>
+            <input type="range" id="surface-repeat" min="1" max="12" step="0.5" value="1" />
+          </label>
+          <label class="check" id="surface-all-walls-field">
+            <input type="checkbox" id="surface-all-walls" />
+            Apply color to all walls
+          </label>
+          <div class="btn-row">
+            <button type="button" class="tool-btn" id="btn-clear-image" data-icon="trash"><span class="btn-label">Remove image</span></button>
+          </div>
+        </div>
+
+        <div class="props" id="props-sign" hidden>
+          <h2>Store sign</h2>
+          <label class="field">
+            <span>Store name</span>
+            <input type="text" id="sign-text" maxlength="28" placeholder="Your Store" />
+          </label>
+          <label class="field color-row">
+            <span>Text color</span>
+            <input type="color" id="sign-fg" value="#fff8ee" />
+          </label>
+          <label class="field color-row">
+            <span>Background</span>
+            <input type="color" id="sign-bg" value="#1c1916" />
+          </label>
+        </div>
+
+        <div class="props" id="props-door" hidden>
+          <h2>Door</h2>
+          <label class="field">
+            <span>Style</span>
+            <select id="door-style">
+              <option value="glass">Single glass</option>
+              <option value="double">Double glass</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Wall</span>
+            <select id="door-wall">
+              <option value="front">Front</option>
+              <option value="back">Back</option>
+              <option value="left">Left</option>
+              <option value="right">Right</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Glass / mirror</span>
+            <select id="door-glass">
+              <option value="clear">Clear glass</option>
+              <option value="tinted">Tinted glass</option>
+              <option value="frosted">Frosted glass</option>
+              <option value="mirror">Mirror</option>
+            </select>
+          </label>
+          <label class="field color-row">
+            <span>Glass color</span>
+            <input type="color" id="door-glass-color" value="#9ec9e6" />
+          </label>
+          <label class="field">
+            <span>Opacity <em id="val-door-op">5%</em></span>
+            <input type="range" id="door-opacity" min="0.02" max="0.7" step="0.01" value="0.05" />
+          </label>
+          <label class="field">
+            <span>Position along wall <em id="val-door-pos">50%</em></span>
+            <input type="range" id="door-pos" min="8" max="92" step="1" value="50" />
+          </label>
+          <label class="field">
+            <span>Width <em id="val-door-w">1.10 m</em></span>
+            <input type="range" id="door-w" min="0.8" max="2.4" step="0.05" value="1.1" />
+          </label>
+          <label class="field">
+            <span>Height <em id="val-door-h">2.10 m</em></span>
+            <input type="range" id="door-h" min="1.8" max="2.8" step="0.05" value="2.1" />
+          </label>
+          <div class="btn-row">
+            <button type="button" class="tool-btn" id="btn-toggle-door" data-icon="door"><span class="btn-label">Open / Close</span></button>
+            <button type="button" class="tool-btn danger" id="btn-delete-door" data-icon="trash"><span class="btn-label">Delete door</span></button>
+          </div>
+        </div>
+
+        <div class="props" id="props-window" hidden>
+          <h2>Window</h2>
+          <label class="field">
+            <span>Wall</span>
+            <select id="window-wall">
+              <option value="front">Front</option>
+              <option value="back">Back</option>
+              <option value="left">Left</option>
+              <option value="right">Right</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Glass / mirror</span>
+            <select id="window-glass">
+              <option value="clear">Clear glass</option>
+              <option value="tinted">Tinted glass</option>
+              <option value="frosted">Frosted glass</option>
+              <option value="mirror">Mirror</option>
+            </select>
+          </label>
+          <label class="field color-row">
+            <span>Glass tint</span>
+            <input type="color" id="window-color" value="#9ec9e6" />
+          </label>
+          <label class="field">
+            <span>Opacity <em id="val-win-op">5%</em></span>
+            <input type="range" id="window-opacity" min="0.02" max="0.7" step="0.01" value="0.05" />
+          </label>
+          <label class="field">
+            <span>Position <em id="val-win-pos">50%</em></span>
+            <input type="range" id="window-pos" min="10" max="90" step="1" value="50" />
+          </label>
+          <label class="field">
+            <span>Width <em id="val-win-w">1.60 m</em></span>
+            <input type="range" id="window-w" min="0.8" max="3.5" step="0.05" value="1.6" />
+          </label>
+          <label class="field">
+            <span>Height <em id="val-win-h">1.20 m</em></span>
+            <input type="range" id="window-h" min="0.6" max="2.2" step="0.05" value="1.2" />
+          </label>
+          <div class="btn-row">
+            <button type="button" class="tool-btn danger" id="btn-delete-window" data-icon="trash"><span class="btn-label">Delete window</span></button>
+          </div>
+        </div>
+
+        <div class="props" id="props-furniture" hidden>
+          <h2 id="furn-title">Desk</h2>
+          <p class="muted" id="furn-type-label"></p>
+          <label class="field color-row">
+            <span>Color</span>
+            <input type="color" id="furn-color" value="#c4a574" />
+          </label>
+          <div class="field">
+            <span>Material presets</span>
+            <div class="swatches" id="furn-swatches"></div>
+          </div>
+          <label class="field color-row">
+            <span>Accent / metal</span>
+            <input type="color" id="furn-accent" value="#2a2e35" />
+          </label>
+          <label class="field" id="furn-stock-field">
+            <span>Display items</span>
+            <select id="furn-stock">
+              <option value="none">None</option>
+              <option value="phones">Phones</option>
+              <option value="dresses">Dresses</option>
+              <option value="shoes">Shoes</option>
+              <option value="watches">Watches</option>
+              <option value="grocery">Grocery</option>
+              <option value="cafe">Cafe</option>
+              <option value="pharmacy">Pharmacy</option>
+            </select>
+          </label>
+          <div id="furn-desk-products" hidden>
+            <h2>Desk products</h2>
+            <p class="muted">Is desk par naya product add karo. Product click karke delete bhi ho sakta hai.</p>
+            <div class="btn-row">
+              <button type="button" class="tool-btn" data-add-cat="laptops"><span class="btn-label">Add laptop</span></button>
+              <button type="button" class="tool-btn" data-add-cat="tablets"><span class="btn-label">Add iPad</span></button>
+              <button type="button" class="tool-btn" data-add-cat="phones"><span class="btn-label">Add phone</span></button>
+            </div>
+          </div>
+          <div id="logo-fields" hidden>
+            <label class="field">
+              <span>Letter / monogram</span>
+              <input type="text" id="logo-letter" maxlength="3" placeholder="A" />
+            </label>
+            <div class="letter-grid" id="logo-letters"></div>
+            <label class="field">
+              <span>Logo style</span>
+              <select id="logo-style"></select>
+            </label>
+            <label class="field">
+              <span>Brand word</span>
+              <input type="text" id="logo-word" maxlength="16" placeholder="STORE" />
+            </label>
+            <label class="field">
+              <span>Mount</span>
+              <select id="logo-mount">
+                <option value="stand">Floor stand</option>
+                <option value="wall">Wall plaque</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Place on wall</span>
+              <select id="logo-snap">
+                <option value="">Anywhere — move freely</option>
+                <option value="front">Front wall</option>
+                <option value="back">Back wall</option>
+                <option value="left">Left wall</option>
+                <option value="right">Right wall</option>
+              </select>
+            </label>
+            <label class="field" id="logo-lift-field">
+              <span>Height from floor <em id="val-logo-lift">1.50 m</em></span>
+              <input type="range" id="logo-lift" min="0.6" max="3.4" step="0.05" value="1.5" />
+            </label>
+            <p class="muted">Upload your own logo below. PNG with transparent background looks best.</p>
+            <div class="btn-row">
+              <button type="button" class="tool-btn" id="btn-clear-logo" data-icon="trash"><span class="btn-label">Remove custom logo</span></button>
+            </div>
+          </div>
+          <div id="banner-fields" hidden>
+            <label class="field">
+              <span>Headline</span>
+              <input type="text" id="banner-text" maxlength="16" placeholder="5G LIVE" />
+            </label>
+            <label class="field">
+              <span>Screen shape</span>
+              <select id="banner-shape">
+                <option value="portrait">Portrait wall</option>
+                <option value="wide">Wide bar</option>
+              </select>
+            </label>
+            <label class="field" id="banner-snap-field">
+              <span>Place on wall</span>
+              <select id="banner-snap">
+                <option value="">Anywhere — move freely</option>
+                <option value="front">Front wall</option>
+                <option value="back">Back wall</option>
+                <option value="left">Left wall</option>
+                <option value="right">Right wall</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Height from floor <em id="val-banner-lift">2.10 m</em></span>
+              <input type="range" id="banner-lift" min="0.6" max="3.4" step="0.05" value="2.1" />
+            </label>
+            <p class="muted">Wall banner snaps to a wall. Desk screen sits on a stand — raise it onto a counter.</p>
+          </div>
+          <div id="light-fields" hidden>
+            <label class="field check-row">
+              <span>Light on</span>
+              <input type="checkbox" id="light-on" checked />
+            </label>
+            <label class="field color-row">
+              <span>Light color</span>
+              <input type="color" id="light-color" value="#ffe6b8" />
+            </label>
+            <label class="field">
+              <span>Brightness <em id="val-light-power">48</em></span>
+              <input type="range" id="light-power" min="4" max="200" step="2" value="48" />
+            </label>
+            <label class="field" id="light-lift-field">
+              <span>Height from floor <em id="val-light-lift">1.75 m</em></span>
+              <input type="range" id="light-lift" min="0.4" max="4.6" step="0.05" value="1.75" />
+            </label>
+            <label class="field" id="light-snap-field">
+              <span>Place on wall</span>
+              <select id="light-snap">
+                <option value="">Anywhere — move freely</option>
+                <option value="front">Front wall</option>
+                <option value="back">Back wall</option>
+                <option value="left">Left wall</option>
+                <option value="right">Right wall</option>
+              </select>
+            </label>
+            <p class="muted">Add as many as you want. Move with the gizmo. Desk lamp: raise it onto a counter.</p>
+          </div>
+          <label class="field">
+            <span>Upload logo / image</span>
+            <input type="file" id="furn-image" accept="image/*" />
+          </label>
+          <label class="field">
+            <span>Width <em id="val-furn-w">1.60 m</em></span>
+            <input type="range" id="furn-w" min="0.4" max="8" step="0.05" value="1.6" />
+          </label>
+          <label class="field">
+            <span>Depth <em id="val-furn-d">0.80 m</em></span>
+            <input type="range" id="furn-d" min="0.3" max="2.4" step="0.05" value="0.8" />
+          </label>
+          <label class="field">
+            <span>Height <em id="val-furn-h">0.75 m</em></span>
+            <input type="range" id="furn-h" min="0.4" max="2.6" step="0.05" value="0.75" />
+          </label>
+          <label class="field">
+            <span>Rotate <em id="val-furn-rot">0°</em></span>
+            <input type="range" id="furn-rot" min="0" max="360" step="1" value="0" />
+          </label>
+          <div class="rot-snaps" id="furn-rot-snaps">
+            <button type="button" data-rot="-90">-90°</button>
+            <button type="button" data-rot="0">0°</button>
+            <button type="button" data-rot="90">90°</button>
+            <button type="button" data-rot="180">180°</button>
+            <button type="button" data-rot="270">270°</button>
+            <button type="button" data-rot="+90">+90°</button>
+          </div>
+          <div class="btn-row">
+            <button type="button" class="tool-btn" id="btn-duplicate" data-icon="duplicate"><span class="btn-label">Duplicate</span></button>
+            <button type="button" class="tool-btn danger" id="btn-delete-furn" data-icon="trash"><span class="btn-label">Delete</span></button>
+          </div>
+        </div>
+
+        <div class="props" id="props-product" hidden>
+          <h2>Product display</h2>
+          <div class="product-card">
+            <span class="product-swatch" id="prod-swatch"></span>
+            <div>
+              <p class="product-kicker" id="prod-cat">Collection</p>
+              <h3 id="prod-title">Product</h3>
+              <p class="product-sku" id="prod-sku">SKU</p>
+            </div>
+          </div>
+          <p class="product-price" id="prod-price">$0</p>
+          <p class="muted" id="prod-detail"></p>
+          <h2>This desk</h2>
+          <div class="btn-row" id="prod-quick-add">
+            <button type="button" class="tool-btn" data-add-cat="laptops"><span class="btn-label">Add laptop</span></button>
+            <button type="button" class="tool-btn" data-add-cat="tablets"><span class="btn-label">Add iPad</span></button>
+            <button type="button" class="tool-btn" data-add-cat="phones"><span class="btn-label">Add phone</span></button>
+          </div>
+          <div class="btn-row">
+            <button type="button" class="tool-btn danger" id="btn-delete-prod" data-icon="trash"><span class="btn-label">Delete from desk</span></button>
+          </div>
+          <h2>Catalog</h2>
+          <div class="prod-swap-cats" id="prod-action-mode"></div>
+          <div class="prod-swap-cats" id="prod-swap-cats"></div>
+          <div class="catalog" id="prod-swap-grid"></div>
+          <p class="muted" id="prod-swap-hint">Replace se isi jagah badlo. Add new se isi desk par naya product aata hai.</p>
+        </div>
+
+        <p class="stack-label">Select</p>
+        <section class="panel-section objects-picker" id="objects-picker">
+          <h2>Objects in store</h2>
+          <button type="button" class="object-trigger" id="object-trigger" aria-expanded="false" aria-controls="object-menu">
+            <span class="object-trigger-ico" id="object-trigger-ico"></span>
+            <span class="object-trigger-copy">
+              <strong id="object-trigger-label">Choose an object</strong>
+              <small id="object-count">0 items</small>
+            </span>
+            <span class="object-chevron" aria-hidden="true"></span>
+          </button>
+          <div class="object-menu" id="object-menu" hidden>
+            <div class="object-list" id="object-list"></div>
+          </div>
+        </section>
+
+        <p class="stack-label">Room</p>
+        <section class="panel-section">
+          <h2>Store size</h2>
+          <label class="field">
+            <span>Width <em id="val-width">18.0 m</em></span>
+            <input type="range" id="store-width" min="8" max="32" step="0.5" value="18" />
+          </label>
+          <label class="field">
+            <span>Depth <em id="val-depth">14.0 m</em></span>
+            <input type="range" id="store-depth" min="8" max="28" step="0.5" value="14" />
+          </label>
+          <label class="field">
+            <span>Height <em id="val-height">4.8 m</em></span>
+            <input type="range" id="store-height" min="2.8" max="6" step="0.1" value="4.8" />
+          </label>
+        </section>
+
+        <section class="panel-section">
+          <h2>Shop lighting</h2>
+          <p class="muted">Har shop ka overall light yahan se change karo. Neeche se extra lamps add karo.</p>
+          <label class="field">
+            <span>Shop brightness <em id="val-lit-exposure">1.14</em></span>
+            <input type="range" id="lit-exposure" min="0.35" max="2.2" step="0.02" value="1.14" />
+          </label>
+          <label class="field">
+            <span>Sun / key light <em id="val-lit-sun">0.92</em></span>
+            <input type="range" id="lit-sun" min="0" max="2.2" step="0.02" value="0.92" />
+          </label>
+          <label class="field">
+            <span>Fill light <em id="val-lit-fill">0.24</em></span>
+            <input type="range" id="lit-fill" min="0" max="1.4" step="0.02" value="0.24" />
+          </label>
+          <label class="field">
+            <span>Ambient <em id="val-lit-hemi">1.20</em></span>
+            <input type="range" id="lit-hemi" min="0.2" max="2.2" step="0.02" value="1.20" />
+          </label>
+          <label class="field">
+            <span>Warm / cool <em id="val-lit-warmth">Warm</em></span>
+            <input type="range" id="lit-warmth" min="0" max="1" step="0.02" value="0.76" />
+          </label>
+          <h2>Add a light</h2>
+          <div class="catalog light-catalog" id="light-catalog"></div>
+          <p class="muted">Jitni chaaho lights add karo, phir select karke color, brightness aur height edit karo.</p>
+        </section>
+
+        <section class="panel-section">
+          <h2>Presets</h2>
+          <div class="preset-grid" id="preset-grid"></div>
+        </section>
+
+        <section class="panel-section">
+          <h2>Surfaces</h2>
+          <div class="surface-list">
+            <button type="button" class="surface-btn" data-select="floor" data-icon="floor">Floor</button>
+            <button type="button" class="surface-btn" data-select="roof" data-icon="roof">Roof</button>
+            <button type="button" class="surface-btn" data-select="wall-front" data-icon="wall">Front wall</button>
+            <button type="button" class="surface-btn" data-select="wall-back" data-icon="wall">Back wall</button>
+            <button type="button" class="surface-btn" data-select="wall-left" data-icon="wall">Left wall</button>
+            <button type="button" class="surface-btn" data-select="wall-right" data-icon="wall">Right wall</button>
+            <button type="button" class="surface-btn" data-select="sign" data-icon="sign">Store sign</button>
+          </div>
+        </section>
+
+        <p class="stack-label">Catalog</p>
+        <section class="panel-section">
+          <h2>Add to store</h2>
+          <div class="catalog" id="catalog"></div>
+        </section>
+
+      </aside>
+    </div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./node_modules/three/build/three.module.js",
+        "three/addons/": "./node_modules/three/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" src="js/main.js?v=sofaoff2"></script>
+</body>
+</html>
