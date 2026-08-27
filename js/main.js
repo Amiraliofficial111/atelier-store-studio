@@ -4,12 +4,12 @@ import { TransformControls } from "three/addons/controls/TransformControls.js";
 import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
-import { applySurface, loadImageBitmap, MATERIALS, FLOOR_MATERIALS, ROOF_MATERIALS, loadPhotoTextures, isShineTexture, isTileTexture, isRoofTexture, resolveRoofId } from "./textures.js";
-import { CATALOG, createFurniture, newFurniture, isLamp, isLightFixture, resetLampBudget, resetAcDisplays, updateAcDisplays, isProductDesk, nextDeskProductPose, defaultDeskScale, loadSofaModels, loadMannequinModels, loadWalkAvatar, loadWalkGirl, createWalkAvatar, cycleWalkGirl } from "./furniture.js?v=walkkeys1";
-import { PRODUCT_LINES, loadClothesPhotos } from "./products.js";
+import { applySurface, loadImageBitmap, MATERIALS, FLOOR_MATERIALS, ROOF_MATERIALS, loadPhotoTextures, isShineTexture, isTileTexture, isRoofTexture, resolveRoofId, resolveFloorId, floorRepeat, roofRepeat } from "./textures.js?v=oak4";
+import { CATALOG, createFurniture, newFurniture, isLamp, isLightFixture, resetLampBudget, resetAcDisplays, updateAcDisplays, isProductDesk, nextDeskProductPose, defaultDeskScale, loadSofaModels, loadMannequinModels, loadWalkAvatar, loadWalkGirl, createWalkAvatar, hasMannequinWalks, updateMannequinWalks, MAN_OUTFITS } from "./furniture.js?v=pre2";
+import { PRODUCT_LINES, loadClothesPhotos, loadClothesModels } from "./products.js";
 import { loadWatchModels } from "./watches.js";
 import { LETTERS, LOGO_STYLES } from "./logos.js";
-import { buildRoom, defaultState } from "./store.js?v=dimshops1";
+import { buildRoom, defaultState, mallShopBays } from "./store.js?v=oak4";
 import { ico, ICONS } from "./icons.js?v=walkwho1";
 import { QUALITY, currentDpr, dropQuality } from "./quality.js";
 
@@ -61,7 +61,7 @@ function installEnvironment() {
     const roomEnv = new RoomEnvironment();
     scene.environment = pmrem.fromScene(roomEnv, QUALITY.pmrem).texture;
     roomEnv.dispose();
-    scene.environmentIntensity = QUALITY.high ? 1.42 : 1.18;
+    scene.environmentIntensity = QUALITY.studio ? 1.36 : 1.18;
     invalidate(240);
   } catch (err) {
     console.warn("environment skipped", err);
@@ -155,7 +155,7 @@ scene.add(sun);
 const fill = new THREE.DirectionalLight("#dce6f4", QUALITY.high ? 0.14 : 0.18);
 fill.position.set(-14, 14, 18);
 scene.add(fill);
-const rim = QUALITY.high ? new THREE.DirectionalLight("#ffe6c4", 0.16) : null;
+const rim = QUALITY.studio ? new THREE.DirectionalLight("#ffe6c4", 0.16) : null;
 if (rim) {
   rim.position.set(18, 8, -16);
   scene.add(rim);
@@ -174,14 +174,14 @@ const SurfaceMat = QUALITY.physical ? THREE.MeshPhysicalMaterial : THREE.MeshSta
 const wallLook = {
   roughness: 0.54,
   metalness: 0,
-  envMapIntensity: 0.78,
+  envMapIntensity: 0.96,
   side: THREE.DoubleSide,
 };
-if (QUALITY.physical && QUALITY.high) {
-  wallLook.clearcoat = 0.08;
-  wallLook.clearcoatRoughness = 0.6;
-  wallLook.sheen = 0.14;
-  wallLook.sheenRoughness = 0.8;
+if (QUALITY.physical) {
+  wallLook.clearcoat = 0.12;
+  wallLook.clearcoatRoughness = 0.48;
+  wallLook.sheen = 0.18;
+  wallLook.sheenRoughness = 0.72;
   wallLook.sheenColor = new THREE.Color("#f3eee6");
 }
 const materials = {
@@ -190,7 +190,7 @@ const materials = {
     metalness: 0.03,
     envMapIntensity: 0.95,
   }),
-  roof: new THREE.MeshStandardMaterial({ color: "#f4efe6", roughness: 0.86, metalness: 0.02 }),
+  roof: new SurfaceMat({ color: "#f4efe6", roughness: 0.72, metalness: 0.04, envMapIntensity: 0.95 }),
   "wall-front": new SurfaceMat({ ...wallLook }),
   "wall-back": new SurfaceMat({ ...wallLook }),
   "wall-left": new SurfaceMat({ ...wallLook }),
@@ -220,8 +220,15 @@ const WALK_GIRL_SIDE = 0.46;
 const WALK_SPEED = 1.55;
 const WALK_SKIP = new Set([
   "logo",
+  "logoMat",
+  "plant",
+  "hangingCard",
+  "goldArch",
+  "mirror",
+  "securityGate",
   "wallSconce",
   "ledBanner",
+  "ledDesk",
   "windowVinyl",
   "hoursPlaque",
   "splitAc",
@@ -237,6 +244,10 @@ function rebuildWalkColliders() {
   walkHits.length = 0;
   for (const item of state.furniture || []) {
     if (WALK_SKIP.has(item.type)) continue;
+    if (item.type === "fittingRoom") {
+      addFittingWalkHits(item);
+      continue;
+    }
     walkHits.push({
       x: item.x || 0,
       z: item.z || 0,
@@ -247,13 +258,65 @@ function rebuildWalkColliders() {
   }
 }
 
+function furnLocalXZ(item, lx, lz) {
+  const c = Math.cos(item.rotY || 0);
+  const s = Math.sin(item.rotY || 0);
+  return {
+    x: (item.x || 0) + lx * c + lz * s,
+    z: (item.z || 0) - lx * s + lz * c,
+  };
+}
+
+function addFittingWalkHits(item) {
+  const w = Number(item.width) || 1.15;
+  const d = Number(item.depth) || 1.15;
+  const rot = item.rotY || 0;
+  const back = furnLocalXZ(item, 0, -d / 2 + 0.03);
+  const left = furnLocalXZ(item, -w / 2 + 0.03, 0);
+  const right = furnLocalXZ(item, w / 2 - 0.03, 0);
+  walkHits.push({ x: back.x, z: back.z, hw: w / 2 + 0.04, hd: 0.05, rotY: rot });
+  walkHits.push({ x: left.x, z: left.z, hw: 0.05, hd: d / 2 + 0.04, rotY: rot });
+  walkHits.push({ x: right.x, z: right.z, hw: 0.05, hd: d / 2 + 0.04, rotY: rot });
+  if (!item.open) {
+    const front = furnLocalXZ(item, 0, d / 2 - 0.03);
+    walkHits.push({ x: front.x, z: front.z, hw: w / 2 + 0.04, hd: 0.05, rotY: rot });
+  }
+}
+
+function nearFittingEntrance(item, pos) {
+  const d = Number(item.depth) || 1.15;
+  const front = furnLocalXZ(item, 0, d / 2 + 0.38);
+  const dx = pos.x - front.x;
+  const dz = pos.z - front.z;
+  return dx * dx + dz * dz < 0.95 * 0.95;
+}
+
+function toggleFittingRoom(id) {
+  const item = (state.furniture || []).find((f) => f.id === id && f.type === "fittingRoom");
+  if (!item) return;
+  item.open = !item.open;
+  rebuildFurniture();
+}
+
+function syncFittingRoomAccess() {
+  let dirty = false;
+  for (const item of state.furniture || []) {
+    if (item.type !== "fittingRoom") continue;
+    if (nearFittingEntrance(item, walkPos) && !item.open) {
+      item.open = true;
+      dirty = true;
+    }
+  }
+  if (dirty) rebuildFurniture();
+}
+
 function frontDoorGap() {
   const width = state.store.width;
   const doors = (state.doors || []).filter((d) => d.wall === "front");
   if (!doors.length) return [{ x: 0, half: 1.15 }];
   return doors.map((d) => ({
     x: (Number(d.pos ?? 50) / 100 - 0.5) * width,
-    half: Math.max(0.7, (Number(d.width) || 2.5) / 2 - 0.12),
+    half: Math.max(0.95, (Number(d.width) || 2.5) / 2 + 0.08),
   }));
 }
 
@@ -261,14 +324,24 @@ function inFrontDoor(x) {
   return frontDoorGap().some((d) => Math.abs(x - d.x) <= d.half);
 }
 
+function inMallShopBay(x, z) {
+  const b = mallShopBays(state.store);
+  const halfW = b.bayW / 2 - 0.35;
+  const halfD = b.bayD / 2 - 0.35;
+  const inBox = (cx) => Math.abs(x - cx) <= halfW && Math.abs(z - b.shopZ) <= halfD;
+  return inBox(b.luxeX) || inBox(b.novaX);
+}
+
 function walkHitsWall(x, z) {
   const w = state.store.width / 2;
   const d = state.store.depth / 2;
   const frontZ = d;
   const pad = WALK_RADIUS + 0.08;
-  if (z > frontZ + 3.8) return true;
-  if (z >= frontZ - 0.2 && (x < -w - 1.5 || x > w + 1.5)) return true;
-  if (Math.abs(z - frontZ) < pad && !inFrontDoor(x)) return true;
+  if (inMallShopBay(x, z)) return false;
+  if (inFrontDoor(x) && z > frontZ - 1.35 && z < frontZ + 1.8) return false;
+  if (z > frontZ + 5.4) return true;
+  if (z >= frontZ - 0.2 && (x < -w - 9.2 || x > w + 9.2)) return true;
+  if (Math.abs(z - frontZ) < pad && !inFrontDoor(x) && Math.abs(x) <= w + 0.2) return true;
   if (z < frontZ - 0.12) {
     if (x < -w + 0.42 || x > w - 0.42) return true;
     if (z < -d + 0.45) return true;
@@ -454,6 +527,66 @@ const SWATCH_BG = {
   "roof-pearl": "#f4efe6",
   "roof-inlay": "#f2ebe0",
   "roof-stepcove": "#f6f1e8",
+  "roof-contrast": "#c6a56a",
+  "roof-medallion": "#e8d4a0",
+  "roof-lattice": "#d4b878",
+  "roof-showroom": "#3a2416",
+  "roof-mallgold": "#e8e2d6",
+  "roof-arch": "#b8b2a8",
+  "roof-float": "#2a221c",
+  "roof-nature": "#c4a574",
+  "roof-slatluxe": "#3a2416",
+  "roof-geofloat": "#1a1612",
+  "roof-wave": "#e8d8c0",
+  "roof-industrial": "#b8b2a8",
+  "roof-star": "#0c1016",
+  "roof-marbleceil": "#f0ebe4",
+  "roof-hex": "#2a2a2c",
+  "roof-minimal": "#f4efe6",
+  "roof-ledline": "#141311",
+  "roof-timber": "#c4a574",
+  "roof-cofferlux": "#e8d4a0",
+  "roof-blackgrid": "#1a1816",
+  "roof-glassglow": "#d8e6f0",
+  "roof-cloudwave": "#f6f1e8",
+  "roof-diapanel": "#c6a56a",
+  "roof-goldrings": "#e8c878",
+  "roof-woodmarble": "#4a3426",
+  "roof-rgbline": "#1a7cff",
+  "roof-goldframe": "#c6a56a",
+  "roof-plain": "#efe9df",
+  "roof-organic": "#8a5a32",
+  "roof-traylux": "#e8d4a0",
+  "roof-roselux": "#c6a56a",
+  "roof-cofferoyal": "#f3ead8",
+  "roof-noirgold": "#1a1714",
+  "roof-corinth": "#e8c878",
+  "floor-plain": "#efe9df",
+  "floor-contrast": "#2a1c14",
+  "floor-diamond": "#1c1612",
+  "floor-medallion": "#c6a56a",
+  "floor-arabesque": "#4a2c18",
+  "floor-brass": "#e8c878",
+  "floor-chevron": "#8a5a32",
+  "floor-noir": "#1a1412",
+  "floor-bone": "#f0e8dc",
+  "floor-check": "#2a1c14",
+  "floor-inkgold": "#c6a56a",
+  "floor-wineivory": "#5c1c26",
+  "floor-navygold": "#162444",
+  "floor-emerald": "#12483a",
+  "floor-sandink": "#d4b896",
+  "floor-runway": "#1a120e",
+  "floor-mall": "#e8e4de",
+  "floor-arch": "#b8b4aa",
+  "floor-warm": "#d4b896",
+  "floor-geo": "#2a2018",
+  "floor-hexlux": "#1a1210",
+  "floor-honey": "#c6a56a",
+  "floor-octolux": "#f0e8dc",
+  "floor-chevgold": "#2a1c14",
+  "floor-fanlux": "#1c1612",
+  "floor-oakplank": "#ae804c",
 };
 
 const PRESETS = [
@@ -473,11 +606,21 @@ function uid() {
 
 function findSelectable(obj) {
   let o = obj;
+  let product = null;
+  let furniture = null;
   while (o) {
-    if (o.userData && o.userData.selectable) return o;
+    if (o.userData?.selectable) {
+      if (o.userData.kind === "furniture") furniture = furniture || o;
+      else if (o.userData.kind === "product") product = product || o;
+      else return o;
+    }
     o = o.parent;
   }
-  return null;
+  const manType = furniture?.userData?.type;
+  if (product && furniture && (manType === "mannequin" || manType === "mannequinCase" || manType === "glowRunway")) {
+    return furniture;
+  }
+  return product || furniture;
 }
 
 function findById(id) {
@@ -509,8 +652,13 @@ function clearGroup(group) {
   }
 }
 
+function isMallItem(f) {
+  return Boolean(f?.mallShop || f?.mallKey);
+}
+
 function clampItems() {
   for (const f of state.furniture) {
+    if (isMallItem(f)) continue;
     const wallLogo =
       (f.type === "logo" && f.logoMount === "wall") ||
       f.type === "ledBanner" ||
@@ -582,28 +730,61 @@ async function applyAllSurfaces() {
       console.error("surface failed", key, surface.texture, err);
     }
     if (key === "roof" && isRoofTexture(surface.texture)) {
-      materials.roof.color.set("#ffffff");
+      const m = materials.roof;
+      m.color.set("#ffffff");
+      if (surface.texture === "roof-plain") {
+        m.roughness = 0.88;
+        m.metalness = 0.02;
+        m.envMapIntensity = 0.28;
+        if ("clearcoat" in m) {
+          m.clearcoat = 0.04;
+          m.clearcoatRoughness = 0.55;
+        }
+      } else {
+        m.envMapIntensity = Math.max(m.envMapIntensity || 0, 0.98);
+        if ("clearcoat" in m) {
+          m.clearcoat = Math.max(m.clearcoat || 0, 0.2);
+          m.clearcoatRoughness = Math.min(m.clearcoatRoughness ?? 0.4, 0.28);
+        }
+      }
     }
     if (key === "floor") {
       const m = materials.floor;
       m.color.set("#ffffff");
-      if (surface.texture === "mobileFloor" || (isTileTexture(surface.texture) && surface.texture !== "tiles")) {
+      if (surface.texture === "floor-plain") {
+        m.roughness = 0.28;
+        m.metalness = 0.02;
+        m.envMapIntensity = 0.55;
+        if ("clearcoat" in m) {
+          m.clearcoat = 0.06;
+          m.clearcoatRoughness = 0.42;
+        }
+      } else if (surface.texture === "floor-oakplank") {
+        m.roughness = 0.22;
+        m.metalness = 0.03;
+        m.envMapIntensity = 0.92;
+        if ("clearcoat" in m) {
+          m.clearcoat = 0.26;
+          m.clearcoatRoughness = 0.2;
+        }
+      } else if (surface.texture === "mobileFloor" || (isTileTexture(surface.texture) && surface.texture !== "tiles")) {
         m.roughness = 0.22;
         m.metalness = 0.05;
         m.envMapIntensity = 1.9;
-        if (QUALITY.high && "clearcoat" in m) {
+        if ("clearcoat" in m) {
           m.clearcoat = 0.8;
           m.clearcoatRoughness = 0.04;
         }
-        if (QUALITY.high && "ior" in m) m.ior = 1.52;
+        if ("ior" in m) m.ior = 1.52;
       } else {
-        m.roughness = Math.min(m.roughness, QUALITY.high ? 0.06 : 0.16);
-        m.metalness = Math.max(m.metalness, 0.07);
-        m.envMapIntensity = 1.65;
-        if (QUALITY.high && "clearcoat" in m) {
-          m.clearcoat = Math.max(m.clearcoat || 0, 0.58);
-          m.clearcoatRoughness = 0.05;
+        m.roughness = Math.min(m.roughness, 0.055);
+        m.metalness = Math.max(m.metalness, 0.08);
+        m.envMapIntensity = 1.85;
+        if ("clearcoat" in m) {
+          m.clearcoat = Math.max(m.clearcoat || 0, 0.72);
+          m.clearcoatRoughness = 0.045;
         }
+        if ("ior" in m) m.ior = 1.5;
       }
     }
   }
@@ -613,7 +794,7 @@ async function applyAllSurfaces() {
 function freezeStatic(root) {
   root.updateMatrixWorld(true);
   root.traverse((o) => {
-    if (o.isLight) return;
+    if (o.isLight || o.isBone || o.isSkinnedMesh || o.userData?.liveWalk || /_jt_|_rootJoint/i.test(o.name || "")) return;
     o.matrixAutoUpdate = false;
     o.frustumCulled = true;
     if (!o.isMesh) return;
@@ -833,7 +1014,7 @@ function stripDressShopLights() {
       if (item.lightOn !== false && !(Number(item.lightPower) > 0)) {
         item.lightOn = true;
         item.lightPower = 86;
-        item.lightColor = item.lightColor || "#f2f6ff";
+        item.lightColor = item.lightColor || "#ffe8c4";
       }
       continue;
     }
@@ -849,10 +1030,10 @@ function stripDressShopLights() {
         height: 0.52,
         lift: Math.max(3.8, h - 0.14),
         lightOn: true,
-        lightPower: 86,
-        lightColor: "#f2f6ff",
-        color: "#e8eef4",
-        accent: "#c8d0d8",
+        lightPower: 72,
+        lightColor: "#ffe8c4",
+        color: "#1a1612",
+        accent: "#c6a56a",
         stock: "none",
       })
     );
@@ -866,16 +1047,16 @@ function applyShopLighting() {
   const cool = new THREE.Color("#dce8ff");
   const warm = new THREE.Color("#fff4e4");
   const key = cool.clone().lerp(warm, warmth);
-  renderer.toneMappingExposure = (L.exposure ?? 0.86) * 0.78;
-  sun.intensity = (L.sun ?? 0.78) * 0.68;
+  renderer.toneMappingExposure = (L.exposure ?? 0.86) * 0.94;
+  sun.intensity = (L.sun ?? 0.78) * 0.98;
   sun.color.copy(key);
-  fill.intensity = (L.fill ?? 0.14) * 0.62;
+  fill.intensity = (L.fill ?? 0.14) * 0.55;
   fill.color.copy(key).multiplyScalar(0.94);
-  hemi.intensity = (L.hemi ?? 0.42) * 0.62;
+  hemi.intensity = (L.hemi ?? 0.42) * 0.42;
   hemi.color.copy(key);
   hemi.groundColor.set(warmth > 0.45 ? "#7a6e62" : "#6a7280");
   const watchShop = lastPresetId === "watches" || state.store?.sign?.text === "CHRONOS" || state.store?.sign?.text === "AURUM GENESIS";
-  scene.environmentIntensity = (watchShop ? 0.68 : 0.72) + (L.exposure ?? 0.86) * 0.12;
+  scene.environmentIntensity = (watchShop ? 0.82 : isDressBoutique() ? 0.72 : 0.98) + (L.exposure ?? 0.86) * 0.18;
   if (rim) {
     rim.intensity = 0.1 + warmth * 0.08;
     rim.color.copy(key);
@@ -883,7 +1064,9 @@ function applyShopLighting() {
   const mobile = state.store?.frontStyle === "mobile";
   const bg = mobile
     ? new THREE.Color("#b7c2ce").lerp(new THREE.Color("#cfd6de"), warmth * 0.35)
-    : new THREE.Color("#c4cedc").lerp(new THREE.Color("#d8cfc2"), warmth);
+    : isDressBoutique()
+      ? new THREE.Color("#2c2824").lerp(new THREE.Color("#3a322c"), warmth)
+      : new THREE.Color("#c4cedc").lerp(new THREE.Color("#d8cfc2"), warmth);
   scene.background.copy(bg);
   if (scene.fog) {
     scene.fog.color.copy(bg);
@@ -902,39 +1085,75 @@ function applyShopLighting() {
   scheduleSave();
 }
 
-const studioJobs = { hdr: null, clothes: null, watches: null, sofa: null, man: null };
-
-function furnitureTypes() {
-  return new Set((state.furniture || []).map((f) => f.type));
-}
+const studioJobs = { hdr: null, clothes: null, clothModels: null, watches: null, sofa: null, man: null, walk: null, walkGirl: null, photos: null };
 
 function ensureStudioAssets() {
-  const types = furnitureTypes();
   const jobs = [];
   if (!studioJobs.hdr) {
-    studioJobs.hdr = true;
-    if (QUALITY.high) setTimeout(() => loadStudioHDR(), 900);
+    studioJobs.hdr = loadStudioHDR();
+    jobs.push(studioJobs.hdr);
   }
-  if ((isDressBoutique() || types.has("rack") || types.has("dressNiche")) && !studioJobs.clothes) {
+  if (!studioJobs.clothes) {
     studioJobs.clothes = loadClothesPhotos();
     jobs.push(studioJobs.clothes);
   }
-  if ((isWatchShop() || types.has("glassCase") || types.has("watchTower")) && !studioJobs.watches) {
+  if (!studioJobs.watches) {
     studioJobs.watches = loadWatchModels();
     jobs.push(studioJobs.watches);
   }
-  if (types.has("sofa") && !studioJobs.sofa) {
+  if (!studioJobs.sofa) {
     studioJobs.sofa = loadSofaModels();
     jobs.push(studioJobs.sofa);
   }
-  if ((types.has("mannequin") || types.has("mannequinCase") || types.has("glowRunway")) && !studioJobs.man) {
+  if (!studioJobs.man) {
     studioJobs.man = loadMannequinModels();
     jobs.push(studioJobs.man);
+  }
+  if (!studioJobs.walk) {
+    studioJobs.walk = loadWalkAvatar();
+    jobs.push(studioJobs.walk);
+  }
+  if (!studioJobs.walkGirl) {
+    studioJobs.walkGirl = loadWalkGirl();
+    jobs.push(studioJobs.walkGirl);
   }
   if (!jobs.length) return Promise.resolve(false);
   return Promise.all(jobs)
     .then(() => true)
     .catch(() => false);
+}
+
+function setBootLoader(on, text) {
+  const el = document.getElementById("boot-loader");
+  if (!el) return;
+  el.hidden = !on;
+  const label = el.querySelector("[data-boot-text]");
+  if (label && text) label.textContent = text;
+}
+
+async function preloadShopModels() {
+  setBootLoader(true, "Loading all models…");
+  studioJobs.sofa = loadSofaModels();
+  studioJobs.clothModels = loadClothesModels();
+  studioJobs.clothes = loadClothesPhotos();
+  studioJobs.man = loadMannequinModels();
+  studioJobs.watches = loadWatchModels();
+  studioJobs.walk = loadWalkAvatar();
+  studioJobs.walkGirl = loadWalkGirl();
+  studioJobs.hdr = loadStudioHDR();
+  studioJobs.photos = loadPhotoTextures();
+  await Promise.all([
+    studioJobs.sofa,
+    studioJobs.clothModels,
+    studioJobs.clothes,
+    studioJobs.man,
+    studioJobs.watches,
+    studioJobs.walk,
+    studioJobs.walkGirl,
+    studioJobs.hdr,
+    studioJobs.photos,
+  ]);
+  setBootLoader(true, "Opening shop…");
 }
 
 function hydrateStudioAssets() {
@@ -970,7 +1189,7 @@ function isWatchShop() {
 
 function ensureWatchDisplays() {
   if (!isWatchShop()) return;
-  const list = (state.furniture || []).filter((item) => item.type !== "sofa" && item.type !== "mannequin");
+  const list = (state.furniture || []).filter((item) => isMallItem(item) || (item.type !== "sofa" && item.type !== "mannequin"));
   state.furniture = list;
   for (const item of list) {
     if (item.type === "watchTower") {
@@ -1007,30 +1226,18 @@ function syncWalkWhoButtons() {
 function applyWalkWho() {
   const actor = walkActor;
   if (!actor) return;
-  const girlOn = walkWho === "girl" || walkWho === "both";
-  const manOn = walkWho === "man" || walkWho === "both";
-  if (actor.man) actor.man.visible = manOn;
-  for (const girl of actor.girls || []) {
-    girl.root.visible = girlOn;
-    girl.side = walkWho === "both" ? WALK_GIRL_SIDE : 0;
-    if (girl.restX != null) girl.root.position.x = girl.restX + (girl.side || 0);
-  }
-  actor.who = walkWho;
+  walkWho = "man";
+  if (actor.man) actor.man.visible = true;
+  for (const girl of actor.girls || []) girl.root.visible = false;
+  actor.who = "man";
   syncWalkWhoButtons();
 }
 
-function chooseWalkWho(who) {
-  walkWho = who === "girl" || who === "both" ? who : "man";
+function chooseWalkWho() {
+  walkWho = "man";
   if (viewMode !== "walk") {
     setView("walk");
     return;
-  }
-  if (walkWho === "girl" || walkWho === "both") {
-    loadWalkGirl().then(() => {
-      cycleWalkGirl(walkActor);
-      applyWalkWho();
-      invalidate(200);
-    });
   }
   applyWalkWho();
   invalidate(200);
@@ -1046,7 +1253,6 @@ function setWalkActorVisible(on) {
     const actor = ensureWalkActor();
     if (!actor) return;
     actor.root.visible = true;
-    if (walkWho === "girl" || walkWho === "both") cycleWalkGirl(actor);
     applyWalkWho();
     invalidate(200);
   };
@@ -1054,21 +1260,29 @@ function setWalkActorVisible(on) {
     show();
     return;
   }
-  loadWalkGirl();
   loadWalkAvatar().then(() => {
     if (viewMode !== "walk") return;
     show();
   });
 }
 
+function ensureMallShops() {
+  state.furniture = (state.furniture || []).filter((item) => !isMallItem(item));
+}
+
 async function rebuildAll() {
+  ensureMallShops();
   clampItems();
   ensureWatchDisplays();
   ensureDressDisplays();
   try {
     applyFlatSurfaces();
     await restoreFurnitureMaps();
-    await loadMannequinModels();
+    const needsMan = (state.furniture || []).some((item) => item.type === "mannequin" || item.type === "mannequinCase" || item.type === "glowRunway");
+    if (needsMan) studioJobs.man = loadMannequinModels();
+    studioJobs.sofa = studioJobs.sofa || loadSofaModels();
+    studioJobs.clothModels = studioJobs.clothModels || loadClothesModels();
+    await Promise.all([studioJobs.sofa, studioJobs.clothModels, needsMan ? studioJobs.man : Promise.resolve(false)]);
     rebuildRoom();
     rebuildFurniture();
     applyShopLighting();
@@ -1274,6 +1488,20 @@ function fillProps() {
             ? "Place it anywhere. Turn it on, pick a color, and set brightness."
             : "Move or rotate with the gizmo, slider, or 90° buttons";
       document.getElementById("furn-stock-field").hidden = isLogo || isBanner || lamp;
+      const outfitField = document.getElementById("furn-outfit-field");
+      if (outfitField) {
+        const isMan = item.type === "mannequin" || item.type === "mannequinCase" || item.type === "glowRunway";
+        outfitField.hidden = !isMan;
+        const outfitSel = document.getElementById("furn-outfit");
+        if (outfitSel && !outfitSel.options.length) {
+          outfitSel.innerHTML = MAN_OUTFITS.map((o) => `<option value="${o.id}">${o.label}</option>`).join("");
+        }
+        if (outfitSel) outfitSel.value = item.outfit || "lumber";
+      }
+      if (item.mallShop) {
+        document.getElementById("furn-title").textContent = `${item.mallShop.toUpperCase()} · ${item.type}`;
+        document.getElementById("furn-type-label").textContent = "Yeh mall shop ka item hai. Color, size, model yahan se change hoga.";
+      }
       const deskProducts = document.getElementById("furn-desk-products");
       if (deskProducts) deskProducts.hidden = !isProductDesk(item.type);
       document.getElementById("logo-fields").hidden = !isLogo;
@@ -1344,9 +1572,9 @@ function fillProps() {
       document.getElementById("surface-color-field").hidden = isFloor || isRoof;
       document.getElementById("surface-all-walls-field").hidden = selected.kind !== "wall";
       document.getElementById("material-presets-label").textContent = isFloor
-        ? "Shiny floor textures"
+        ? "Floor"
         : isRoof
-          ? "Ceiling designs"
+          ? "Ceiling"
           : "Material presets";
       fillSwatchGrid(
         document.getElementById("material-swatches"),
@@ -1421,7 +1649,11 @@ function objectRowLabel(row) {
   if (row.type === "ledDesk") return `LED desk · ${row.posterText || "Deals"}`;
   if (row.type === "light") return "Floor lamp";
   if (row.type === "pendant") return "Pendant lamp";
-  if (row.type === "crystalChandelier") return "Crystal jhomar";
+  if (row.type === "crystalChandelier") return "Luxury ring light";
+  if (row.type === "loungeChair") return "Lounge chair";
+  if (row.type === "coffeeTable") return "Coffee table";
+  if (row.type === "ottoman") return "Ottoman";
+  if (row.type === "sideboard") return "Sideboard";
   if (row.type === "ceilingCan") return "Ceiling spot";
   if (row.type === "wallSconce") return "Wall sconce";
   if (row.type === "deskLamp") return "Desk lamp";
@@ -1545,6 +1777,12 @@ function wheelStep(e) {
 
 function camHeightLimits() {
   const h = state.store?.height || 4.8;
+  if (viewMode === "top" || viewMode === "front" || viewMode === "back" || viewMode === "left" || viewMode === "right") {
+    return { min: 0.05, max: Math.max(h * 5, 36) };
+  }
+  if (viewMode === "orbit") {
+    return { min: 0.05, max: Math.max(h * 3.4, 24) };
+  }
   return { min: 0.05, max: h - 0.04 };
 }
 
@@ -1627,16 +1865,21 @@ function frameFullStore() {
 
 function setOrbitLimits(mode) {
   if (mode === "ceiling") {
-    orbit.minPolarAngle = Math.PI * 0.48;
-    orbit.maxPolarAngle = Math.PI * 0.78;
+    orbit.minPolarAngle = Math.PI * 0.55;
+    orbit.maxPolarAngle = Math.PI * 0.98;
+    return;
+  }
+  if (mode === "top") {
+    orbit.minPolarAngle = 0.02;
+    orbit.maxPolarAngle = Math.PI * 0.62;
     return;
   }
   if (mode === "inside") {
     orbit.minPolarAngle = 0.1;
     orbit.maxPolarAngle = Math.PI * 0.9;
   } else {
-    orbit.minPolarAngle = 0.08;
-    orbit.maxPolarAngle = Math.PI * 0.92;
+    orbit.minPolarAngle = 0.02;
+    orbit.maxPolarAngle = Math.PI * 0.94;
   }
 }
 
@@ -1711,17 +1954,19 @@ function setView(mode) {
         rebuildRoom();
         syncStoreSliders();
       }
-      setCameraFov(58);
-      camera.position.set(-width * 0.34, 1.12, depth * 0.36);
-      orbit.target.set(width * 0.06, height - 0.18, -depth * 0.14);
-      orbit.minDistance = 0.2;
-      orbit.maxDistance = Math.max(width, depth) * 1.4;
+      setCameraFov(64);
+      camera.position.set(0.08, height * 0.38, 0.12);
+      orbit.target.set(0, height - 0.06, 0);
+      orbit.minDistance = 0.4;
+      orbit.maxDistance = Math.max(width, depth) * 0.95;
     } else if (mode === "top") {
-      const d = storeFitDistance(50);
-      applyCameraRange(d);
-      setCameraFov(50);
-      orbit.target.set(0, 0.2, 0);
-      camera.position.set(0, d * 0.95, 0.02);
+      const span = Math.max(width, depth);
+      applyCameraRange(span * 2.2);
+      setCameraFov(48);
+      orbit.target.set(0, height * 0.12, 0);
+      camera.position.set(span * 0.2, height + span * 0.78, span * 0.46);
+      orbit.minDistance = 2.2;
+      orbit.maxDistance = span * 3.6;
     } else if (mode === "front") {
       const { depth, height } = state.store;
       if (state.store.frontStyle === "mobile") {
@@ -1839,8 +2084,10 @@ function addFromCatalog(type) {
     if (type === "pendant") extra.lift = Math.max(2.2, (state.store.height || 4.8) - 1.35);
     if (type === "crystalChandelier") {
       extra.lift = Math.max(3.6, (state.store.height || 4.8) - 0.14);
-      extra.lightColor = "#f2f6ff";
-      extra.lightPower = 86;
+      extra.color = "#161412";
+      extra.accent = "#c6a56a";
+      extra.lightColor = "#ffe4b8";
+      extra.lightPower = 72;
     }
     if (type === "ceilingCan") extra.lift = Math.max(2.8, (state.store.height || 4.8) - 0.28);
     if (type === "wallSconce") extra.lift = 1.75;
@@ -1940,6 +2187,7 @@ function serializable() {
 const SAVE_KEY = "atelier-store-autosave";
 const SAVE_KEY_OLD = "store-layout-3d";
 const PRESET_KEY = "atelier-last-preset";
+const DRESS_LAYOUT_REV = "atelier-showroom-1";
 let autosavePaused = false;
 let lastPresetId = localStorage.getItem(PRESET_KEY) || "mobile";
 let saveTimer = 0;
@@ -2002,6 +2250,24 @@ function applySavedState(data) {
   for (const id of Object.keys(savedSurfaces)) {
     surfaces[id] = { ...(surfaces[id] || {}), ...savedSurfaces[id] };
   }
+  if (surfaces.floor) {
+    const floorId = resolveFloorId(surfaces.floor.texture);
+    surfaces.floor = {
+      ...surfaces.floor,
+      texture: floorId,
+      color: surfaces.floor.color || "#ffffff",
+      repeat: surfaces.floor.repeat ?? floorRepeat(floorId),
+    };
+  }
+  if (surfaces.roof) {
+    const roofId = resolveRoofId(surfaces.roof.texture);
+    surfaces.roof = {
+      ...surfaces.roof,
+      texture: roofId,
+      color: surfaces.roof.color || "#ffffff",
+      repeat: surfaces.roof.repeat ?? roofRepeat(roofId),
+    };
+  }
   state = {
     ...base,
     ...data,
@@ -2016,128 +2282,71 @@ function applySavedState(data) {
     windows: Array.isArray(data.windows) ? data.windows.map((w) => ({ ...w })) : base.windows,
     furniture: Array.isArray(data.furniture) ? data.furniture.map((item) => ({ ...item })) : [],
   };
+  if (state.store?.sign?.text === "ATELIER" || lastPresetId === "dresses") {
+    for (const door of state.doors) {
+      if (door.color === "#2a221c" || door.color === "#1c1814") door.color = "#c6a56a";
+    }
+  }
   if (state.store.surfaces?.roof?.texture) {
     state.store.surfaces.roof.texture = resolveRoofId(state.store.surfaces.roof.texture);
-    state.store.surfaces.roof.color = "#ffffff";
+  }
+  if (state.store.floorLookRev !== "honey-oak-tex") {
+    state.store.floorLookRev = "honey-oak-tex";
+    if (state.store.surfaces?.floor) {
+      state.store.surfaces.floor.texture = "floor-oakplank";
+      state.store.surfaces.floor.color = "#ffffff";
+      state.store.surfaces.floor.repeat = floorRepeat("floor-oakplank");
+    }
   }
   document.querySelectorAll("[data-preset]").forEach((b) => b.classList.toggle("active", b.dataset.preset === lastPresetId));
-  ensureDressDisplays();
+}
+
+function dressLayoutStale(data) {
+  const dress =
+    data?.presetId === "dresses" ||
+    data?.store?.sign?.text === "ATELIER" ||
+    lastPresetId === "dresses";
+  return dress && data?.store?.layoutRev !== DRESS_LAYOUT_REV;
 }
 
 function ensureDressDisplays() {
-  const list = state.furniture || [];
-  const dressShop =
-    lastPresetId === "dresses" ||
-    state.store?.sign?.text === "ATELIER" ||
-    list.some((item) => item.type === "dressNiche" || item.type === "marbleIsland");
-  if (!dressShop) return;
-  const cleaned = list.filter((item) => {
-    if (item.type === "mannequinCase" && Math.abs(item.x || 0) <= 1.1 && (item.z || 0) >= 3.4) return false;
-    if (item.type === "sofa" && (item.z || 0) >= 3.2) return false;
-    return true;
-  });
-  if (cleaned.length !== list.length) {
-    list.length = 0;
-    list.push(...cleaned);
-  }
-  const L = state.store.lighting || {};
-  if ((L.sun ?? 0) < 0.45) {
-    state.store.lighting = { exposure: 0.88, sun: 0.72, fill: 0.22, hemi: 0.58, warmth: 0.74 };
-  }
-  const roof = state.store.surfaces?.roof;
-  if (roof) {
-    roof.texture = resolveRoofId(roof.texture || "roof-stepcove");
-    roof.color = "#ffffff";
-  }
-  for (const item of list) {
-    if (item.type === "marbleIsland" && (!item.stock || item.stock === "none")) item.stock = "dresses";
-    if (item.type === "dressNiche") {
-      item.width = 3.15;
-      item.height = 2.24;
-      item.depth = 0.46;
-      item.color = "#f4eee6";
-      item.accent = "#b08968";
-      item.stock = "dresses";
-      const snaps = [
-        [-3.55, -6.82, -3.85, -6.77],
-        [3.55, -6.82, 3.85, -6.77],
-        [-8.78, -2.55, -8.77, -2.45],
-        [-8.78, 2.15, -8.77, 2.15],
-        [8.78, -2.55, 8.77, -2.45],
-        [8.78, 2.15, 8.77, 2.15],
-      ];
-      for (const [ox, oz, nx, nz] of snaps) {
-        if (Math.hypot((item.x || 0) - ox, (item.z || 0) - oz) < 0.35) {
-          item.x = nx;
-          item.z = nz;
-          break;
-        }
-      }
-    }
-    if (item.type === "rack") {
-      item.width = item.width >= 1.3 ? 1 : item.width || 1;
-      item.height = Math.max(item.height || 0, 1.85);
-      item.depth = item.depth || 0.46;
-      item.color = "#c6a56a";
-      item.accent = "#c6a56a";
-      item.stock = "dresses";
+  const dress = lastPresetId === "dresses" || state.store?.sign?.text === "ATELIER";
+  if (!dress) return;
+  if (!state.store.fittingRoomBig) {
+    state.store.fittingRoomBig = true;
+    for (const item of state.furniture || []) {
+      if (item.type !== "fittingRoom") continue;
+      item.width = 1.82;
+      item.depth = 1.72;
+      item.height = 2.42;
     }
   }
-  const addIfMissing = (type, x, z, extra) => {
-    if (list.some((item) => item.type === type && Math.hypot((item.x || 0) - x, (item.z || 0) - z) < 0.85)) return;
-    list.push(newFurniture(type, x, z, extra));
-  };
-  addIfMissing("glowRunway", -2.55, 4.55, {
-    width: 1.35,
-    depth: 1.15,
-    height: 2.18,
-    color: "#e8dcc8",
-    accent: "#ffffff",
-    stock: "none",
-    lightOn: true,
-    lightPower: 28,
-    lightColor: "#ffffff",
-  });
-  for (const item of list) {
-    if (item.type !== "splitAc") continue;
-    item.width = 0.92;
-    item.height = 0.29;
-    item.depth = 0.21;
-    item.color = "#f3f5f7";
+  if (state.store.floorRoofRev !== "oakplank-pro") {
+    state.store.floorRoofRev = "oakplank-pro";
+    const S = state.store.surfaces;
+    if (S.floor) {
+      S.floor.texture = "floor-oakplank";
+      S.floor.color = "#ffffff";
+      S.floor.repeat = floorRepeat("floor-oakplank");
+    }
+    if (S.roof) {
+      S.roof.texture = "roof-plain";
+      S.roof.color = "#ffffff";
+      S.roof.repeat = 1;
+    }
   }
-  if (!list.some((item) => item.type === "splitAc")) {
-    const lift = Math.max(3.4, (state.store.height || 4.8) - 0.88);
-    const ac = {
-      logoMount: "wall",
-      lift,
-      width: 0.92,
-      height: 0.29,
-      depth: 0.21,
-      color: "#f3f5f7",
-      accent: "#c8ccd2",
-      stock: "none",
-    };
-    list.push(
-      newFurniture("splitAc", -8.55, -0.2, { ...ac, logoSnap: "left" }),
-      newFurniture("splitAc", 8.55, -0.2, { ...ac, logoSnap: "right" })
-    );
+  if (state.store.archMirrorRev !== "real-bronze") {
+    state.store.archMirrorRev = "real-bronze";
+    for (const item of state.furniture || []) {
+      if (item.type !== "goldArch") continue;
+      item.lift = 0.14;
+      item.width = 1.04;
+      item.height = 2.28;
+      item.depth = 0.1;
+      item.color = "#5a4a3c";
+      item.accent = "#5a4a3c";
+    }
   }
-  for (const [x, z] of [
-    [-5.55, 1.25],
-    [5.55, 1.25],
-    [-5.55, -2.15],
-    [5.55, -2.15],
-  ]) {
-    addIfMissing("rack", x, z, {
-      width: 1,
-      height: 1.85,
-      depth: 0.46,
-      color: "#c6a56a",
-      accent: "#c6a56a",
-      stock: "dresses",
-    });
-  }
-  state.furniture = list;
 }
 
 function saveLocal() {
@@ -2151,12 +2360,17 @@ function loadLocal() {
     return;
   }
   autosavePaused = true;
-  applySavedState(data);
-  rebuildAll().finally(() => {
+  const useNew = dressLayoutStale(data);
+  const job = useNew ? applyPreset("dresses") : Promise.resolve().then(() => {
+    applySavedState(data);
+    ensureMallShops();
+    return rebuildAll();
+  });
+  job.finally(() => {
     autosavePaused = false;
     persistLayout(false);
     deselect();
-    flashSave("Loaded saved layout");
+    flashSave(useNew ? "New showroom layout" : "Loaded saved layout");
   });
 }
 
@@ -2167,7 +2381,12 @@ async function restoreLayout() {
   const n = data.furniture?.length || 0;
   const blank = (data.presetId === "empty" || sign === "YOUR STORE") && n <= 1;
   if (blank && (localStorage.getItem(PRESET_KEY) || "mobile") !== "empty") return false;
+  if (dressLayoutStale(data)) {
+    await applyPreset("dresses");
+    return true;
+  }
   applySavedState(data);
+  ensureMallShops();
   await rebuildAll();
   deselect();
   return true;
@@ -2209,20 +2428,17 @@ function applyPreset(id) {
     state.store.sign.bg = "#121214";
     state.store.lighting = { exposure: 0.88, sun: 0.7, fill: 0.16, hemi: 0.68, warmth: 0.8 };
     paintWalls("#f7f1e8", "microcement");
-    S.floor.texture = "tz-glossy";
+    S.floor.texture = "floor-contrast";
     S.floor.color = "#ffffff";
     S.floor.repeat = 3;
     S.roof.color = "#ffffff";
-    S.roof.texture = "roof-goldleaf";
+    S.roof.texture = "roof-contrast";
     S.roof.repeat = 2;
     state.furniture = [
       f("rack", -6.85, -1.6, { rotY: Math.PI / 2, width: 1.0, height: 1.85, depth: 0.46, stock: "dresses", color: "#c6a56a", accent: "#c6a56a" }),
       f("rack", -6.85, 1.35, { rotY: Math.PI / 2, width: 1.0, height: 1.85, depth: 0.46, stock: "dresses", color: "#c6a56a", accent: "#c6a56a" }),
       f("rack", 6.85, -1.6, { rotY: -Math.PI / 2, width: 1.0, height: 1.85, depth: 0.46, stock: "dresses", color: "#c6a56a", accent: "#c6a56a" }),
       f("rack", 6.85, 1.35, { rotY: -Math.PI / 2, width: 1.0, height: 1.85, depth: 0.46, stock: "dresses", color: "#c6a56a", accent: "#c6a56a" }),
-      f("mannequin", -1.7, 4.15, { accent: "#4a1d4e", color: "#f3ece4" }),
-      f("mannequin", 0, 4.45, { accent: "#8b1e3f", color: "#f3ece4" }),
-      f("mannequin", 1.7, 4.15, { accent: "#1e3a5f", color: "#f3ece4" }),
       f("cube", -2.15, 0.15, { stock: "dresses", color: "#f7f3ec", accent: "#c6a56a", width: 0.85, height: 0.55, depth: 0.85 }),
       f("cube", 2.15, 0.15, { stock: "dresses", color: "#f7f3ec", accent: "#c6a56a", width: 0.85, height: 0.55, depth: 0.85 }),
       f("table", 0, 0.35, { width: 1.35, depth: 1.35, color: "#f7f3ec", accent: "#c6a56a", stock: "dresses" }),
@@ -2280,10 +2496,10 @@ function applyPreset(id) {
     S["wall-right"].repeat = 2.4;
     S["wall-right"].finish = "solid";
     S.floor.color = "#ffffff";
-    S.floor.texture = "tile-charcoal";
+    S.floor.texture = "floor-noir";
     S.floor.repeat = 3.2;
     S.roof.color = "#ffffff";
-    S.roof.texture = "roof-silk";
+    S.roof.texture = "roof-contrast";
     S.roof.repeat = 1;
     state.store.lighting = { exposure: 0.9, sun: 0.54, fill: 0.32, hemi: 0.68, warmth: 0.4 };
     state.doors[0].style = "slide";
@@ -2403,86 +2619,115 @@ function applyPreset(id) {
     ];
   } else if (id === "dresses") {
     state.store.sign.text = "ATELIER";
-    state.store.sign.bg = "#121214";
+    state.store.sign.bg = "#0c0a09";
     state.store.sign.fg = "#c6a56a";
-    S["wall-front"].color = "#f4f1ea";
+    S["wall-front"].color = "#1c1816";
+    S["wall-front"].texture = "silk";
     S["wall-front"].finish = "glass";
-    S["wall-back"].color = "#ffffff";
-    S["wall-back"].texture = "carrara";
+    S["wall-back"].color = "#2a221c";
+    S["wall-back"].texture = "fluted-walnut";
+    S["wall-back"].repeat = 1.6;
     S["wall-back"].finish = "solid";
-    S["wall-left"].color = "#ffffff";
-    S["wall-left"].texture = "carrara";
+    S["wall-left"].color = "#1c1816";
+    S["wall-left"].texture = "silk";
     S["wall-left"].finish = "solid";
-    S["wall-right"].color = "#ffffff";
-    S["wall-right"].texture = "carrara";
+    S["wall-right"].color = "#1c1816";
+    S["wall-right"].texture = "silk";
     S["wall-right"].finish = "solid";
     S.floor.color = "#ffffff";
-    S.floor.texture = "luxury";
-    S.floor.repeat = 2;
+    S.floor.texture = "floor-oakplank";
+    S.floor.repeat = floorRepeat("floor-oakplank");
     S.roof.color = "#ffffff";
-    S.roof.texture = "roof-stepcove";
-    S.roof.repeat = 2;
-    state.store.lighting = { exposure: 0.88, sun: 0.72, fill: 0.24, hemi: 0.58, warmth: 0.74 };
-    const niche = { color: "#f4eee6", accent: "#b08968", stock: "dresses", width: 3.15, height: 2.24, depth: 0.46 };
-    const island = { color: "#f7f3ec", accent: "#c6a56a", stock: "dresses" };
+    S.roof.texture = "roof-plain";
+    S.roof.repeat = 1;
+    state.store.layoutRev = DRESS_LAYOUT_REV;
+    state.store.fittingRoomBig = true;
+    state.store.floorRoofRev = "oakplank-pro";
+    state.store.floorLookRev = "honey-oak-tex";
+    state.store.archMirrorRev = "real-bronze";
+    state.store.lighting = { exposure: 0.8, sun: 0.46, fill: 0.12, hemi: 0.22, warmth: 0.9 };
+    state.doors[0].color = "#c6a56a";
+    state.doors[0].width = 2.7;
+    state.doors[0].height = 3.28;
+    state.windows.forEach((win) => {
+      if (win.wall !== "front") return;
+      win.style = "luxe";
+      win.height = 3.55;
+      win.sill = 0.08;
+    });
+    const ink = "#1a1612";
+    const brass = "#c6a56a";
+    const niche = { color: ink, accent: brass, stock: "dresses", width: 3.05, height: 2.28, depth: 0.46 };
+    const rail = { width: 1.85, height: 1.88, depth: 0.46, color: ink, accent: brass, stock: "dresses", rotY: Math.PI / 2 };
+    const pot = { pot: "gold", color: ink, accent: "#3f8f5a" };
+    const plinth = { color: ink, accent: brass, stock: "dresses", width: 0.42, depth: 0.42, height: 0.86 };
     state.furniture = [
-      f("goldArch", 0, -6.78, { width: 1.55, height: 2.95, depth: 0.16, color: "#f7f3ec", accent: "#c6a56a" }),
-      f("dressNiche", -3.85, -6.77, { ...niche }),
-      f("dressNiche", 3.85, -6.77, { ...niche }),
-      f("dressNiche", -8.77, -2.45, { rotY: Math.PI / 2, ...niche }),
-      f("dressNiche", -8.77, 2.15, { rotY: Math.PI / 2, ...niche }),
-      f("dressNiche", 8.77, -2.45, { rotY: -Math.PI / 2, ...niche }),
-      f("dressNiche", 8.77, 2.15, { rotY: -Math.PI / 2, ...niche }),
-      f("marbleIsland", 0, 1.25, { width: 3.55, depth: 0.92, height: 0.4, ...island }),
-      f("marbleIsland", 0, -2.15, { width: 3.55, depth: 0.92, height: 0.4, ...island }),
-      lamp("crystalChandelier", 0, -0.45, {
-        width: 1.18,
-        depth: 1.18,
-        height: 0.52,
+      f("goldArch", 0, -6.78, { width: 1.04, height: 2.28, depth: 0.1, lift: 0.14, color: "#5a4a3c", accent: "#5a4a3c" }),
+      f("dressNiche", -3.95, -6.77, { ...niche }),
+      f("dressNiche", 3.95, -6.77, { ...niche }),
+      f("dressNiche", -8.77, -2.85, { rotY: Math.PI / 2, ...niche }),
+      f("dressNiche", -8.77, 1.85, { rotY: Math.PI / 2, ...niche }),
+      f("dressNiche", 8.77, -2.85, { rotY: -Math.PI / 2, ...niche }),
+      f("dressNiche", 8.77, 1.85, { rotY: -Math.PI / 2, ...niche }),
+      lamp("crystalChandelier", 0, 0.55, {
+        width: 1.38,
+        depth: 1.38,
+        height: 0.58,
         lift: 4.66,
-        lightPower: 86,
-        lightColor: "#f2f6ff",
-        color: "#e8eef4",
-        accent: "#c8d0d8",
+        lightPower: 64,
+        lightColor: "#ffe4b8",
+        color: ink,
+        accent: brass,
         stock: "none",
       }),
-      f("rack", -5.55, 1.25, { width: 1.0, height: 1.85, depth: 0.46, color: "#c6a56a", accent: "#c6a56a", stock: "dresses" }),
-      f("rack", 5.55, 1.25, { width: 1.0, height: 1.85, depth: 0.46, color: "#c6a56a", accent: "#c6a56a", stock: "dresses" }),
-      f("rack", -5.55, -2.15, { width: 1.0, height: 1.85, depth: 0.46, color: "#c6a56a", accent: "#c6a56a", stock: "dresses" }),
-      f("rack", 5.55, -2.15, { width: 1.0, height: 1.85, depth: 0.46, color: "#c6a56a", accent: "#c6a56a", stock: "dresses" }),
-      f("glowRunway", -2.55, 4.55, {
-        width: 1.35,
-        depth: 1.15,
-        height: 2.18,
-        color: "#e8dcc8",
-        accent: "#ffffff",
-        stock: "none",
-        lightOn: false,
-        lightPower: 0,
-      }),
-      f("marblePlinth", 5.35, 4.55, { color: "#f7f3ec", accent: "#c6a56a", stock: "shoes" }),
-      f("plant", -6.85, 5.25, { pot: "gold", color: "#f7f3ec", accent: "#3f8f5a", height: 1.15, width: 0.55 }),
-      f("desk", 6.85, 5.15, { width: 1.45, depth: 0.7, color: "#f3ebe0", accent: "#c6a56a" }),
-      f("splitAc", -8.55, -0.2, {
+      lamp("pendant", -3.35, 2.85, { lift: 3.08, lightPower: 30, lightColor: "#ffe4b8", color: ink, accent: brass }),
+      lamp("pendant", 6.15, 4.25, { lift: 3.12, lightPower: 28, lightColor: "#ffe4b8", color: ink, accent: brass }),
+      f("sofa", -4.15, 2.85, { width: 2.25, depth: 0.84, height: 0.74, color: "#121014", accent: brass, rotY: Math.PI / 2 }),
+      f("coffeeTable", -2.72, 2.85, { width: 1.02, depth: 0.56, height: 0.4, color: ink, accent: brass, stock: "none" }),
+      f("loungeChair", -1.88, 3.55, { width: 0.78, depth: 0.82, height: 0.8, color: "#121014", accent: brass, rotY: Math.PI }),
+      f("ottoman", -2.72, 1.95, { width: 0.56, depth: 0.56, height: 0.38, color: "#161210", accent: brass }),
+      f("sideboard", 7.4, -0.55, { width: 2.05, depth: 0.42, height: 0.74, color: ink, accent: brass, rotY: -Math.PI / 2 }),
+      f("plant", -4.15, 4.05, { ...pot, height: 1.1, width: 0.48 }),
+      f("plant", -4.15, 1.65, { ...pot, height: 1.02, width: 0.46 }),
+      f("mannequin", -2.55, 5.22, { outfit: "suit", color: "#f3ece4", accent: "#1a1c20", rotY: 0.12, width: 0.56, depth: 0.5, height: 1.88 }),
+      f("mannequin", 2.55, 5.22, { outfit: "cool", color: "#f3ece4", accent: "#2a241e", rotY: -0.12, width: 0.56, depth: 0.5, height: 1.88 }),
+      f("rack", -6.25, 1.35, { ...rail }),
+      f("rack", -6.25, -1.85, { ...rail }),
+      f("rack", 6.25, 1.35, { ...rail }),
+      f("rack", 6.25, -1.85, { ...rail }),
+      f("marblePlinth", -1.72, 2.15, { ...plinth, stock: "shoes" }),
+      f("marblePlinth", 1.72, 2.15, { ...plinth, stock: "shoes" }),
+      f("cube", -1.72, -0.85, { width: 0.5, depth: 0.5, height: 0.62, color: ink, accent: brass, stock: "dresses" }),
+      f("cube", 1.72, -0.85, { width: 0.5, depth: 0.5, height: 0.62, color: ink, accent: brass, stock: "dresses" }),
+      f("table", 0, -3.05, { width: 1.35, depth: 0.88, height: 0.78, color: ink, accent: brass, stock: "dresses" }),
+      f("desk", 6.35, 4.25, { width: 1.55, depth: 0.72, color: ink, accent: brass, rotY: -Math.PI / 2 }),
+      f("logoMat", 0, 6.05, { width: 2.25, depth: 1.12, color: "#0c0a09", accent: brass }),
+      f("fittingRoom", -7.05, -5.85, { width: 1.82, depth: 1.72, height: 2.42, color: ink, accent: "#3a2a1e" }),
+      f("fittingRoom", 7.05, -5.85, { width: 1.82, depth: 1.72, height: 2.42, color: ink, accent: "#3a2a1e" }),
+      f("mirror", -5.05, -5.35, { width: 0.68, height: 1.78, color: "#d5e2ec", accent: brass }),
+      f("mirror", 5.05, -5.35, { width: 0.68, height: 1.78, color: "#d5e2ec", accent: brass }),
+      f("plant", -7.25, 5.45, { ...pot, height: 1.18, width: 0.54 }),
+      f("plant", 7.25, 5.45, { ...pot, height: 1.18, width: 0.54 }),
+      f("splitAc", -8.55, -0.15, {
         logoMount: "wall",
         logoSnap: "left",
         lift: 3.92,
         width: 0.92,
         height: 0.29,
         depth: 0.21,
-        color: "#f3f5f7",
-        accent: "#c8ccd2",
+        color: "#2a2a2c",
+        accent: "#8a8070",
         stock: "none",
       }),
-      f("splitAc", 8.55, -0.2, {
+      f("splitAc", 8.55, -0.15, {
         logoMount: "wall",
         logoSnap: "right",
         lift: 3.92,
         width: 0.92,
         height: 0.29,
         depth: 0.21,
-        color: "#f3f5f7",
-        accent: "#c8ccd2",
+        color: "#2a2a2c",
+        accent: "#8a8070",
         stock: "none",
       }),
       f("logo", 0, -6.91, {
@@ -2493,8 +2738,8 @@ function applyPreset(id) {
         logoSnap: "back",
         rotY: 0,
         color: "#121214",
-        accent: "#c6a56a",
-        lift: 3.42,
+        accent: brass,
+        lift: 3.48,
         width: 0.62,
       }),
     ];
@@ -2505,10 +2750,10 @@ function applyPreset(id) {
     state.store.lighting = { exposure: 0.84, sun: 0.64, fill: 0.16, hemi: 0.66, warmth: 0.84 };
     paintWalls("#f3ebe0", "microcement");
     S.floor.color = "#ffffff";
-    S.floor.texture = "herringbone";
+    S.floor.texture = "floor-chevron";
     S.floor.repeat = 5;
     S.roof.color = "#ffffff";
-    S.roof.texture = "roof-walnutinlay";
+    S.roof.texture = "roof-lattice";
     S.roof.repeat = 2;
     state.doors[0].color = "#c6a56a";
     state.furniture = [
@@ -2556,10 +2801,10 @@ function applyPreset(id) {
     S["wall-left"].color = "#171412";
     S["wall-right"].color = "#171412";
     S.floor.color = "#ffffff";
-    S.floor.texture = "terrazzo-noir";
+    S.floor.texture = "floor-noir";
     S.floor.repeat = 2.4;
     S.roof.color = "#ffffff";
-    S.roof.texture = "roof-noir";
+    S.roof.texture = "roof-contrast";
     S.roof.repeat = 2;
     S["wall-back"].texture = "tadelakt";
     S["wall-back"].repeat = 1.6;
@@ -2664,11 +2909,11 @@ function applyPreset(id) {
     S["wall-left"].texture = "clay";
     S["wall-right"].color = "#f6ebe0";
     S["wall-right"].texture = "clay";
-    S.floor.texture = "walnut";
+    S.floor.texture = "floor-chevron";
     S.floor.color = "#ffffff";
     S.floor.repeat = 5;
     S.roof.color = "#ffffff";
-    S.roof.texture = "roof-walnutinlay";
+    S.roof.texture = "roof-lattice";
     S.roof.repeat = 2;
     state.furniture = [
       f("counter", 0, -4.5, { width: 6.2, color: "#5b3a29", accent: "#c4a574", stock: "cafe" }),
@@ -2702,11 +2947,11 @@ function applyPreset(id) {
     state.store.sign.fg = "#f6f3ea";
     state.store.lighting = { exposure: 0.88, sun: 0.68, fill: 0.2, hemi: 0.7, warmth: 0.52 };
     paintWalls("#f7f4ee", "drywall");
-    S.floor.texture = "tz-sage";
+    S.floor.texture = "floor-arabesque";
     S.floor.color = "#ffffff";
     S.floor.repeat = 3;
     S.roof.color = "#ffffff";
-    S.roof.texture = "roof-champagne";
+    S.roof.texture = "roof-contrast";
     S.roof.repeat = 2;
     state.furniture = [
       newFurniture("cashier", 4.2, 4.6),
@@ -2759,10 +3004,10 @@ function applyPreset(id) {
     state.store.lighting = { exposure: 0.9, sun: 0.62, fill: 0.22, hemi: 0.72, warmth: 0.26 };
     paintWalls("#f4f8fb", "silk");
     S.floor.color = "#ffffff";
-    S.floor.texture = "tile-white";
+    S.floor.texture = "floor-bone";
     S.floor.repeat = 4;
     S.roof.color = "#ffffff";
-    S.roof.texture = "roof-pearl";
+    S.roof.texture = "roof-lattice";
     S.roof.repeat = 2;
     state.furniture = [
       newFurniture("counter", 0, -4.4),
@@ -2806,18 +3051,21 @@ function applyPreset(id) {
     state.store.sign.text = "YOUR STORE";
     state.furniture = [newFurniture("desk", 0, 2.2)];
   }
+  ensureMallShops();
   state.furniture.forEach((item) => {
-    item.id = uid();
+    if (isMallItem(item) && item.mallKey) item.id = item.mallKey;
+    else item.id = uid();
     if ((item.type === "logo" || item.type === "wallSconce" || item.type === "ledBanner" || item.type === "windowVinyl" || item.type === "hoursPlaque" || item.type === "slatSignWall" || item.type === "splitAc") && item.logoSnap) {
       snapLogoToWall(item, item.logoSnap);
     }
   });
-  rebuildAll().then(() => {
+  const done = rebuildAll().then(() => {
     persistLayout(false);
     frameFullStore();
     invalidate(900);
   });
   deselect();
+  return done;
 }
 
 function debounce(fn, ms) {
@@ -2828,10 +3076,15 @@ function debounce(fn, ms) {
   };
 }
 
+let lastViewW = 0;
+let lastViewH = 0;
 function resize() {
   const wrap = canvas.parentElement;
-  const w = Math.max(1, wrap.clientWidth);
-  const h = Math.max(1, wrap.clientHeight);
+  const w = Math.max(1, Math.floor(wrap.clientWidth));
+  const h = Math.max(1, Math.floor(wrap.clientHeight));
+  if (w === lastViewW && h === lastViewH) return;
+  lastViewW = w;
+  lastViewH = h;
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   renderer.setPixelRatio(currentDpr());
@@ -2851,7 +3104,9 @@ function onPointer(event) {
   const hits = ray.intersectObjects([...roomRoot.children, ...furnitureRoot.children], true);
   const hit = hits.find((h) => findSelectable(h.object));
   if (!hit) return deselect();
-  select(findSelectable(hit.object));
+  const obj = findSelectable(hit.object);
+  select(obj);
+  if (obj?.userData?.type === "fittingRoom") toggleFittingRoom(obj.userData.id);
 }
 
 function bindUI() {
@@ -2925,9 +3180,13 @@ function bindUI() {
       if (isRoofTexture(surface.texture)) {
         const roofId = resolveRoofId(surface.texture);
         surface.texture = roofId;
-        surface.repeat = roofId === "roof-walnutinlay" || roofId === "roof-bronze" || roofId === "roof-fluted" ? 6 : 2;
+        surface.repeat = roofRepeat(roofId);
       } else {
-        surface.repeat = isTileTexture(surface.texture) ? 4 : Math.max(surface.repeat || 1, 3);
+        surface.repeat = isTileTexture(surface.texture)
+          ? 4
+          : surface.texture && surface.texture.startsWith("floor-")
+            ? floorRepeat(surface.texture)
+            : Math.max(surface.repeat || 1, 3);
       }
     }
     await applyAllSurfaces();
@@ -2957,8 +3216,9 @@ function bindUI() {
       rebuildFurniture();
     }, 80);
     el.addEventListener("input", () => {
+      if (uiLock) return;
       state.store[key] = Number(el.value);
-      syncStoreSliders();
+      document.getElementById(`val-${key}`).textContent = `${Number(el.value).toFixed(1)} m`;
       apply();
     });
   };
@@ -3178,6 +3438,10 @@ function bindUI() {
     item.color = document.getElementById("furn-color").value;
     item.accent = document.getElementById("furn-accent").value;
     item.stock = document.getElementById("furn-stock").value;
+    const outfitSel = document.getElementById("furn-outfit");
+    if (outfitSel && (item.type === "mannequin" || item.type === "mannequinCase" || item.type === "glowRunway")) {
+      item.outfit = outfitSel.value;
+    }
     item.width = Number(document.getElementById("furn-w").value);
     item.depth = Number(document.getElementById("furn-d").value);
     item.height = Number(document.getElementById("furn-h").value);
@@ -3243,9 +3507,11 @@ function bindUI() {
     const next = raw.startsWith("+") || raw.startsWith("-") ? current + Number(raw) : Number(raw);
     applyFurnRotation(item, next);
   });
-  ["furn-color", "furn-accent", "furn-stock", "furn-w", "furn-d", "furn-h", "logo-letter", "logo-style", "logo-word", "logo-mount", "logo-snap", "logo-lift", "banner-text", "banner-shape", "banner-snap", "banner-lift", "light-on", "light-color", "light-power", "light-lift", "light-snap"].forEach((id) => {
-    document.getElementById(id).addEventListener("input", furnUpdate);
-    document.getElementById(id).addEventListener("change", furnUpdate);
+  ["furn-color", "furn-accent", "furn-stock", "furn-outfit", "furn-w", "furn-d", "furn-h", "logo-letter", "logo-style", "logo-word", "logo-mount", "logo-snap", "logo-lift", "banner-text", "banner-shape", "banner-snap", "banner-lift", "light-on", "light-color", "light-power", "light-lift", "light-snap"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("input", furnUpdate);
+    el.addEventListener("change", furnUpdate);
   });
   document.getElementById("logo-style").innerHTML = LOGO_STYLES.map(
     (s) => `<option value="${s.id}">${s.label}</option>`
@@ -3345,7 +3611,7 @@ function bindUI() {
       idleT = 0;
       orbit.autoRotate = false;
       if (introT > 0) introT = 0;
-      if (viewMode === "walk" || (orbit.enabled && viewMode !== "ceiling" && viewMode !== "top")) {
+      if (viewMode === "walk" || (orbit.enabled && viewMode !== "ceiling")) {
         walkStyleZoom(wheelStep(e));
       }
       invalidate(900);
@@ -3401,21 +3667,17 @@ window.addEventListener("keydown", (e) => {
     e.preventDefault();
     duplicateSelected();
   }
-  if ((e.ctrlKey || e.metaKey) && e.code === "KeyG") {
-    e.preventDefault();
-    chooseWalkWho("girl");
-  }
   if ((e.ctrlKey || e.metaKey) && e.code === "KeyM") {
     e.preventDefault();
-    chooseWalkWho("man");
-  }
-  if ((e.ctrlKey || e.metaKey) && e.code === "KeyB") {
-    e.preventDefault();
-    chooseWalkWho("both");
+    chooseWalkWho();
   }
   if (e.key === "1") setMode("translate");
   if (e.key === "2") setMode("rotate");
   if (e.key === "3") setMode("scale");
+  if (e.code === "KeyE") {
+    const booth = (state.furniture || []).find((f) => f.type === "fittingRoom" && nearFittingEntrance(f, walkPos));
+    if (booth) toggleFittingRoom(booth.id);
+  }
   if (e.key === "Escape") {
     if (viewMode === "walk") setView("orbit");
     else deselect();
@@ -3449,10 +3711,12 @@ function tick() {
   const intro = introT > 0;
   const moving = keys.w || keys.a || keys.s || keys.d;
   const acDirty = updateAcDisplays(now);
-  const live = intro || transform.dragging || moving || now < renderUntil || acDirty || roomRoot.children.length === 0;
+  const walkMans = hasMannequinWalks();
+  const live = intro || transform.dragging || moving || now < renderUntil || acDirty || roomRoot.children.length === 0 || walking || walkMans;
   if (!live) return;
 
   const dt = Math.min(clock.getDelta(), 0.05);
+  if (walkMans) updateMannequinWalks(dt);
   if (walking) {
     const speed = WALK_SPEED * dt;
     walkFwd.set(-Math.sin(walkYaw), 0, -Math.cos(walkYaw));
@@ -3475,6 +3739,7 @@ function tick() {
       nx += walkRight.x * speed;
       nz += walkRight.z * speed;
     }
+    syncFittingRoomAccess();
     tryWalkMove(nx, nz);
     walkPos.y = 0;
     const actor = ensureWalkActor();
@@ -3482,21 +3747,13 @@ function tick() {
       actor.root.visible = true;
       actor.root.position.copy(walkPos);
       actor.root.rotation.y = Math.atan2(walkFwd.x, walkFwd.z);
-      if (walkWho === "both") {
-        const wantSide = pickGirlSide(walkPos.x, walkPos.z, actor.girls?.[0]?.side ?? WALK_GIRL_SIDE);
-        for (const girl of actor.girls || []) {
-          girl.side = THREE.MathUtils.damp(girl.side ?? WALK_GIRL_SIDE, wantSide, 10, dt);
-        }
-      } else {
-        for (const girl of actor.girls || []) girl.side = 0;
-      }
       actor.play(moving ? "walk" : "idle");
       if (actor.update) actor.update(dt, moving);
       else actor.mixer.update(dt);
     }
     const back = walkDist * Math.cos(walkPitch);
-    const lookX = walkPos.x + (walkWho === "both" ? walkRight.x * 0.28 : 0);
-    const lookZ = walkPos.z + (walkWho === "both" ? walkRight.z * 0.28 : 0);
+    const lookX = walkPos.x;
+    const lookZ = walkPos.z;
     camera.position.set(
       walkPos.x - walkFwd.x * back,
       walkPos.y + 1.48 + walkDist * Math.sin(walkPitch) * 0.55,
@@ -3519,7 +3776,7 @@ function tick() {
       invalidate(80);
     }
     orbit.update();
-    if (viewMode !== "ceiling") {
+    if (viewMode !== "ceiling" && viewMode !== "top") {
       camera.position.y = clampCamHeight(camera.position.y);
     }
   }
@@ -3546,6 +3803,10 @@ function tick() {
 }
 
 window.addEventListener("resize", debounce(resize, 80));
+if (typeof ResizeObserver !== "undefined" && canvas.parentElement) {
+  const viewWatch = new ResizeObserver(() => resize());
+  viewWatch.observe(canvas.parentElement);
+}
 window.addEventListener("beforeunload", () => persistLayout(false));
 window.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "hidden") persistLayout(false);
@@ -3556,18 +3817,17 @@ try {
   console.error("bindUI failed", err);
 }
 resize();
-try {
-  rebuildRoom();
-  rebuildFurniture();
-} catch (err) {
-  console.error("first room failed", err);
-}
 setView("orbit");
 invalidate(4000);
 tick();
 renderer.render(scene, camera);
 requestAnimationFrame(async () => {
   installEnvironment();
+  try {
+    await preloadShopModels();
+  } catch (err) {
+    console.error("model preload failed", err);
+  }
   autosavePaused = true;
   let restored = false;
   try {
@@ -3579,16 +3839,17 @@ requestAnimationFrame(async () => {
   if (!restored) {
     const preset = localStorage.getItem(PRESET_KEY) || "mobile";
     try {
-      applyPreset(preset);
+      await applyPreset(preset);
     } catch (err) {
       console.error("preset failed", err);
-      applyPreset("empty");
+      await applyPreset("empty");
     }
     document.querySelector(`[data-preset="${preset}"]`)?.classList.add("active");
   } else {
     frameFullStore();
     persistLayout(false);
   }
+  setBootLoader(false);
   invalidate(1200);
   renderer.render(scene, camera);
   loadPhotoTextures().then(() => {

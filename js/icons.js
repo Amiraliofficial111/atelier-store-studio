@@ -46,6 +46,7 @@ export const ICONS = {
   haloDesk: s(`<path d="M3 14h12v6H3z"/><path d="M15 14h6v10H15z"/><path d="M5 12h8v2H5z"/>`),
   table: s(`<ellipse cx="12" cy="9" rx="8" ry="3.2"/><path d="M7 9v9M17 9v9M5 18h14"/>`),
   shelf: s(`<path d="M5 5h14M5 10h14M5 15h14M5 20h14"/><path d="M6 5v15M18 5v15"/>`),
+  steelShelf: s(`<path d="M5 5h14M5 10h14M5 15h14M5 20h14"/><path d="M6 5v15M18 5v15M8 5l8 15M16 5 8 20"/>`),
   ledGlassBay: s(`<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9.3 3v18M14.7 3v18M4 8h16M4 13h16M4 18h16"/>`),
   phoneIsland: s(`<path d="M5 18h14v2H5z"/><rect x="8" y="4" width="8" height="12" rx="1.5"/><path d="M10.5 14.5h3"/>`),
   phoneBar: s(`<path d="M3 14h18v5H3z"/><path d="M5 14V10h14v4"/><path d="M6 12h2M10 12h2M14 12h2"/>`),

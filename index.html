@@ -4,8 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Atelier — Premium Store Studio</title>
-  <link rel="stylesheet" href="css/style.css?v=walkkeys1" />
-  <link rel="modulepreload" href="js/main.js?v=sofaoff2" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="stylesheet" href="css/style.css?v=resize1" />
+  <link rel="modulepreload" href="js/main.js?v=pre2" />
   <link rel="modulepreload" href="./node_modules/three/build/three.module.js" />
 </head>
 <body>
@@ -31,9 +33,6 @@
           <button type="button" class="tool-btn" data-view="right" data-icon="right" title="Right view"><span class="btn-label">Right</span></button>
           <button type="button" class="tool-btn" data-view="inside" data-icon="inside" title="Inside view"><span class="btn-label">Inside</span></button>
           <button type="button" class="tool-btn" data-view="walk" data-icon="walk" title="Walk inside"><span class="btn-label">Walk</span></button>
-          <button type="button" class="tool-btn" data-walk-who="man" data-icon="mannequin" title="Walk as man (Ctrl+M)"><span class="btn-label">Man</span></button>
-          <button type="button" class="tool-btn" data-walk-who="girl" data-icon="girl" title="Walk as girl (Ctrl+G)"><span class="btn-label">Girl</span></button>
-          <button type="button" class="tool-btn" data-walk-who="both" data-icon="walk" title="Walk as both (Ctrl+B)"><span class="btn-label">Both</span></button>
         </div>
 
         <div class="toolbar-group icon-rail" data-label="Look">
@@ -67,6 +66,12 @@
     <div class="workspace">
       <main class="viewport">
         <canvas id="scene"></canvas>
+        <div id="boot-loader" class="boot-loader">
+          <div class="boot-loader-card">
+            <span class="boot-spinner" aria-hidden="true"></span>
+            <p data-boot-text>Loading models…</p>
+          </div>
+        </div>
         <div class="viewport-fx" aria-hidden="true"></div>
         <div class="hud hud-top">
           <span class="view-badge" id="view-badge">Inside</span>
@@ -74,12 +79,7 @@
         </div>
         <div class="save-toast" id="save-toast" hidden>Saved</div>
         <div class="viewport-hint" id="walk-hint" hidden style="display:none">
-          <div class="walk-pick">
-            <button type="button" class="walk-who" data-walk-who="man">Man</button>
-            <button type="button" class="walk-who" data-walk-who="girl">Girl</button>
-            <button type="button" class="walk-who" data-walk-who="both">Both</button>
-          </div>
-          <span>Ctrl+M man · Ctrl+G girl · Ctrl+B both · WASD · Esc</span>
+          <span>WASD to walk · Esc to exit</span>
         </div>
         <div class="viewport-legend">
           <span class="legend-chip">Click a wall, floor or fixture to edit</span>
@@ -294,6 +294,15 @@
               <option value="grocery">Grocery</option>
               <option value="cafe">Cafe</option>
               <option value="pharmacy">Pharmacy</option>
+            </select>
+          </label>
+          <label class="field" id="furn-outfit-field" hidden>
+            <span>Man model</span>
+            <select id="furn-outfit">
+              <option value="lumber">Lumberjack</option>
+              <option value="cool">Cool man</option>
+              <option value="suit">Business suit</option>
+              <option value="casual">Casual</option>
             </select>
           </label>
           <div id="furn-desk-products" hidden>
@@ -561,6 +570,6 @@
       }
     }
   </script>
-  <script type="module" src="js/main.js?v=sofaoff2"></script>
+  <script type="module" src="js/main.js?v=pre2"></script>
 </body>
 </html>

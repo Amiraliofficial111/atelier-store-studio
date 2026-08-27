@@ -4,7 +4,7 @@ import { createFurniture, newFurniture } from "./furniture.js";
 import { makePresetTexture, makeNormalFromAlbedo, resolveRoofId } from "./textures.js";
 
 function mappedMat(color, texId, extra = {}) {
-  if (!QUALITY.high) {
+  if (!QUALITY.studio) {
     return new THREE.MeshStandardMaterial({
       color,
       roughness: extra.roughness ?? 0.42,
@@ -38,6 +38,25 @@ function mappedMat(color, texId, extra = {}) {
     });
   }
   return new THREE.MeshStandardMaterial(spec);
+}
+
+function bronzeMat(color = "#2a221c") {
+  if (QUALITY.physical) {
+    return new THREE.MeshPhysicalMaterial({
+      color,
+      metalness: 0.78,
+      roughness: 0.3,
+      envMapIntensity: 1.15,
+      clearcoat: 0.2,
+      clearcoatRoughness: 0.38,
+    });
+  }
+  return new THREE.MeshStandardMaterial({
+    color,
+    metalness: 0.74,
+    roughness: 0.32,
+    envMapIntensity: 1.05,
+  });
 }
 
 function brassMat() {
@@ -333,28 +352,6 @@ function makeMallSlideDoor(door, heightLimit) {
   group.add(meshBox(0.018, h, 0.04, chrome, w - 0.01, h / 2, faceZ - 0.12));
   group.add(meshBox(w + 0.04, 0.02, 0.05, chrome, w / 2, h + 0.012, faceZ - 0.04));
 
-  const screenW = w - 0.06;
-  const screenH = 0.5;
-  const screenY = h + 0.32;
-  group.add(meshBox(screenW + 0.06, screenH + 0.05, 0.035, dark, w / 2, screenY, faceZ + 0.004));
-  const ad = makeStorefrontAdTex("header");
-  const ledMat = new THREE.MeshStandardMaterial({
-    map: ad,
-    roughness: 0.08,
-    metalness: 0.02,
-    emissive: "#ffffff",
-    emissiveMap: ad,
-    emissiveIntensity: 1.28,
-  });
-  const screen = new THREE.Mesh(UNIT_PLANE, ledMat);
-  screen.scale.set(screenW, screenH, 1);
-  screen.position.set(w / 2, screenY, faceZ + 0.024);
-  group.add(screen);
-  const backAd = screen.clone();
-  backAd.rotation.y = Math.PI;
-  backAd.position.z = -faceZ + 0.02;
-  group.add(backAd);
-
   const mark = makePhoneMarkTex();
   const plaque = new THREE.Mesh(
     UNIT_PLANE,
@@ -426,31 +423,64 @@ function makeMallSlideDoor(door, heightLimit) {
   return group;
 }
 
-function makeDoor(door, heightLimit) {
-  if (door.style === "slide") return makeMallSlideDoor(door, heightLimit);
+function makeLuxuryDoubleDoor(door, heightLimit) {
   const w = door.width;
   const h = Math.min(door.height, heightLimit - 0.05);
   const group = new THREE.Group();
   const opts = glassOpts(door);
   const hinge = new THREE.Group();
   const leaf = new THREE.Group();
-  const count = door.style === "double" ? 2 : 1;
-  const leafW = w / count;
-  const chrome = brassMat();
+  const gold = brassMat();
+  const brass = gold;
+  const leafW = w / 2;
 
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < 2; i++) {
     const panel = new THREE.Group();
-    addFrame(panel, leafW, h, 0.03, 0.05, chrome, true);
-    const pane = makeGlassPane(leafW - 0.05, h - 0.055, opts);
-    pane.position.set(leafW / 2, h / 2, 0);
+    addFrame(panel, leafW, h, 0.058, 0.072, gold, true);
+    const reveal = new THREE.Group();
+    addFrame(reveal, leafW - 0.07, h - 0.08, 0.012, 0.042, gold, true);
+    reveal.position.set(0.035, 0.04, 0.012);
+    panel.add(reveal);
+    const pane = makeGlassPane(leafW - 0.14, h - 0.18, opts);
+    pane.position.set(leafW / 2, h / 2 + 0.02, 0);
     panel.add(pane);
-    const hx = i === 0 && count > 1 ? leafW - 0.1 : 0.1;
-    panel.add(meshBox(0.022, 0.95, 0.022, chrome, hx, h * 0.48, 0.04));
+    panel.add(meshBox(leafW - 0.1, 0.18, 0.032, gold, leafW / 2, 0.15, 0.028));
+    panel.add(meshBox(leafW - 0.14, 0.008, 0.02, gold, leafW / 2, 0.24, 0.04));
+    const hx = i === 0 ? leafW - 0.13 : 0.13;
+    panel.add(meshBox(0.032, 0.14, 0.016, brass, hx, h * 0.52, 0.02));
+    panel.add(meshBox(0.016, 1.08, 0.016, brass, hx, h * 0.5, 0.058));
+    panel.add(meshBox(0.022, 0.022, 0.022, brass, hx, h * 0.5 + 0.5, 0.058));
+    panel.add(meshBox(0.022, 0.022, 0.022, brass, hx, h * 0.5 - 0.5, 0.058));
     panel.position.x = i * leafW;
     leaf.add(panel);
   }
-  group.add(meshBox(w + 0.08, 0.04, 0.08, chrome, w / 2, 0.02, 0));
+  group.add(meshBox(0.028, h - 0.1, 0.08, gold, w / 2, h / 2, 0.012));
+  group.add(meshBox(w + 0.18, 0.05, 0.16, gold, w / 2, 0.025, 0.02));
+  group.add(meshBox(w + 0.1, 0.012, 0.09, gold, w / 2, 0.054, 0.03));
 
+  hinge.add(leaf);
+  hinge.rotation.y = door.open ? -Math.PI * 0.72 : 0;
+  group.add(hinge);
+  group.userData = { selectable: true, kind: "door", id: door.id };
+  return group;
+}
+
+function makeDoor(door, heightLimit) {
+  if (door.style === "slide") return makeMallSlideDoor(door, heightLimit);
+  if (door.style === "double") return makeLuxuryDoubleDoor(door, heightLimit);
+  const w = door.width;
+  const h = Math.min(door.height, heightLimit - 0.05);
+  const group = new THREE.Group();
+  const opts = glassOpts(door);
+  const hinge = new THREE.Group();
+  const leaf = new THREE.Group();
+  const chrome = brassMat();
+  addFrame(leaf, w, h, 0.03, 0.05, chrome, true);
+  const pane = makeGlassPane(w - 0.05, h - 0.055, opts);
+  pane.position.set(w / 2, h / 2, 0);
+  leaf.add(pane);
+  leaf.add(meshBox(0.022, 0.95, 0.022, chrome, 0.1, h * 0.48, 0.04));
+  group.add(meshBox(w + 0.08, 0.04, 0.08, chrome, w / 2, 0.02, 0));
   hinge.add(leaf);
   hinge.rotation.y = door.open ? -Math.PI * 0.72 : 0;
   group.add(hinge);
@@ -463,8 +493,8 @@ function meshBox(w, h, d, mat, x, y, z) {
   m.scale.set(Math.max(0.002, w), Math.max(0.002, h), Math.max(0.002, d));
   m.position.set(x, y, z);
   const vol = w * h * d;
-  m.castShadow = !QUALITY.low && vol > 0.35;
-  m.receiveShadow = false;
+  m.castShadow = QUALITY.studio && vol > 0.01;
+  m.receiveShadow = QUALITY.studio;
   return m;
 }
 
@@ -926,53 +956,68 @@ function addEntranceBanners(root, width, depth, height, sign, doors) {
   const door = (doors || []).find((d) => d.wall === "front") || { pos: 50, width: 2.8, height: 3.15 };
   const doorX = (door.pos / 100 - 0.5) * width;
   const doorW = door.width || 2.8;
-  const doorH = Math.min(door.height || 3.15, height - 0.35);
-  const copy = {
-    title: sign?.text || "STORE",
-    fg: sign?.fg || "#f6f1e8",
-    bg: sign?.bg || "#121214",
-    accent: "#c6a56a",
-    ...bannerCopyFor(sign?.text),
-  };
   const frontZ = depth / 2;
-  const insideZ = frontZ - 0.36;
-  const side = doorW / 2 + 0.62;
-  const bannerW = 0.7;
-  const bannerH = Math.min(1.82, height - 2.15);
-  const bannerY = 1.92 + bannerH / 2;
-  addDigitalScreen(root, { w: bannerW, h: bannerH, x: doorX - side, y: bannerY, z: insideZ, copy, vertical: true });
-  addDigitalScreen(root, { w: bannerW, h: bannerH, x: doorX + side, y: bannerY, z: insideZ, copy, vertical: true });
-  const barW = Math.min(doorW + 0.55, 3.6);
-  const barY = Math.min(doorH + 0.38, height - 0.42);
-  addDigitalScreen(root, { w: barW, h: 0.4, x: doorX, y: barY, z: insideZ, copy, vertical: false });
-  addDigitalScreen(root, { w: barW, h: 0.4, x: doorX, y: barY, z: frontZ + 0.08, copy, vertical: false });
-  const rod = new THREE.MeshStandardMaterial({ color: "#c6a56a", metalness: 0.8, roughness: 0.32 });
-  for (const x of [doorX - side, doorX + side]) {
-    root.add(meshBox(0.016, Math.max(0.12, height - 0.22 - (bannerY + bannerH / 2)), 0.016, rod, x, (height - 0.22 + bannerY + bannerH / 2) / 2, insideZ));
+  const brass = brassMat();
+  const bronze = bronzeMat("#1c1814");
+  const glow = new THREE.MeshStandardMaterial({
+    color: "#e8c896",
+    emissive: "#c9a06a",
+    emissiveIntensity: 0.7,
+  });
+  const lintelY = Math.min((door.height || 3.15) + 0.18, height - 0.32);
+  const colH = Math.min(lintelY + 0.12, height - 0.22);
+  const colW = 0.24;
+  const leftX = doorX - doorW / 2 - 0.32;
+  const rightX = doorX + doorW / 2 + 0.32;
+  for (const x of [leftX, rightX]) {
+    root.add(meshBox(colW, colH, 0.22, bronze, x, colH / 2, frontZ - 0.01));
+    root.add(meshBox(colW + 0.07, 0.05, 0.26, brass, x, 0.04, frontZ + 0.02));
+    root.add(meshBox(colW + 0.07, 0.06, 0.26, brass, x, colH - 0.04, frontZ + 0.02));
+    root.add(meshBox(0.02, colH - 0.14, 0.04, brass, x + (x < doorX ? colW / 2 : -colW / 2), colH / 2, frontZ + 0.1));
   }
+  const canW = doorW + 1.45;
+  root.add(meshBox(canW, 0.08, 0.52, bronze, doorX, lintelY + 0.06, frontZ + 0.16));
+  root.add(meshBox(canW + 0.08, 0.018, 0.56, brass, doorX, lintelY + 0.11, frontZ + 0.16));
+  root.add(meshBox(canW - 0.12, 0.014, 0.4, glow, doorX, lintelY + 0.01, frontZ + 0.14));
+  root.add(meshBox(doorW + 0.55, 0.05, 0.1, brass, doorX, lintelY, frontZ - 0.06));
 }
 
 function makeWindow(win) {
   const w = win.width;
   const h = win.height;
   const group = new THREE.Group();
-  const frame = brassMat();
-  addFrame(group, w, h, 0.024, 0.042, frame, false);
-  group.add(meshBox(0.016, h - 0.05, 0.03, frame, 0, h / 2, 0));
-  group.add(meshBox(w - 0.05, 0.016, 0.03, frame, 0, h / 2, 0));
-  const opts = glassOpts(win);
-  const pw = (w - 0.07) / 2;
-  const ph = (h - 0.07) / 2;
-  const panes = [
-    [-pw / 2 - 0.008, h * 0.75],
-    [pw / 2 + 0.008, h * 0.75],
-    [-pw / 2 - 0.008, h * 0.25],
-    [pw / 2 + 0.008, h * 0.25],
-  ];
-  for (const [x, y] of panes) {
-    const pane = makeGlassPane(pw, ph, opts);
-    pane.position.set(x, y, 0.01);
+  const luxe = win.style === "luxe" || w >= 3.2;
+  const frame = luxe ? bronzeMat("#2a221c") : brassMat();
+  const brass = brassMat();
+  if (luxe) {
+    addFrame(group, w, h, 0.042, 0.058, frame, false);
+    const reveal = new THREE.Group();
+    addFrame(reveal, w - 0.06, h - 0.06, 0.01, 0.04, brass, false);
+    reveal.position.z = 0.01;
+    group.add(reveal);
+    const pane = makeGlassPane(w - 0.12, h - 0.14, glassOpts(win));
+    pane.position.set(0, h / 2, 0.01);
     group.add(pane);
+    group.add(meshBox(w + 0.04, 0.04, 0.08, frame, 0, 0.02, 0.01));
+    group.add(meshBox(w - 0.04, 0.01, 0.05, brass, 0, 0.042, 0.02));
+  } else {
+    addFrame(group, w, h, 0.024, 0.042, frame, false);
+    group.add(meshBox(0.016, h - 0.05, 0.03, frame, 0, h / 2, 0));
+    group.add(meshBox(w - 0.05, 0.016, 0.03, frame, 0, h / 2, 0));
+    const opts = glassOpts(win);
+    const pw = (w - 0.07) / 2;
+    const ph = (h - 0.07) / 2;
+    const panes = [
+      [-pw / 2 - 0.008, h * 0.75],
+      [pw / 2 + 0.008, h * 0.75],
+      [-pw / 2 - 0.008, h * 0.25],
+      [pw / 2 + 0.008, h * 0.25],
+    ];
+    for (const [x, y] of panes) {
+      const pane = makeGlassPane(pw, ph, opts);
+      pane.position.set(x, y, 0.01);
+      group.add(pane);
+    }
   }
   group.userData = { selectable: true, kind: "window", id: win.id };
   return group;
@@ -996,26 +1041,25 @@ function placeOnWall(object, wall, length, posPct, y, depth, width, extraZ = 0) 
 
 function makeSignTexture(sign) {
   const c = document.createElement("canvas");
-  c.width = 700;
-  c.height = 140;
+  c.width = 1024;
+  c.height = 220;
   const ctx = c.getContext("2d");
-  ctx.fillStyle = sign.bg || "#121214";
-  ctx.fillRect(0, 0, 700, 140);
-  ctx.strokeStyle = "rgba(255,255,255,0.12)";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(40, 26);
-  ctx.lineTo(660, 26);
-  ctx.moveTo(40, 114);
-  ctx.lineTo(660, 114);
-  ctx.stroke();
-  ctx.fillStyle = sign.fg || "#f3f1ec";
-  ctx.font = "600 36px DM Sans, sans-serif";
+  ctx.fillStyle = sign.bg || "#0c0a09";
+  ctx.fillRect(0, 0, 1024, 220);
+  ctx.strokeStyle = sign.fg || "#c6a56a";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(18, 18, 988, 184);
+  ctx.strokeStyle = "rgba(198,165,106,0.35)";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(28, 28, 968, 164);
+  ctx.fillStyle = sign.fg || "#c6a56a";
+  ctx.font = "500 72px Cormorant Garamond, Georgia, serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText((sign.text || "YOUR STORE").toUpperCase(), 350, 70);
+  ctx.fillText((sign.text || "YOUR STORE").toUpperCase(), 512, 110);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
   return tex;
 }
 
@@ -1054,7 +1098,8 @@ function addWallDressing(root, width, depth, height, state) {
     { id: "wall-right", wall: "right", len: depth },
     { id: "wall-front", wall: "front", len: width },
   ];
-  const paintSkirting = mappedMat("#f2eee6", "drywall", {
+  const darkLook = isDarkLuxuryFitout(state);
+  const paintSkirting = mappedMat(darkLook ? "#1a1612" : "#f2eee6", "drywall", {
     repeat: 2.2,
     repeatY: 0.35,
     roughness: 0.5,
@@ -1063,7 +1108,7 @@ function addWallDressing(root, width, depth, height, state) {
     nStr: 0.85,
     nSc: 0.3,
   });
-  const paintCrown = mappedMat("#f0ebe3", "limewash", {
+  const paintCrown = mappedMat(darkLook ? "#241e18" : "#f0ebe3", "limewash", {
     repeat: 2.1,
     roughness: 0.56,
     metalness: 0.02,
@@ -1081,7 +1126,7 @@ function addWallDressing(root, width, depth, height, state) {
     nSc: 0.34,
   });
   const cap = new THREE.MeshStandardMaterial({
-    color: "#ebe4d8",
+    color: darkLook ? "#2a221c" : "#ebe4d8",
     roughness: 0.4,
     metalness: 0.05,
     envMapIntensity: 0.58,
@@ -1101,7 +1146,7 @@ function addWallDressing(root, width, depth, height, state) {
   for (const s of sides) {
     const surface = state.store.surfaces[s.id] || {};
     const glass = surface.finish === "glass" || surface.finish === "mirror";
-    const wood = surface.texture === "walnut" || surface.texture === "wood" || surface.texture === "herringbone";
+    const wood = surface.texture === "walnut" || surface.texture === "wood" || surface.texture === "herringbone" || surface.texture === "fluted-walnut";
     const openings = openingsFor(state, s.wall, s.len, height);
     const floorSpans = solidWallSpans(s.len, openings);
     const skirtMat = wood ? woodSkirting : paintSkirting;
@@ -1123,7 +1168,7 @@ function addWallDressing(root, width, depth, height, state) {
     addOnInnerWall(root, s.wall, width, depth, 0, height - 0.1, crownW, 0.02, 0.052, crownMat);
   }
 
-  const bead = mappedMat("#efeae3", "drywall", {
+  const bead = mappedMat(darkLook ? "#1c1814" : "#efeae3", "drywall", {
     repeat: 1.2,
     roughness: 0.52,
     metalness: 0.02,
@@ -1145,8 +1190,21 @@ function addWallDressing(root, width, depth, height, state) {
   }
 }
 
-function addInteriorFitout(root, width, depth, height, frontStyle) {
-  const wood = mappedMat("#4a3426", "walnut", {
+function isDarkLuxuryFitout(state) {
+  const color = state?.store?.surfaces?.["wall-back"]?.color || "";
+  const hex = color.replace("#", "");
+  if (hex.length < 6) return state?.store?.sign?.text === "ATELIER";
+  const n = parseInt(hex.slice(0, 6), 16);
+  if (Number.isNaN(n)) return false;
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  return (r + g + b) / 3 < 95;
+}
+
+function addInteriorFitout(root, width, depth, height, frontStyle, state) {
+  const dark = isDarkLuxuryFitout(state);
+  const wood = mappedMat(dark ? "#1a1410" : "#4a3426", "walnut", {
     repeat: 1,
     repeatY: 3.2,
     roughness: 0.42,
@@ -1155,7 +1213,7 @@ function addInteriorFitout(root, width, depth, height, frontStyle) {
     nStr: 0.95,
     nSc: 0.42,
   });
-  const gypsum = mappedMat("#f3ebe0", "limewash", {
+  const gypsum = mappedMat(dark ? "#2a2622" : "#f3ebe0", "limewash", {
     repeat: 1.4,
     roughness: 0.7,
     metalness: 0.02,
@@ -1165,12 +1223,12 @@ function addInteriorFitout(root, width, depth, height, frontStyle) {
   });
   const brass = brassMat();
   const glow = new THREE.MeshStandardMaterial({
-    color: "#fff8f0",
-    emissive: "#ffe8c8",
-    emissiveIntensity: 1.05,
+    color: dark ? "#e8c896" : "#fff8f0",
+    emissive: dark ? "#c9a06a" : "#ffe8c8",
+    emissiveIntensity: dark ? 0.55 : 1.05,
   });
   const champagne = new THREE.MeshStandardMaterial({
-    color: "#e8dfd0",
+    color: dark ? "#3a3228" : "#e8dfd0",
     metalness: 0.16,
     roughness: 0.3,
     envMapIntensity: 0.8,
@@ -1188,51 +1246,76 @@ function addInteriorFitout(root, width, depth, height, frontStyle) {
     return;
   }
 
-  const slatW = Math.min(width * 0.62, 9.5);
-  const slatCount = QUALITY.low ? 8 : 14;
-  const slatGap = slatW / slatCount;
-  const slats = new THREE.InstancedMesh(UNIT_BOX, wood, slatCount);
-  slats.castShadow = false;
-  slats.receiveShadow = false;
-  for (let i = 0; i < slatCount; i++) {
-    const x = -slatW / 2 + slatGap * (i + 0.5);
-    instDummy.position.set(x, (height - 0.35) / 2, -depth / 2 + 0.09);
-    instDummy.scale.set(0.045, height - 0.7, 0.028);
-    instDummy.rotation.set(0, 0, 0);
-    instDummy.updateMatrix();
-    slats.setMatrixAt(i, instDummy.matrix);
-  }
-  slats.instanceMatrix.needsUpdate = true;
-  root.add(slats);
-  root.add(meshBox(slatW + 0.2, 0.06, 0.04, brass, 0, height - 0.42, -depth / 2 + 0.1));
-  root.add(meshBox(slatW + 0.08, 0.02, 0.03, glow, 0, height - 0.48, -depth / 2 + 0.12));
+  const silk = mappedMat(dark ? "#241e18" : "#f7f3ec", "silk", {
+    repeat: 1.6,
+    roughness: 0.32,
+    metalness: 0.03,
+    env: 0.92,
+    nStr: 1.15,
+    nSc: 0.4,
+  });
+  const dadoH = dark ? 0.56 : 1.12;
+  const dado = (w, d, x, z) => {
+    root.add(meshBox(w, dadoH, d, wood, x, dadoH / 2, z));
+    root.add(meshBox(w, 0.018, d + 0.012, brass, x, dadoH + 0.01, z));
+    root.add(meshBox(w, 0.012, d + 0.008, glow, x, dadoH + 0.028, z));
+  };
+  dado(width - 0.42, 0.045, 0, -depth / 2 + 0.068);
+  dado(0.045, depth - 0.55, -width / 2 + 0.068, 0);
+  dado(0.045, depth - 0.55, width / 2 - 0.068, 0);
 
-  const col = 0.28;
-  const colZ = frontStyle === "mobile" ? [-depth / 2 + 1.15] : [-depth / 2 + 1.15, depth / 2 - 1.35];
-  const colX = [-width / 2 + 0.42, width / 2 - 0.42];
-  for (const x of colX) {
-    for (const z of colZ) {
-      root.add(meshBox(col, height - 0.25, col, gypsum, x, (height - 0.12) / 2, z));
-      root.add(meshBox(col + 0.08, 0.05, col + 0.08, brass, x, 0.08, z));
-      root.add(meshBox(col + 0.1, 0.055, col + 0.1, brass, x, height - 0.22, z));
-      root.add(meshBox(col + 0.02, 0.02, col + 0.02, glow, x, height - 0.255, z));
+  const panelH = Math.max(1.35, height - dadoH - 0.72);
+  const panelY = dadoH + 0.16 + panelH / 2;
+  const addPanel = (w, d, x, z) => {
+    root.add(meshBox(w, panelH, d, silk, x, panelY, z));
+    root.add(meshBox(w + 0.04, panelH + 0.04, 0.016, brass, x, panelY, z + (d > 0.03 ? 0.014 : 0)));
+  };
+  for (const x of [-width * 0.28, width * 0.28]) {
+    addPanel(2.35, 0.03, x, -depth / 2 + 0.09);
+  }
+  for (const z of [-depth * 0.18, depth * 0.18]) {
+    root.add(meshBox(0.03, panelH, 2.05, silk, -width / 2 + 0.09, panelY, z));
+    root.add(meshBox(0.016, panelH + 0.04, 2.09, brass, -width / 2 + 0.104, panelY, z));
+    root.add(meshBox(0.03, panelH, 2.05, silk, width / 2 - 0.09, panelY, z));
+    root.add(meshBox(0.016, panelH + 0.04, 2.09, brass, width / 2 - 0.104, panelY, z));
+  }
+
+  const col = 0.22;
+  const colH = height - 0.32;
+  for (const x of [-width / 2 + 0.38, width / 2 - 0.38]) {
+    for (const z of [-depth / 2 + 1.05, depth / 2 - 1.15]) {
+      root.add(meshBox(col, colH, col, wood, x, colH / 2 + 0.04, z));
+      root.add(meshBox(col + 0.07, 0.045, col + 0.07, brass, x, 0.07, z));
+      root.add(meshBox(col + 0.08, 0.05, col + 0.08, brass, x, height - 0.24, z));
+      root.add(meshBox(col + 0.02, 0.016, col + 0.02, glow, x, height - 0.27, z));
     }
   }
-
-  root.add(meshBox(width * 0.42, 0.12, 0.38, gypsum, 0, 0.18, -depth / 2 + 0.42));
-  root.add(meshBox(width * 0.42, 0.015, 0.4, brass, 0, 0.25, -depth / 2 + 0.42));
 
   if (!QUALITY.low) {
-    const railY = Math.min(2.48, height * 0.52);
-    root.add(meshBox(0.018, 0.022, depth - 1.1, brass, -width / 2 + 0.075, railY, 0));
-    root.add(meshBox(0.018, 0.022, depth - 1.1, brass, width / 2 - 0.075, railY, 0));
-    root.add(meshBox(width - 1.2, 0.022, 0.018, brass, 0, railY, -depth / 2 + 0.075));
-    if (frontStyle !== "mobile") {
-      root.add(meshBox(width - 0.2, 0.07, 0.09, champagne, 0, height - 0.075, depth / 2 - 0.055));
-      root.add(meshBox(0.09, 0.07, depth - 0.2, champagne, -width / 2 + 0.055, height - 0.075, 0));
-    }
-    root.add(meshBox(width - 0.2, 0.07, 0.09, champagne, 0, height - 0.075, -depth / 2 + 0.055));
-    root.add(meshBox(0.09, 0.07, depth - 0.2, champagne, width / 2 - 0.055, height - 0.075, 0));
+    root.add(meshBox(width - 0.28, 0.06, 0.08, champagne, 0, height - 0.08, -depth / 2 + 0.05));
+    root.add(meshBox(width - 0.28, 0.06, 0.08, champagne, 0, height - 0.08, depth / 2 - 0.05));
+    root.add(meshBox(0.08, 0.06, depth - 0.28, champagne, -width / 2 + 0.05, height - 0.08, 0));
+    root.add(meshBox(0.08, 0.06, depth - 0.28, champagne, width / 2 - 0.05, height - 0.08, 0));
+    root.add(meshBox(width - 0.5, 0.016, 0.03, glow, 0, height - 0.12, -depth / 2 + 0.08));
+    root.add(meshBox(width - 0.5, 0.016, 0.03, glow, 0, height - 0.12, depth / 2 - 0.08));
+  }
+
+  if (dark && !QUALITY.low) {
+    const runner = mappedMat("#1c1814", "walnut", {
+      repeat: 0.55,
+      repeatY: 2.6,
+      roughness: 0.34,
+      metalness: 0.05,
+      env: 0.82,
+      nStr: 0.9,
+      nSc: 0.36,
+    });
+    const runW = 2.62;
+    const runD = depth - 2.35;
+    root.add(meshBox(runW + 0.08, 0.006, runD + 0.08, brass, 0, 0.004, -0.12));
+    root.add(meshBox(runW, 0.014, runD, runner, 0, 0.01, -0.12));
+    root.add(meshBox(0.018, 0.016, runD - 0.12, glow, -runW / 2 + 0.03, 0.016, -0.12));
+    root.add(meshBox(0.018, 0.016, runD - 0.12, glow, runW / 2 - 0.03, 0.016, -0.12));
   }
 }
 
@@ -2357,8 +2440,84 @@ function addDownlights(root, width, depth, height, cols, rows, pad, cellW, cellD
   root.add(wells, baffles, rings, lenses);
 }
 
+function dropBox(root, w, h, d, mat, x, y, z) {
+  const mesh = meshBox(w, h, d, mat, x, y, z);
+  mesh.castShadow = !QUALITY.low;
+  mesh.receiveShadow = true;
+  root.add(tagRoof(mesh));
+  return mesh;
+}
+
+function addTrackRail(root, length, x, y, z, alongX, mat, glow) {
+  if (alongX) {
+    dropBox(root, length, 0.028, 0.046, mat, x, y, z);
+    const n = Math.max(3, Math.round(length / 1.55));
+    for (let i = 0; i < n; i++) {
+      const px = x - length / 2 + ((i + 0.5) / n) * length;
+      dropBox(root, 0.07, 0.045, 0.07, mat, px, y - 0.036, z);
+      dropBox(root, 0.038, 0.016, 0.038, glow, px, y - 0.062, z);
+    }
+    return;
+  }
+  dropBox(root, 0.046, 0.028, length, mat, x, y, z);
+  const n = Math.max(3, Math.round(length / 1.55));
+  for (let i = 0; i < n; i++) {
+    const pz = z - length / 2 + ((i + 0.5) / n) * length;
+    dropBox(root, 0.07, 0.045, 0.07, mat, x, y - 0.036, pz);
+    dropBox(root, 0.038, 0.016, 0.038, glow, x, y - 0.062, pz);
+  }
+}
+
+function addHangCan(root, x, y, z, metal, glow) {
+  dropBox(root, 0.01, 0.26, 0.01, metal, x, y - 0.13, z);
+  const can = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.058, 0.1, 12), metal);
+  can.position.set(x, y - 0.3, z);
+  can.castShadow = !QUALITY.low;
+  root.add(tagRoof(can));
+  const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.036, 0.014, 12), glow);
+  lens.position.set(x, y - 0.352, z);
+  root.add(tagRoof(lens));
+  if (QUALITY.high) {
+    const light = new THREE.PointLight("#ffd4a0", 7.5, 6.2, 2);
+    light.position.set(x, y - 0.38, z);
+    root.add(light);
+  }
+}
+
+function addCeilingGreens(root, x, y, z, potMat) {
+  dropBox(root, 0.2, 0.07, 0.2, potMat, x, y, z);
+  const leaf = new THREE.MeshStandardMaterial({ color: "#3f8a4c", roughness: 0.84, metalness: 0.02 });
+  for (let i = 0; i < 5; i++) {
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.055 + (i % 3) * 0.012, 8, 6), leaf);
+    ball.position.set(x + ((i % 3) - 1) * 0.045, y + 0.08 + (i % 2) * 0.03, z + (Math.floor(i / 2) - 1) * 0.04);
+    ball.castShadow = !QUALITY.low;
+    root.add(tagRoof(ball));
+  }
+}
+
+function addCeilingRose3D(root, x, y, z, r, gold, ivory) {
+  [r, r * 0.72, r * 0.48, r * 0.26].forEach((rad, i) => {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(Math.max(0.08, rad), i ? 0.02 : 0.032, 8, 28), gold);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.set(x, y - i * 0.01, z);
+    root.add(tagRoof(ring));
+  });
+  const disc = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.2, r * 0.2, 0.026, 24), ivory);
+  disc.position.set(x, y + 0.008, z);
+  root.add(tagRoof(disc));
+  const petals = 12;
+  for (let i = 0; i < petals; i++) {
+    const a = (Math.PI * 2 * i) / petals;
+    const petal = new THREE.Mesh(new THREE.SphereGeometry(r * 0.085, 8, 6), gold);
+    petal.scale.set(1, 0.26, 1.65);
+    petal.position.set(x + Math.cos(a) * r * 0.58, y - 0.008, z + Math.sin(a) * r * 0.58);
+    petal.rotation.y = a;
+    root.add(tagRoof(petal));
+  }
+}
+
 function addPremiumCeiling(root, kind, width, depth, height, roofMat, mats) {
-  const { cream, brass, glow, housing, led, walnut, dark, chrome, champagne, trayIvory } = mats;
+  const { cream, brass, glow, housing, led, walnut, oak, dark, chrome, champagne, trayIvory } = mats;
   const gold = champagne;
   const ivory = trayIvory;
   const slab = new THREE.Mesh(new THREE.BoxGeometry(width, 0.16, depth), roofMat || cream);
@@ -2366,6 +2525,123 @@ function addPremiumCeiling(root, kind, width, depth, height, roofMat, mats) {
   slab.receiveShadow = true;
   slab.userData = { selectable: true, kind: "roof", id: "roof" };
   root.add(slab);
+  if (kind === "roof-plain") return true;
+
+  if (kind === "roof-traylux") {
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    root.add(tagRoof(meshBox(width - 1.05, 0.07, depth - 1.05, ivory, 0, height - 0.18, 0)));
+    addFrameBand(root, width - 0.98, depth - 0.98, 0.07, 0.04, height - 0.22, gold);
+    addLedLoop(root, width - 1.2, depth - 1.2, height - 0.23, led);
+    root.add(tagRoof(meshBox(width - 2.15, 0.07, depth - 2.15, ivory, 0, height - 0.26, 0)));
+    addFrameBand(root, width - 2.08, depth - 2.08, 0.06, 0.03, height - 0.3, gold);
+    addLedLoop(root, width - 2.3, depth - 2.3, height - 0.31, led);
+    root.add(tagRoof(meshBox(width - 3.2, 0.06, depth - 3.2, ivory, 0, height - 0.34, 0)));
+    addFrameBand(root, width - 3.12, depth - 3.12, 0.05, 0.026, height - 0.38, gold);
+    addCeilingRose3D(root, 0, height - 0.36, 0, Math.min(1.05, width * 0.1), gold, ivory);
+    addDownlights(root, width, depth, height, 5, 4, 0.85, (width - 1.7) / 5, (depth - 1.7) / 4, housing, glow, {
+      luxury: true,
+      wash: true,
+      ringMat: gold,
+    });
+    return true;
+  }
+  if (kind === "roof-roselux") {
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    addFrameBand(root, width - 0.9, depth - 0.9, 0.08, 0.045, height - 0.16, gold);
+    addFrameBand(root, width - 1.35, depth - 1.35, 0.04, 0.025, height - 0.2, gold);
+    addCeilingRose3D(root, 0, height - 0.18, 0, Math.min(1.85, width * 0.2), gold, ivory);
+    const r2 = Math.min(2.25, width * 0.24);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(r2, 0.028, 8, 36), gold);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.set(0, height - 0.17, 0);
+    root.add(tagRoof(ring));
+    [
+      [-width / 2 + 1.2, -depth / 2 + 1.2],
+      [width / 2 - 1.2, -depth / 2 + 1.2],
+      [-width / 2 + 1.2, depth / 2 - 1.2],
+      [width / 2 - 1.2, depth / 2 - 1.2],
+    ].forEach(([x, z]) => {
+      dropBox(root, 0.62, 0.03, 0.62, gold, x, height - 0.18, z);
+      dropBox(root, 0.18, 0.04, 0.18, ivory, x, height - 0.2, z);
+    });
+    addDownlights(root, width, depth, height, 3, 3, 1.15, (width - 2.3) / 3, (depth - 2.3) / 3, housing, glow, {
+      luxury: true,
+      wash: true,
+      ringMat: gold,
+    });
+    return true;
+  }
+  if (kind === "roof-cofferoyal") {
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    const g = addCofferGrid(root, width, depth, height, gold, gold, 0.08, 0.13, { profile: "molded", trayMat: ivory });
+    for (let i = 0; i < g.cols; i++) {
+      for (let j = 0; j < g.rows; j++) {
+        const x = -width / 2 + g.pad + (i + 0.5) * g.cellW;
+        const z = -depth / 2 + g.pad + (j + 0.5) * g.cellD;
+        addCeilingRose3D(root, x, height - 0.2, z, Math.min(0.28, Math.min(g.cellW, g.cellD) * 0.18), gold, ivory);
+      }
+    }
+    addDownlights(root, width, depth, height, g.cols, g.rows, g.pad, g.cellW, g.cellD, housing, glow, {
+      luxury: true,
+      wash: true,
+      ringMat: gold,
+    });
+    return true;
+  }
+  if (kind === "roof-noirgold") {
+    const noir = new THREE.MeshStandardMaterial({ color: "#161310", roughness: 0.55, metalness: 0.08 });
+    addCoveLights(root, width, depth, height, cream, brass, led, "dark");
+    root.add(tagRoof(meshBox(width - 0.35, 0.08, depth - 0.35, noir, 0, height - 0.16, 0)));
+    addFrameBand(root, width - 0.28, depth - 0.28, 0.09, 0.045, height - 0.21, gold);
+    addLedLoop(root, width - 0.55, depth - 0.55, height - 0.22, led);
+    root.add(tagRoof(meshBox(width - 2.4, 0.07, depth - 2.4, ivory, 0, height - 0.26, 0)));
+    addFrameBand(root, width - 2.32, depth - 2.32, 0.06, 0.03, height - 0.3, gold);
+    addCeilingRose3D(root, 0, height - 0.28, 0, Math.min(1.05, width * 0.1), gold, ivory);
+    [
+      [-width / 2 + 0.85, -depth / 2 + 0.85],
+      [width / 2 - 0.85, -depth / 2 + 0.85],
+      [-width / 2 + 0.85, depth / 2 - 0.85],
+      [width / 2 - 0.85, depth / 2 - 0.85],
+    ].forEach(([x, z]) => {
+      dropBox(root, 0.48, 0.03, 0.48, gold, x, height - 0.18, z);
+      dropBox(root, 0.42, 0.05, 0.42, noir, x, height - 0.2, z);
+    });
+    addDownlights(root, width, depth, height, 4, 3, 0.95, (width - 1.9) / 4, (depth - 1.9) / 3, housing, glow, {
+      luxury: true,
+      wash: true,
+      ringMat: gold,
+    });
+    return true;
+  }
+  if (kind === "roof-corinth") {
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    addFrameBand(root, width - 0.7, depth - 0.7, 0.1, 0.05, height - 0.16, gold);
+    addFrameBand(root, width - 1.55, depth - 1.55, 0.06, 0.032, height - 0.22, gold);
+    addFrameBand(root, width - 2.4, depth - 2.4, 0.045, 0.024, height - 0.28, gold);
+    addLedLoop(root, width - 0.95, depth - 0.95, height - 0.18, led);
+    [Math.min(2.1, width * 0.2), Math.min(1.55, width * 0.15), Math.min(1.05, width * 0.1)].forEach((rad, i) => {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(rad, i ? 0.022 : 0.032, 8, 32), gold);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.set(0, height - 0.2 - i * 0.012, 0);
+      root.add(tagRoof(ring));
+    });
+    addCeilingRose3D(root, 0, height - 0.22, 0, Math.min(0.85, width * 0.08), gold, ivory);
+    [
+      [-width / 2 + 1.15, -depth / 2 + 1.15],
+      [width / 2 - 1.15, -depth / 2 + 1.15],
+      [-width / 2 + 1.15, depth / 2 - 1.15],
+      [width / 2 - 1.15, depth / 2 - 1.15],
+    ].forEach(([x, z]) => {
+      dropBox(root, 0.62, 0.03, 0.62, gold, x, height - 0.18, z);
+      dropBox(root, 0.55, 0.06, 0.55, ivory, x, height - 0.2, z);
+    });
+    addDownlights(root, width, depth, height, 3, 3, 1.1, (width - 2.2) / 3, (depth - 2.2) / 3, housing, glow, {
+      luxury: true,
+      wash: true,
+      ringMat: gold,
+    });
+    return true;
+  }
 
   const onyx = new THREE.MeshStandardMaterial({
     color: "#2a1c12",
@@ -2398,6 +2674,421 @@ function addPremiumCeiling(root, kind, width, depth, height, roofMat, mats) {
     roughness: 0.28,
   });
 
+  const matteBlack = new THREE.MeshStandardMaterial({ color: "#141311", roughness: 0.9, metalness: 0.04 });
+  const concrete = new THREE.MeshStandardMaterial({ color: "#c9c4ba", roughness: 0.74, metalness: 0.05 });
+  const plaster = new THREE.MeshStandardMaterial({ color: "#f3eadc", roughness: 0.88, metalness: 0.02 });
+  const beige = new THREE.MeshStandardMaterial({ color: "#e8d8c0", roughness: 0.78, metalness: 0.03 });
+  const gray = new THREE.MeshStandardMaterial({ color: "#3a3a3c", roughness: 0.62, metalness: 0.08 });
+  const whiteMarble = new THREE.MeshStandardMaterial({ color: "#f3efe8", roughness: 0.14, metalness: 0.08, envMapIntensity: 1.15 });
+  const blackMarble = new THREE.MeshStandardMaterial({ color: "#1a1614", roughness: 0.12, metalness: 0.12, envMapIntensity: 1.2 });
+  const blueLed = new THREE.MeshStandardMaterial({ color: "#9ad0ff", emissive: "#3d8cff", emissiveIntensity: 1.7, roughness: 0.22 });
+  const starGlow = new THREE.MeshStandardMaterial({ color: "#f4fbff", emissive: "#b7e0ff", emissiveIntensity: 2.4, roughness: 0.18 });
+
+  const frost = QUALITY.physical
+    ? new THREE.MeshPhysicalMaterial({
+        color: "#e4eef6",
+        roughness: 0.32,
+        metalness: 0.04,
+        transmission: 0.42,
+        thickness: 0.08,
+        transparent: true,
+        opacity: 0.88,
+        envMapIntensity: 1.1,
+      })
+    : new THREE.MeshStandardMaterial({ color: "#d8e6f0", roughness: 0.24, transparent: true, opacity: 0.52 });
+  const rgbMats = [
+    new THREE.MeshStandardMaterial({ color: "#ff4d6d", emissive: "#ff2450", emissiveIntensity: 1.85, roughness: 0.2 }),
+    new THREE.MeshStandardMaterial({ color: "#3dffb2", emissive: "#14ff8a", emissiveIntensity: 1.85, roughness: 0.2 }),
+    new THREE.MeshStandardMaterial({ color: "#4da6ff", emissive: "#1a7cff", emissiveIntensity: 1.85, roughness: 0.2 }),
+  ];
+
+  if (kind === "roof-ledline") {
+    dropBox(root, width - 0.1, 0.05, depth - 0.1, matteBlack, 0, height - 0.12, 0);
+    addCoveLights(root, width, depth, height, cream, brass, led, "dark");
+    const lines = QUALITY.low ? 5 : 7;
+    for (let i = 0; i < lines; i++) {
+      const z = -depth * 0.34 + (i / Math.max(1, lines - 1)) * depth * 0.68;
+      dropBox(root, width - 1.05, 0.012, 0.028, led, 0, height - 0.165, z);
+    }
+    return true;
+  }
+  if (kind === "roof-timber") {
+    dropBox(root, width - 0.14, 0.04, depth - 0.14, plaster, 0, height - 0.12, 0);
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    const beams = QUALITY.low ? 4 : 6;
+    for (let i = 0; i < beams; i++) {
+      const z = -depth / 2 + 0.85 + ((i + 0.5) / beams) * (depth - 1.7);
+      dropBox(root, width - 0.8, 0.14, 0.18, oak || walnut, 0, height - 0.24, z);
+    }
+    addDownlights(root, width, depth, height, 3, 2, 1.4, (width - 2.8) / 3, (depth - 2.8) / 2, housing, glow);
+    return true;
+  }
+  if (kind === "roof-cofferlux") {
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    const g = addCofferGrid(root, width, depth, height, walnut, gold, 0.09, 0.13, { profile: "molded", trayMat: ivory });
+    addDownlights(root, width, depth, height, g.cols, g.rows, g.pad, g.cellW, g.cellD, housing, glow, {
+      luxury: true,
+      wash: true,
+      ringMat: gold,
+    });
+    return true;
+  }
+  if (kind === "roof-blackgrid") {
+    dropBox(root, width - 0.12, 0.04, depth - 0.12, matteBlack, 0, height - 0.12, 0);
+    addCoveLights(root, width, depth, height, cream, brass, led, "dark");
+    const g = addCofferGrid(root, width, depth, height, matteBlack, gray, 0.06, 0.1, { profile: "flat" });
+    addDownlights(root, width, depth, height, g.cols, g.rows, g.pad, g.cellW, g.cellD, matteBlack, glow);
+    return true;
+  }
+  if (kind === "roof-glassglow") {
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    const cols = 3;
+    const rows = 2;
+    const pad = 0.9;
+    const cellW = (width - pad * 2) / cols;
+    const cellD = (depth - pad * 2) / rows;
+    for (let i = 0; i < cols; i++) {
+      for (let j = 0; j < rows; j++) {
+        const x = -width / 2 + pad + (i + 0.5) * cellW;
+        const z = -depth / 2 + pad + (j + 0.5) * cellD;
+        dropBox(root, cellW - 0.18, 0.02, cellD - 0.18, led, x, height - 0.15, z);
+        const pane = meshBox(cellW - 0.22, 0.03, cellD - 0.22, frost, x, height - 0.175, z);
+        pane.castShadow = false;
+        pane.receiveShadow = true;
+        root.add(tagRoof(pane));
+        addFrameBand(root, cellW - 0.14, cellD - 0.14, 0.02, 0.016, height - 0.19, chrome);
+      }
+    }
+    return true;
+  }
+  if (kind === "roof-cloudwave") {
+    dropBox(root, width - 0.14, 0.04, depth - 0.14, ivory, 0, height - 0.12, 0);
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    const n = QUALITY.low ? 6 : 9;
+    const band = (depth - 1.2) / n;
+    for (let i = 0; i < n; i++) {
+      const z = -depth / 2 + 0.6 + (i + 0.5) * band;
+      const y = height - 0.2 + Math.sin((i / Math.max(1, n - 1)) * Math.PI * 1.8) * 0.1;
+      dropBox(root, width - 1.05, 0.07, Math.max(0.1, band * 0.72), ivory, 0, y, z);
+      dropBox(root, width - 1.2, 0.012, 0.02, led, 0, y - 0.04, z);
+    }
+    return true;
+  }
+  if (kind === "roof-diapanel") {
+    dropBox(root, width - 0.12, 0.04, depth - 0.12, matteBlack, 0, height - 0.12, 0);
+    addCoveLights(root, width, depth, height, cream, brass, led, "dark");
+    const step = 1.55;
+    const cols = Math.max(3, Math.floor((width - 1.5) / step));
+    const rows = Math.max(2, Math.floor((depth - 1.5) / step));
+    const ox = -((cols - 1) * step) / 2;
+    const oz = -((rows - 1) * step) / 2;
+    const size = 0.92;
+    for (let j = 0; j < rows; j++) {
+      for (let i = 0; i < cols; i++) {
+        const x = ox + i * step;
+        const z = oz + j * step;
+        const tile = meshBox(size, 0.04, size, matteBlack, x, height - 0.18, z);
+        tile.rotation.y = Math.PI / 4;
+        tile.castShadow = !QUALITY.low;
+        root.add(tagRoof(tile));
+        const rim = meshBox(size - 0.14, 0.014, size - 0.14, gold, x, height - 0.205, z);
+        rim.rotation.y = Math.PI / 4;
+        root.add(tagRoof(rim));
+      }
+    }
+    addDownlights(root, width, depth, height, 3, 2, 1.3, (width - 2.6) / 3, (depth - 2.6) / 2, housing, glow, { ringMat: gold });
+    return true;
+  }
+  if (kind === "roof-goldrings") {
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    dropBox(root, width - 0.16, 0.04, depth - 0.16, ivory, 0, height - 0.12, 0);
+    const rings = [1.55, 1.15, 0.75, 0.38];
+    rings.forEach((r, i) => {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(r, i ? 0.028 : 0.038, 10, 36), gold);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.set(0, height - 0.18 - i * 0.012, 0);
+      root.add(tagRoof(ring));
+      const halo = new THREE.Mesh(new THREE.TorusGeometry(r, 0.012, 8, 32), led);
+      halo.rotation.x = Math.PI / 2;
+      halo.position.set(0, height - 0.2 - i * 0.012, 0);
+      root.add(tagRoof(halo));
+    });
+    addDownlights(root, width, depth, height, 3, 3, 1.45, (width - 2.9) / 3, (depth - 2.9) / 3, housing, glow, { ringMat: gold });
+    return true;
+  }
+  if (kind === "roof-woodmarble") {
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    dropBox(root, width - 0.9, 0.05, depth - 0.9, whiteMarble, 0, height - 0.14, 0);
+    addFrameBand(root, width - 0.78, depth - 0.78, 0.08, 0.05, height - 0.18, walnut);
+    addFrameBand(root, width - 0.7, depth - 0.7, 0.02, 0.016, height - 0.21, gold);
+    addLedLoop(root, width - 1.05, depth - 1.05, height - 0.22, led);
+    addDownlights(root, width, depth, height, 3, 2, 1.35, (width - 2.7) / 3, (depth - 2.7) / 2, housing, glow, { ringMat: gold });
+    return true;
+  }
+  if (kind === "roof-rgbline") {
+    dropBox(root, width - 0.1, 0.05, depth - 0.1, matteBlack, 0, height - 0.12, 0);
+    addCoveLights(root, width, depth, height, cream, brass, rgbMats[2], "dark");
+    const lines = QUALITY.low ? 5 : 8;
+    for (let i = 0; i < lines; i++) {
+      const z = -depth * 0.36 + (i / Math.max(1, lines - 1)) * depth * 0.72;
+      dropBox(root, width - 1.0, 0.012, 0.026, rgbMats[i % rgbMats.length], 0, height - 0.168, z);
+    }
+    return true;
+  }
+  if (kind === "roof-goldframe") {
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    dropBox(root, width - 0.16, 0.04, depth - 0.16, plaster, 0, height - 0.12, 0);
+    addFrameBand(root, width - 1.05, depth - 1.05, 0.07, 0.04, height - 0.17, gold);
+    addFrameBand(root, width - 2.15, depth - 2.15, 0.05, 0.03, height - 0.22, gold);
+    addLedLoop(root, width - 1.25, depth - 1.25, height - 0.2, led);
+    addLedLoop(root, width - 2.32, depth - 2.32, height - 0.25, led);
+    addDownlights(root, width, depth, height, 3, 3, 1.25, (width - 2.5) / 3, (depth - 2.5) / 3, housing, glow, { luxury: true, ringMat: gold });
+    return true;
+  }
+  if (kind === "roof-organic") {
+    dropBox(root, width - 0.14, 0.04, depth - 0.14, plaster, 0, height - 0.12, 0);
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    const n = QUALITY.low ? 6 : 9;
+    for (let i = 0; i < n; i++) {
+      const z = -depth * 0.36 + (i / Math.max(1, n - 1)) * depth * 0.72;
+      const y = height - 0.26 + Math.sin(i * 0.85) * 0.08;
+      const wave = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, width - 1.15, 16, 1, false, -0.45, 0.9), oak || walnut);
+      wave.rotation.z = Math.PI / 2;
+      wave.position.set(0, y, z);
+      wave.scale.set(1, 1, 0.55);
+      wave.castShadow = !QUALITY.low;
+      root.add(tagRoof(wave));
+      dropBox(root, width - 1.3, 0.01, 0.016, led, 0, y - 0.07, z);
+    }
+    return true;
+  }
+  if (kind === "roof-slatluxe" || kind === "roof-showroom") {
+    dropBox(root, width - 0.12, 0.05, depth - 0.12, matteBlack, 0, height - 0.12, 0);
+    addCoveLights(root, width, depth, height, cream, brass, led, "dark");
+    const n = Math.max(11, Math.round(width * 1.28));
+    const slatW = 0.115;
+    const span = width - 0.95;
+    const gap = Math.max(0.03, (span - n * slatW) / Math.max(1, n - 1));
+    for (let i = 0; i < n; i++) {
+      const x = -span / 2 + i * (slatW + gap) + slatW / 2;
+      dropBox(root, slatW, 0.075, depth - 0.82, walnut, x, height - 0.185, 0);
+      if (i < n - 1) dropBox(root, 0.012, 0.01, depth - 1.05, led, x + slatW / 2 + gap / 2, height - 0.16, 0);
+    }
+    for (const z of [-depth * 0.22, depth * 0.22]) {
+      addTrackRail(root, width - 1.25, 0, height - 0.27, z, true, matteBlack, glow);
+    }
+    return true;
+  }
+  if (kind === "roof-geofloat") {
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    const pieces = [
+      { w: width * 0.36, d: depth * 0.22, x: -width * 0.18, z: -depth * 0.14, drop: 0.22, gold: false },
+      { w: width * 0.22, d: depth * 0.3, x: width * 0.2, z: 0.05, drop: 0.34, gold: true },
+      { w: width * 0.2, d: depth * 0.2, x: -width * 0.08, z: depth * 0.2, drop: 0.28, gold: false },
+      { w: width * 0.16, d: depth * 0.16, x: width * 0.12, z: -depth * 0.24, drop: 0.18, gold: true },
+      { w: width * 0.14, d: depth * 0.24, x: -width * 0.3, z: depth * 0.02, drop: 0.4, gold: false },
+    ];
+    for (const p of pieces) {
+      const y = height - p.drop;
+      dropBox(root, p.w, 0.05, p.d, p.gold ? gold : matteBlack, p.x, y, p.z);
+      addFrameBand(root, p.w + 0.04, p.d + 0.04, 0.014, 0.012, y - 0.03, gold);
+      addLedLoop(root, p.w + 0.06, p.d + 0.06, y - 0.038, led, 0.016);
+    }
+    addDownlights(root, width, depth, height, 3, 2, 1.3, (width - 2.6) / 3, (depth - 2.6) / 2, housing, glow, { luxury: true, ringMat: gold });
+    return true;
+  }
+  if (kind === "roof-wave") {
+    dropBox(root, width - 0.14, 0.04, depth - 0.14, plaster, 0, height - 0.12, 0);
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    const n = QUALITY.low ? 7 : 11;
+    const band = (depth - 1.15) / n;
+    for (let i = 0; i < n; i++) {
+      const z = -depth / 2 + 0.58 + (i + 0.5) * band;
+      const y = height - 0.22 + Math.sin((i / Math.max(1, n - 1)) * Math.PI * 2.15) * 0.13;
+      const mat = i % 3 === 0 ? walnut : i % 3 === 1 ? matteBlack : plaster;
+      dropBox(root, width - 0.95, 0.055, Math.max(0.08, band - 0.035), mat, 0, y, z);
+    }
+    addDownlights(root, width, depth, height, 3, 2, 1.4, (width - 2.8) / 3, (depth - 2.8) / 2, housing, glow);
+    return true;
+  }
+  if (kind === "roof-industrial") {
+    dropBox(root, width - 0.18, 0.04, depth - 0.18, concrete, 0, height - 0.12, 0);
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    addIBeam(root, width - 0.7, 0, height - 0.2, -depth * 0.18, true, matteBlack);
+    addIBeam(root, width - 0.7, 0, height - 0.2, depth * 0.18, true, matteBlack);
+    addIBeam(root, depth - 0.7, -width * 0.22, height - 0.2, 0, false, matteBlack);
+    addIBeam(root, depth - 0.7, width * 0.22, height - 0.2, 0, false, matteBlack);
+    dropBox(root, width * 0.34, 0.06, depth * 0.28, walnut, -width * 0.18, height - 0.34, -depth * 0.08);
+    dropBox(root, width * 0.3, 0.06, depth * 0.32, walnut, width * 0.2, height - 0.4, depth * 0.1);
+    addHangCan(root, -width * 0.16, height - 0.22, 0, chrome, glow);
+    addHangCan(root, 0, height - 0.22, 0.15, chrome, glow);
+    addHangCan(root, width * 0.16, height - 0.22, 0, chrome, glow);
+    return true;
+  }
+  if (kind === "roof-star") {
+    dropBox(root, width - 0.1, 0.06, depth - 0.1, matteBlack, 0, height - 0.12, 0);
+    addCoveLights(root, width, depth, height, cream, brass, blueLed, "dark");
+    addLedLoop(root, width - 1.1, depth - 1.1, height - 0.22, blueLed, 0.03);
+    const count = QUALITY.low ? 26 : 58;
+    const starGeo = new THREE.SphereGeometry(0.016, 6, 4);
+    const stars = new THREE.InstancedMesh(starGeo, starGlow, count);
+    stars.castShadow = false;
+    for (let i = 0; i < count; i++) {
+      const rx = Math.sin(i * 12.9898 + 78.233) * 43758.5453;
+      const rz = Math.sin(i * 78.233 + 12.9898) * 23421.631;
+      const x = ((rx - Math.floor(rx)) - 0.5) * (width - 1.4);
+      const z = ((rz - Math.floor(rz)) - 0.5) * (depth - 1.4);
+      const sc = 0.55 + (i % 5) * 0.28;
+      instDummy.position.set(x, height - 0.155, z);
+      instDummy.scale.setScalar(sc);
+      instDummy.rotation.set(0, 0, 0);
+      instDummy.updateMatrix();
+      stars.setMatrixAt(i, instDummy.matrix);
+    }
+    stars.instanceMatrix.needsUpdate = true;
+    root.add(tagRoof(stars));
+    return true;
+  }
+  if (kind === "roof-marbleceil") {
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    const cols = 3;
+    const rows = 2;
+    const pad = 0.85;
+    const cellW = (width - pad * 2) / cols;
+    const cellD = (depth - pad * 2) / rows;
+    for (let i = 0; i < cols; i++) {
+      for (let j = 0; j < rows; j++) {
+        const x = -width / 2 + pad + (i + 0.5) * cellW;
+        const z = -depth / 2 + pad + (j + 0.5) * cellD;
+        const darkTile = (i + j) % 2 === 0;
+        dropBox(root, cellW - 0.16, 0.05, cellD - 0.16, darkTile ? blackMarble : whiteMarble, x, height - 0.16, z);
+        addFrameBand(root, cellW - 0.08, cellD - 0.08, 0.018, 0.014, height - 0.188, gold);
+      }
+    }
+    addLedLoop(root, width - 1.2, depth - 1.2, height - 0.24, led);
+    addDownlights(root, width, depth, height, cols, rows, pad, cellW, cellD, housing, glow, { luxury: true, ringMat: gold });
+    return true;
+  }
+  if (kind === "roof-hex") {
+    dropBox(root, width - 0.12, 0.045, depth - 0.12, matteBlack, 0, height - 0.12, 0);
+    addCoveLights(root, width, depth, height, cream, brass, led, "dark");
+    const r = 0.42;
+    const sx = r * 1.78;
+    const sz = r * 1.54;
+    const cols = Math.max(3, Math.floor((width - 1.6) / sx));
+    const rows = Math.max(2, Math.round((depth - 1.6) / sz));
+    const ox = -((cols - 1) * sx) / 2;
+    const oz = -((rows - 1) * sz) / 2;
+    for (let j = 0; j < rows; j++) {
+      for (let i = 0; i < cols; i++) {
+        const x = ox + i * sx + (j % 2 ? sx * 0.5 : 0);
+        const z = oz + j * sz;
+        if (Math.abs(x) > width / 2 - 0.85 || Math.abs(z) > depth / 2 - 0.75) continue;
+        const hex = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.88, r * 0.88, 0.045, 6), j % 2 ? gray : matteBlack);
+        hex.position.set(x, height - 0.175, z);
+        hex.castShadow = !QUALITY.low;
+        hex.receiveShadow = true;
+        root.add(tagRoof(hex));
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(r * 0.9, 0.01, 6, 6), led);
+        ring.rotation.x = Math.PI / 2;
+        ring.position.set(x, height - 0.2, z);
+        root.add(tagRoof(ring));
+      }
+    }
+    addDownlights(root, width, depth, height, 3, 2, 1.35, (width - 2.7) / 3, (depth - 2.7) / 2, housing, glow);
+    return true;
+  }
+  if (kind === "roof-minimal") {
+    dropBox(root, width - 0.16, 0.04, depth - 0.16, plaster, 0, height - 0.12, 0);
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    dropBox(root, width - 1.55, 0.05, depth - 1.55, beige, 0, height - 0.2, 0);
+    addLedLoop(root, width - 1.7, depth - 1.7, height - 0.23, led, 0.02);
+    addTrackRail(root, width - 2.1, 0, height - 0.28, -depth * 0.16, true, matteBlack, glow);
+    addTrackRail(root, width - 2.1, 0, height - 0.28, depth * 0.16, true, matteBlack, glow);
+    return true;
+  }
+  if (kind === "roof-showroom") {
+    dropBox(root, width - 0.12, 0.05, depth - 0.12, matteBlack, 0, height - 0.12, 0);
+    addCoveLights(root, width, depth, height, cream, brass, led, "dark");
+    const n = Math.max(11, Math.round(width * 1.28));
+    const slatW = 0.115;
+    const span = width - 0.95;
+    const gap = Math.max(0.03, (span - n * slatW) / Math.max(1, n - 1));
+    for (let i = 0; i < n; i++) {
+      const x = -span / 2 + i * (slatW + gap) + slatW / 2;
+      dropBox(root, slatW, 0.075, depth - 0.82, walnut, x, height - 0.185, 0);
+      if (i < n - 1) dropBox(root, 0.012, 0.01, depth - 1.05, led, x + slatW / 2 + gap / 2, height - 0.16, 0);
+    }
+    for (const z of [-depth * 0.22, depth * 0.22]) {
+      addTrackRail(root, width - 1.25, 0, height - 0.27, z, true, matteBlack, glow);
+    }
+    return true;
+  }
+  if (kind === "roof-mallgold") {
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    const cols = 4;
+    const rows = 3;
+    const pad = 0.95;
+    const cellW = (width - pad * 2) / cols;
+    const cellD = (depth - pad * 2) / rows;
+    for (let i = 0; i < cols; i++) {
+      for (let j = 0; j < rows; j++) {
+        const x = -width / 2 + pad + (i + 0.5) * cellW;
+        const z = -depth / 2 + pad + (j + 0.5) * cellD;
+        dropBox(root, cellW - 0.32, 0.045, cellD - 0.32, matteBlack, x, height - 0.165, z);
+        addFrameBand(root, cellW - 0.24, cellD - 0.24, 0.016, 0.014, height - 0.188, gold);
+      }
+    }
+    addLedLoop(root, width - 1.35, depth - 1.35, height - 0.24, led);
+    addDownlights(root, width, depth, height, cols, rows, pad, cellW, cellD, housing, glow, { luxury: true, ringMat: gold });
+    return true;
+  }
+  if (kind === "roof-arch") {
+    dropBox(root, width - 0.18, 0.04, depth - 0.18, concrete, 0, height - 0.12, 0);
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    addIBeam(root, width - 0.7, 0, height - 0.2, -depth * 0.18, true, matteBlack);
+    addIBeam(root, width - 0.7, 0, height - 0.2, depth * 0.18, true, matteBlack);
+    addIBeam(root, depth - 0.7, -width * 0.22, height - 0.2, 0, false, matteBlack);
+    addIBeam(root, depth - 0.7, width * 0.22, height - 0.2, 0, false, matteBlack);
+    dropBox(root, width * 0.34, 0.06, depth * 0.28, walnut, -width * 0.18, height - 0.34, -depth * 0.08);
+    dropBox(root, width * 0.3, 0.06, depth * 0.32, walnut, width * 0.2, height - 0.4, depth * 0.1);
+    addHangCan(root, -width * 0.16, height - 0.22, 0, chrome, glow);
+    addHangCan(root, 0, height - 0.22, 0.15, chrome, glow);
+    addHangCan(root, width * 0.16, height - 0.22, 0, chrome, glow);
+    return true;
+  }
+  if (kind === "roof-float") {
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    const panels = [
+      { w: width * 0.4, d: depth * 0.3, x: -width * 0.16, z: -depth * 0.1, drop: 0.24, wood: true },
+      { w: width * 0.26, d: depth * 0.36, x: width * 0.2, z: depth * 0.08, drop: 0.36, wood: false },
+      { w: width * 0.32, d: depth * 0.2, x: -width * 0.06, z: depth * 0.2, drop: 0.3, wood: true },
+      { w: width * 0.18, d: depth * 0.18, x: width * 0.14, z: -depth * 0.22, drop: 0.2, wood: false },
+      { w: width * 0.16, d: depth * 0.26, x: -width * 0.3, z: depth * 0.04, drop: 0.42, wood: true },
+    ];
+    for (const p of panels) {
+      const y = height - p.drop;
+      dropBox(root, p.w, 0.055, p.d, p.wood ? walnut : matteBlack, p.x, y, p.z);
+      addLedLoop(root, p.w + 0.03, p.d + 0.03, y - 0.034, led, 0.02);
+    }
+    addDownlights(root, width, depth, height, 3, 2, 1.35, (width - 2.7) / 3, (depth - 2.7) / 2, housing, glow);
+    return true;
+  }
+  if (kind === "roof-nature") {
+    dropBox(root, width - 0.16, 0.04, depth - 0.16, plaster, 0, height - 0.12, 0);
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    addCeilingSlats(root, width, depth, height, oak || walnut, Math.round(width * 1.7), 0.08, 0.045, null);
+    const beams = QUALITY.low ? 3 : 5;
+    for (let i = 0; i < beams; i++) {
+      const z = -depth / 2 + 0.9 + ((i + 0.5) / beams) * (depth - 1.8);
+      dropBox(root, width - 0.85, 0.1, 0.14, oak || walnut, 0, height - 0.26, z);
+    }
+    addCeilingGreens(root, -width * 0.28, height - 0.34, -depth * 0.16, dark);
+    addCeilingGreens(root, width * 0.26, height - 0.34, depth * 0.14, dark);
+    addCeilingGreens(root, 0, height - 0.34, -depth * 0.05, dark);
+    addDownlights(root, width, depth, height, 3, 3, 1.3, (width - 2.6) / 3, (depth - 2.6) / 3, housing, glow);
+    return true;
+  }
   if (kind === "roof-goldleaf") {
     addCoveLights(root, width, depth, height, cream, brass, led, "cream");
     const g = addCofferGrid(root, width, depth, height, gold, gold, 0.08, 0.13, { profile: "molded", trayMat: ivory });
@@ -2573,11 +3264,92 @@ function addPremiumCeiling(root, kind, width, depth, height, roofMat, mats) {
     addDownlights(root, width, depth, height, 3, 3, 1.2, (width - 2.4) / 3, (depth - 2.4) / 3, housing, glow);
     return true;
   }
+  if (kind === "roof-contrast") {
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    const g = addCofferGrid(root, width, depth, height, gold, gold, 0.07, 0.12, { profile: "molded", trayMat: ivory });
+    for (let i = 0; i < g.cols; i++) {
+      for (let j = 0; j < g.rows; j++) {
+        const x = -width / 2 + g.pad + (i + 0.5) * g.cellW;
+        const z = -depth / 2 + g.pad + (j + 0.5) * g.cellD;
+        const size = Math.min(g.cellW, g.cellD) * 0.42;
+        const box = meshBox(size, 0.03, size, ivory, x, height - 0.16, z);
+        box.rotation.y = Math.PI / 4;
+        root.add(tagRoof(box));
+        const rim = meshBox(size - 0.12, 0.014, size - 0.12, gold, x, height - 0.18, z);
+        rim.rotation.y = Math.PI / 4;
+        root.add(tagRoof(rim));
+        const inner = meshBox(size * 0.38, 0.012, size * 0.38, gold, x, height - 0.19, z);
+        inner.rotation.y = Math.PI / 4;
+        root.add(tagRoof(inner));
+      }
+    }
+    const roseR = Math.min(0.72, width * 0.08);
+    const rose = new THREE.Mesh(new THREE.TorusGeometry(roseR, 0.03, 8, 28), gold);
+    rose.rotation.x = Math.PI / 2;
+    rose.position.set(0, height - 0.2, 0);
+    root.add(tagRoof(rose));
+    root.add(tagRoof(meshBox(0.42, 0.02, 0.42, ivory, 0, height - 0.185, 0)));
+    addDownlights(root, width, depth, height, g.cols, g.rows, g.pad, g.cellW, g.cellD, housing, glow, {
+      luxury: true,
+      wash: true,
+      ringMat: gold,
+    });
+    return true;
+  }
+  if (kind === "roof-medallion") {
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    addFrameBand(root, width - 1.05, depth - 1.05, 0.08, 0.04, height - 0.16, gold);
+    const r = Math.min(1.35, width * 0.18);
+    [r + 0.28, r + 0.08, r - 0.12].forEach((rad, i) => {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(Math.max(0.2, rad), i ? 0.028 : 0.04, 8, 32), gold);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.set(0, height - 0.15 - i * 0.012, 0);
+      root.add(tagRoof(ring));
+    });
+    const disc = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.42, r * 0.42, 0.03, 28), ivory);
+    disc.position.set(0, height - 0.14, 0);
+    root.add(tagRoof(disc));
+    const corners = [
+      [-width / 2 + 1.15, -depth / 2 + 1.15],
+      [width / 2 - 1.15, -depth / 2 + 1.15],
+      [-width / 2 + 1.15, depth / 2 - 1.15],
+      [width / 2 - 1.15, depth / 2 - 1.15],
+    ];
+    corners.forEach(([x, z]) => {
+      const box = meshBox(0.55, 0.03, 0.55, gold, x, height - 0.16, z);
+      box.rotation.y = Math.PI / 4;
+      root.add(tagRoof(box));
+    });
+    addLedLoop(root, width - 1.45, depth - 1.45, height - 0.26, led);
+    addDownlights(root, width, depth, height, 3, 3, 1.25, (width - 2.5) / 3, (depth - 2.5) / 3, housing, glow);
+    return true;
+  }
+  if (kind === "roof-lattice") {
+    addCoveLights(root, width, depth, height, cream, brass, led, "cream");
+    const size = 0.95;
+    const step = 1.35;
+    const cols = Math.max(3, Math.floor((width - 1.6) / step));
+    const rows = Math.max(3, Math.floor((depth - 1.6) / step));
+    const ox = -((cols - 1) * step) / 2;
+    const oz = -((rows - 1) * step) / 2;
+    for (let j = 0; j < rows; j++) {
+      for (let i = 0; i < cols; i++) {
+        const box = meshBox(size, 0.03, size, ivory, ox + i * step, height - 0.15, oz + j * step);
+        box.rotation.y = Math.PI / 4;
+        root.add(tagRoof(box));
+        const rim = meshBox(size - 0.16, 0.014, size - 0.16, gold, ox + i * step, height - 0.172, oz + j * step);
+        rim.rotation.y = Math.PI / 4;
+        root.add(tagRoof(rim));
+      }
+    }
+    addDownlights(root, width, depth, height, 3, 3, 1.2, (width - 2.4) / 3, (depth - 2.4) / 3, housing, glow);
+    return true;
+  }
   return false;
 }
 
 function addInteriorCeiling(root, width, depth, height, roofMat, style) {
-  if (!QUALITY.high) {
+  if (QUALITY.phone) {
     const slab = new THREE.Mesh(new THREE.BoxGeometry(width, 0.14, depth), roofMat);
     slab.position.y = height - 0.05;
     slab.receiveShadow = true;
@@ -2864,22 +3636,98 @@ function makeShopSign(text, fg, bg) {
   return tex;
 }
 
-function mallMarble(repeatX = 4, repeatZ = 4) {
-  const map = makePresetTexture("luxury");
-  if (map) {
-    const tex = map.clone();
-    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(repeatX, repeatZ);
-    tex.needsUpdate = true;
-    return new THREE.MeshStandardMaterial({
-      color: "#f4eee6",
-      map: tex,
-      roughness: 0.05,
-      metalness: 0.1,
-      envMapIntensity: 1.4,
-    });
+function mallMarble(repeatX = 4, repeatZ = 4, texId = "luxury", color = "#ffffff") {
+  return mappedMat(color, texId, {
+    repeat: repeatX,
+    repeatY: repeatZ,
+    roughness: 0.045,
+    metalness: 0.1,
+    env: 1.72,
+    nStr: 0.42,
+    nSc: 0.16,
+    clearcoat: 0.78,
+    ccr: 0.06,
+  });
+}
+
+function addMallShopFinish(g, w, d, h, theme) {
+  const fashion = theme === "fashion";
+  const wall = mappedMat(fashion ? "#f4eee6" : "#e8eef4", fashion ? "limewash" : "plaster", {
+    repeat: 1.8,
+    roughness: fashion ? 0.62 : 0.48,
+    metalness: 0.03,
+    env: 0.62,
+    nStr: 0.48,
+    nSc: 0.18,
+  });
+  const dado = fashion
+    ? mappedMat("#f7f3ec", "luxury", { repeat: 1.4, roughness: 0.08, metalness: 0.08, env: 1.45, nStr: 0.4, nSc: 0.14, clearcoat: 0.55, ccr: 0.1 })
+    : mappedMat("#1a2230", "stone", { repeat: 1.6, roughness: 0.22, metalness: 0.12, env: 1.15, nStr: 0.55, nSc: 0.2, clearcoat: 0.28, ccr: 0.2 });
+  const floor = mallMarble(fashion ? 1.15 : 1.35, fashion ? 1.35 : 1.55, fashion ? "floor-contrast" : "floor-diamond", "#ffffff");
+  const cream = mappedMat("#f6f1e8", "plaster", { repeat: 2.2, roughness: 0.78, metalness: 0.02, env: 0.38, nStr: 0.35, nSc: 0.12 });
+  const brass = brassMat();
+  const chrome = new THREE.MeshStandardMaterial({ color: fashion ? "#c6a56a" : "#b8c0c8", metalness: 0.9, roughness: 0.16, envMapIntensity: 1.4 });
+  const led = new THREE.MeshStandardMaterial({
+    color: fashion ? "#fff6e8" : "#e8f7ff",
+    emissive: fashion ? "#ffd89a" : "#8ce4ff",
+    emissiveIntensity: fashion ? 1.55 : 1.35,
+  });
+  const glow = led.clone();
+  glow.emissiveIntensity = fashion ? 2.05 : 1.7;
+  const housing = new THREE.MeshStandardMaterial({ color: fashion ? "#ece4d6" : "#1c222a", metalness: 0.22, roughness: 0.38 });
+
+  const shopFloor = new THREE.Mesh(new THREE.PlaneGeometry(w - 0.1, d - 0.1), floor);
+  shopFloor.rotation.x = -Math.PI / 2;
+  shopFloor.position.y = 0.003;
+  shopFloor.receiveShadow = true;
+  g.add(shopFloor);
+  g.add(meshBox(w - 0.22, 0.006, 0.028, brass, 0, 0.006, d / 2 - 0.18));
+  g.add(meshBox(w - 0.22, 0.006, 0.028, brass, 0, 0.006, -d / 2 + 0.18));
+  g.add(meshBox(0.028, 0.006, d - 0.22, brass, -w / 2 + 0.18, 0.006, 0));
+  g.add(meshBox(0.028, 0.006, d - 0.22, brass, w / 2 - 0.18, 0.006, 0));
+
+  const t = 0.1;
+  g.add(meshBox(w, h, t, wall, 0, h / 2, -d / 2 + t / 2));
+  g.add(meshBox(t, h, d, wall, -w / 2 + t / 2, h / 2, 0));
+  g.add(meshBox(t, h, d, wall, w / 2 - t / 2, h / 2, 0));
+  g.add(meshBox(w - 0.16, 1.08, 0.04, dado, 0, 0.58, -d / 2 + 0.12));
+  g.add(meshBox(0.04, 1.08, d - 0.2, dado, -w / 2 + 0.12, 0.58, 0));
+  g.add(meshBox(0.04, 1.08, d - 0.2, dado, w / 2 - 0.12, 0.58, 0));
+  g.add(meshBox(w - 0.14, 0.03, 0.03, brass, 0, 1.14, -d / 2 + 0.13));
+  g.add(meshBox(0.03, 0.03, d - 0.18, brass, -w / 2 + 0.13, 1.14, 0));
+  g.add(meshBox(0.03, 0.03, d - 0.18, brass, w / 2 - 0.13, 1.14, 0));
+  g.add(meshBox(w - 0.12, 0.08, 0.05, cream, 0, 0.04, -d / 2 + 0.12));
+  g.add(meshBox(0.05, 0.08, d - 0.16, cream, -w / 2 + 0.12, 0.04, 0));
+  g.add(meshBox(0.05, 0.08, d - 0.16, cream, w / 2 - 0.12, 0.04, 0));
+
+  g.add(meshBox(w, 0.16, d, cream, 0, h - 0.05, 0));
+  g.add(meshBox(w - 0.55, 0.05, d - 0.55, cream, 0, h - 0.18, 0));
+  g.add(meshBox(w - 0.52, 0.014, d - 0.52, chrome, 0, h - 0.21, 0));
+  g.add(meshBox(w - 0.72, 0.012, 0.04, led, 0, h - 0.225, (d - 0.72) / 2));
+  g.add(meshBox(w - 0.72, 0.012, 0.04, led, 0, h - 0.225, -(d - 0.72) / 2));
+  g.add(meshBox(0.04, 0.012, d - 0.72, led, -(w - 0.72) / 2, h - 0.225, 0));
+  g.add(meshBox(0.04, 0.012, d - 0.72, led, (w - 0.72) / 2, h - 0.225, 0));
+
+  if (fashion) {
+    const gold = mappedMat("#c6a56a", "roof-goldleaf", { repeat: 1.6, roughness: 0.22, metalness: 0.72, env: 1.35, nStr: 0.3, nSc: 0.12, clearcoat: 0.35, ccr: 0.18 });
+    addCofferGrid(g, w - 0.7, d - 0.7, h - 0.02, gold, brass, 0.07, 0.1, { profile: QUALITY.low ? "flat" : "molded", trayMat: cream });
+    addDownlights(g, w - 0.7, d - 0.7, h - 0.02, 3, 3, 0.55, (w - 1.8) / 3, (d - 1.8) / 3, housing, glow);
+  } else {
+    const navy = new THREE.MeshStandardMaterial({ color: "#121820", roughness: 0.42, metalness: 0.16, envMapIntensity: 0.85 });
+    const trays = [-w * 0.22, 0, w * 0.22];
+    const trayW = Math.min(1.85, w * 0.26);
+    for (const x of trays) {
+      g.add(meshBox(trayW, 0.05, d - 1.35, navy, x, h - 0.2, 0));
+      g.add(meshBox(trayW - 0.12, 0.012, d - 1.55, led, x, h - 0.228, 0));
+    }
+    addDownlights(g, w - 0.8, d - 0.8, h - 0.02, 3, 2, 0.7, (w - 2.2) / 3, (d - 2.2) / 2, housing, glow);
   }
-  return new THREE.MeshStandardMaterial({ color: "#f0e8dc", roughness: 0.12, metalness: 0.06 });
+
+  const lamp = new THREE.PointLight(fashion ? "#ffe6c4" : "#d8f4ff", fashion ? 18 : 16, Math.max(8, d * 1.15), 1.7);
+  lamp.position.set(0, h - 0.55, 0.15);
+  lamp.castShadow = false;
+  g.add(lamp);
+  g.add(meshBox(w * 0.42, 0.03, 0.14, glow, 0, h - 0.16, 0.15));
 }
 
 function addMallColumn(root, x, z, h, stone, dark, brass) {
@@ -2897,37 +3745,27 @@ function addMallColumn(root, x, z, h, stone, dark, brass) {
 function makeMallShop(opts) {
   const { x, z, w, d, h, name, fg, bg, theme } = opts;
   const g = new THREE.Group();
-  const wall = mappedMat(theme === "cafe" ? "#efe6d8" : "#f3ebe0", "limewash", {
-    repeat: 1.6,
-    roughness: 0.7,
-    metalness: 0.02,
-    env: 0.45,
-    nStr: 0.5,
-    nSc: 0.18,
-  });
-  const floor = mallMarble(1.4, 1.4);
-  const cream = new THREE.MeshStandardMaterial({ color: "#f4efe6", roughness: 0.82 });
-  const dark = new THREE.MeshStandardMaterial({ color: bg, metalness: 0.42, roughness: 0.32 });
-  const chrome = new THREE.MeshStandardMaterial({ color: "#2a2d32", metalness: 0.72, roughness: 0.46 });
+  addMallShopFinish(g, w, d, h, theme);
+  const dark = new THREE.MeshStandardMaterial({ color: bg, metalness: 0.48, roughness: 0.28, envMapIntensity: 0.9 });
+  const chrome = new THREE.MeshStandardMaterial({ color: theme === "fashion" ? "#c6a56a" : "#c5c8cc", metalness: 0.88, roughness: 0.14, envMapIntensity: 1.35 });
   const brass = brassMat();
   const glass = new THREE.MeshStandardMaterial({
     color: "#c8d8e6",
-    roughness: 0.06,
-    metalness: 0.04,
+    roughness: 0.05,
+    metalness: 0.06,
     transparent: true,
-    opacity: 0.16,
-    envMapIntensity: 1.4,
+    opacity: 0.14,
+    envMapIntensity: 1.55,
     depthWrite: false,
   });
-  const t = 0.1;
-  const shopFloor = new THREE.Mesh(new THREE.PlaneGeometry(w - 0.08, d - 0.08), floor);
-  shopFloor.rotation.x = -Math.PI / 2;
-  shopFloor.position.y = 0.002;
-  g.add(shopFloor);
-  g.add(meshBox(w, h, t, wall, 0, h / 2, -d / 2 + t / 2));
-  g.add(meshBox(t, h, d, wall, -w / 2 + t / 2, h / 2, 0));
-  g.add(meshBox(t, h, d, wall, w / 2 - t / 2, h / 2, 0));
-  g.add(meshBox(w, 0.12, d, cream, 0, h - 0.06, 0));
+  const wall = mappedMat(theme === "cafe" ? "#efe6d8" : "#f3ebe0", "limewash", {
+    repeat: 1.6,
+    roughness: 0.62,
+    metalness: 0.02,
+    env: 0.55,
+    nStr: 0.45,
+    nSc: 0.16,
+  });
 
   const doorW = 2.15;
   const pier = (w - doorW) / 2;
@@ -2988,46 +3826,62 @@ function makeMallShop(opts) {
   addDigitalScreen(g, { w: shopDoorW + 0.35, h: 0.36, x: 0, y: Math.min(h - 1.15, 3.45), z: shopInsideZ, copy: shopCopy, vertical: false });
   addDigitalScreen(g, { w: shopDoorW + 0.35, h: 0.36, x: 0, y: h - fasciaH - 0.28, z: d / 2 + 0.12, copy: shopCopy, vertical: false });
 
-  const glow = new THREE.MeshStandardMaterial({ color: "#fff8f0", emissive: "#ffe8c4", emissiveIntensity: 0.55 });
-  g.add(meshBox(w * 0.55, 0.04, 0.18, glow, 0, h - 0.16, 0.2));
-
-  const hw = w / 2 - 0.55;
-  const hd = d / 2 - 0.7;
-  if (theme === "fashion") {
-    addShopFurniture(g, "rack", -hw + 0.2, -0.4, { rotY: Math.PI / 2, stock: "dresses" });
-    addShopFurniture(g, "rack", hw - 0.2, 0.2, { rotY: -Math.PI / 2, stock: "dresses" });
-    addShopFurniture(g, "mannequin", -0.45, hd - 0.45, { accent: "#4a1d4e" });
-    addShopFurniture(g, "mannequin", 0.5, hd - 0.35, { accent: "#8b1e3f" });
-    addShopFurniture(g, "cube", 0, 0.35, { stock: "dresses", width: 0.7, height: 0.5, color: "#f7f3ec" });
-    addShopFurniture(g, "counter", 0, -hd + 0.15, { width: 2.4, color: "#e6dccf", stock: "dresses" });
-    addShopFurniture(g, "plant", hw - 0.15, hd - 0.2);
-  } else if (theme === "tech") {
-    const cab = { color: "#f3ebe0", accent: "#c6a56a", stock: "phones" };
-    addShopFurniture(g, "phoneCabinet", 0, -hd + 0.26, { width: 3.0, ...cab });
-    addShopFurniture(g, "phoneCabinet", -hw + 0.26, 0.1, { rotY: Math.PI / 2, width: 2.0, ...cab });
-    addShopFurniture(g, "phoneIsland", 0, 0.45, { width: 1.5, color: "#f4eee6", accent: "#c6a56a" });
-    addShopFurniture(g, "glassCase", hw - 0.85, 0.35, { width: 1.15, stock: "phones", color: "#f7f3ec", accent: "#c6a56a" });
-    addShopFurniture(g, "counter", 0, -hd + 1.45, { width: 2.2, color: "#f3ebe0", accent: "#c6a56a", stock: "phones" });
-  } else if (theme === "shoes") {
-    addShopFurniture(g, "shoeWall", -hw + 0.15, 0, { rotY: Math.PI / 2 });
-    addShopFurniture(g, "shoeWall", hw - 0.15, 0, { rotY: -Math.PI / 2 });
-    addShopFurniture(g, "shoeIsland", -0.9, 0.6);
-    addShopFurniture(g, "shoeIsland", 0.9, 0.6);
-    addShopFurniture(g, "bench", 0, hd - 0.5);
-    addShopFurniture(g, "cashier", hw - 1.1, -hd + 0.2, { color: "#d9cbb8" });
-  } else {
-    addShopFurniture(g, "counter", 0, -hd + 0.1, { width: 3.2, color: "#d9cbb8" });
-    addShopFurniture(g, "table", -1.2, 0.4, { stock: "none", color: "#efe8dc" });
-    addShopFurniture(g, "table", 1.2, 0.4, { color: "#efe8dc" });
-    addShopFurniture(g, "sofa", 0, hd - 0.5, { color: "#5c4033" });
-    addShopFurniture(g, "plant", -hw + 0.2, hd - 0.3);
-    addShopFurniture(g, "plant", hw - 0.2, hd - 0.3);
-    addShopFurniture(g, "light", -1.8, -0.2);
-    addShopFurniture(g, "light", 1.8, -0.2);
-  }
-
+  g.userData = { kind: "mall-shop", name, theme, selectable: false };
   g.position.set(x, 0, z);
   return g;
+}
+
+export function mallShopBays(store = {}) {
+  const width = store.width || 18;
+  const depth = store.depth || 14;
+  const bayW = 7.2;
+  const bayD = Math.max(9.2, depth - 1.2);
+  const bayGap = 0.2;
+  const frontZ = depth / 2;
+  return {
+    width,
+    depth,
+    bayW,
+    bayD,
+    bayGap,
+    frontZ,
+    shopZ: frontZ - bayD / 2 + 0.06,
+    luxeX: -(width / 2 + bayGap + bayW / 2),
+    novaX: width / 2 + bayGap + bayW / 2,
+  };
+}
+
+export function mallShopItems(store = {}) {
+  const { bayW, bayD, shopZ, luxeX, novaX, frontZ } = mallShopBays(store);
+  const hw = bayW / 2 - 0.55;
+  const hd = bayD / 2 - 0.7;
+  const place = (mallKey, mallShop, type, x, z, extra = {}) => ({ mallKey, mallShop, type, x, z, ...extra });
+  const cab = { color: "#f3ebe0", accent: "#c6a56a", stock: "phones", texture: "stone" };
+  const lift = Math.max(3.9, (store.height || 4.8) - 0.26);
+  const warmCan = { lift, lightOn: true, lightColor: "#ffe6b0", lightPower: 38, accent: "#c6a56a", color: "#ece4d6" };
+  const coolCan = { lift, lightOn: true, lightColor: "#e4f4ff", lightPower: 36, accent: "#9aa4ae", color: "#1c222a" };
+  return [
+    place("luxe-rack-l", "luxe", "rack", luxeX - hw + 0.2, shopZ - 0.4, { rotY: Math.PI / 2, stock: "dresses", color: "#c6a56a", accent: "#c6a56a" }),
+    place("luxe-rack-r", "luxe", "rack", luxeX + hw - 0.2, shopZ + 0.2, { rotY: -Math.PI / 2, stock: "dresses", color: "#c6a56a", accent: "#c6a56a" }),
+    place("luxe-man-l", "luxe", "mannequin", luxeX - 0.45, shopZ + hd - 0.45, { accent: "#4a1d4e", color: "#f3ece4", outfit: "lumber" }),
+    place("luxe-man-r", "luxe", "mannequin", luxeX + 0.5, shopZ + hd - 0.35, { accent: "#8b1e3f", color: "#f3ece4", outfit: "cool" }),
+    place("luxe-cube", "luxe", "cube", luxeX, shopZ + 0.35, { stock: "dresses", width: 0.7, height: 0.5, color: "#ffffff", texture: "luxury", accent: "#c6a56a" }),
+    place("luxe-counter", "luxe", "counter", luxeX, shopZ - hd + 0.15, { width: 2.4, color: "#5c4033", accent: "#c6a56a", stock: "dresses", texture: "walnut" }),
+    place("luxe-plant", "luxe", "plant", luxeX + hw - 0.15, shopZ + hd - 0.2),
+    place("luxe-can-1", "luxe", "ceilingCan", luxeX - 1.55, shopZ - 1.35, warmCan),
+    place("luxe-can-2", "luxe", "ceilingCan", luxeX + 1.55, shopZ - 1.35, warmCan),
+    place("luxe-can-3", "luxe", "ceilingCan", luxeX, shopZ + 1.15, warmCan),
+    place("nova-cab-back", "nova", "phoneCabinet", novaX, shopZ - hd + 0.26, { width: 3, ...cab }),
+    place("nova-cab-side", "nova", "phoneCabinet", novaX - hw + 0.26, shopZ + 0.1, { rotY: Math.PI / 2, width: 2, ...cab }),
+    place("nova-island", "nova", "phoneIsland", novaX, shopZ + 0.45, { width: 1.5, color: "#1a2230", accent: "#c6a56a", texture: "stone" }),
+    place("nova-case", "nova", "glassCase", novaX + hw - 0.85, shopZ + 0.35, { width: 1.15, stock: "phones", color: "#f7f3ec", accent: "#c6a56a", texture: "luxury" }),
+    place("nova-counter", "nova", "counter", novaX, shopZ - hd + 1.45, { width: 2.2, color: "#1c222a", accent: "#c6a56a", stock: "phones", texture: "stone" }),
+    place("nova-can-1", "nova", "ceilingCan", novaX - 1.5, shopZ - 1.2, coolCan),
+    place("nova-can-2", "nova", "ceilingCan", novaX + 1.5, shopZ - 1.2, coolCan),
+    place("nova-can-3", "nova", "ceilingCan", novaX, shopZ + 1.1, coolCan),
+    place("con-bench-l", "concourse", "bench", -2.4, frontZ + 3.2, { color: "#d8cfc2", accent: "#c6a56a", width: 1.6, texture: "walnut" }),
+    place("con-bench-r", "concourse", "bench", 2.4, frontZ + 3.2, { color: "#d8cfc2", accent: "#c6a56a", width: 1.6, texture: "walnut" }),
+  ];
 }
 
 function addMallContext(root, width, depth, height, sign) {
@@ -3036,43 +3890,14 @@ function addMallContext(root, width, depth, height, sign) {
     roughness: 0.3,
     metalness: 0.07,
   });
-  const dark = new THREE.MeshStandardMaterial({
-    color: "#1a1612",
-    metalness: 0.42,
-    roughness: 0.3,
-  });
-  const chrome = new THREE.MeshStandardMaterial({
-    color: "#c5c8cc",
-    metalness: 0.88,
-    roughness: 0.14,
-  });
   const brass = brassMat();
-  const cream = new THREE.MeshStandardMaterial({
-    color: "#f4efe6",
-    roughness: 0.82,
-    metalness: 0.02,
-  });
-  const led = new THREE.MeshStandardMaterial({
-    color: "#fff8f0",
-    emissive: "#ffe8c4",
-    emissiveIntensity: 0.52,
-  });
-  const glass = new THREE.MeshStandardMaterial({
-    color: "#c8d8e6",
-    roughness: 0.06,
-    metalness: 0.04,
-    transparent: true,
-    opacity: 0.14,
-    envMapIntensity: 1.4,
-    depthWrite: false,
-  });
 
   const frontZ = depth / 2;
-  const walkD = 5.4;
+  const walkD = 3.2;
   const walkZ = frontZ + walkD / 2 + 0.08;
-  const walkW = width + 16.4;
+  const walkW = width + 2.6;
 
-  const deck = new THREE.Mesh(new THREE.PlaneGeometry(walkW, walkD + 0.4), mallMarble(2, 1));
+  const deck = new THREE.Mesh(new THREE.PlaneGeometry(walkW, walkD + 0.4), mallMarble(2.2, 1.1, "floor-contrast", "#ffffff"));
   deck.rotation.x = -Math.PI / 2;
   deck.position.set(0, 0, walkZ);
   deck.receiveShadow = true;
@@ -3081,89 +3906,31 @@ function addMallContext(root, width, depth, height, sign) {
   root.add(meshBox(walkW, 0.002, 0.016, brass, 0, 0.0012, frontZ + walkD));
   root.add(meshBox(walkW - 1.4, 0.002, 0.012, brass, 0, 0.0012, walkZ));
 
-  root.add(meshBox(walkW, 0.18, walkD + 0.35, cream, 0, height + 0.02, walkZ));
-  root.add(meshBox(walkW, 0.05, 0.1, chrome, 0, height + 0.02, frontZ + 0.16));
-  root.add(meshBox(walkW, 0.05, 0.1, chrome, 0, height + 0.02, frontZ + walkD));
-  for (let i = -2; i <= 2; i++) {
-    root.add(meshBox(walkW - 1.4, 0.03, 0.08, led, 0, height - 0.02, walkZ + i * 0.85));
-  }
-  const sky = new THREE.Mesh(UNIT_PLANE, glass);
-  sky.rotation.x = Math.PI / 2;
-  sky.scale.set(walkW * 0.42, walkD * 0.55, 1);
-  sky.position.set(0, height + 0.12, walkZ);
-  root.add(sky);
-  root.add(meshBox(walkW * 0.42, 0.02, walkD * 0.55, led, 0, height + 0.08, walkZ));
-
-  const fasciaH = 1.08;
-  root.add(meshBox(width + 0.55, fasciaH, 0.3, dark, 0, height - fasciaH / 2, frontZ + 0.22));
-  root.add(meshBox(width + 0.6, 0.035, 0.34, brass, 0, height - 0.02, frontZ + 0.22));
-  root.add(meshBox(width + 0.6, 0.035, 0.34, brass, 0, height - fasciaH + 0.02, frontZ + 0.22));
-  root.add(meshBox(width + 0.25, 0.045, 0.1, led, 0, height - fasciaH - 0.03, frontZ + 0.36));
-
-  const signW = Math.min(width * 0.58, 7.2);
+  const signW = Math.min(width * 0.42, 4.6);
   const signGroup = new THREE.Group();
+  const dark = bronzeMat("#14110e");
   const signTex = makeSignTexture(sign);
+  signGroup.add(meshBox(signW + 0.18, 0.62, 0.08, dark, 0, 0, -0.03));
+  signGroup.add(meshBox(signW + 0.22, 0.66, 0.02, brass, 0, 0, -0.06));
   const face = new THREE.Mesh(
     UNIT_PLANE,
     new THREE.MeshStandardMaterial({
       map: signTex,
-      roughness: 0.2,
-      metalness: 0.1,
+      roughness: 0.22,
+      metalness: 0.12,
       emissive: "#ffffff",
       emissiveMap: signTex,
-      emissiveIntensity: 0.38,
+      emissiveIntensity: 0.32,
     })
   );
-  face.scale.set(signW, 0.62, 1);
+  face.scale.set(signW, 0.46, 1);
+  face.position.z = 0.02;
   signGroup.add(face);
-  signGroup.position.set(0, height - fasciaH / 2, frontZ + 0.4);
+  signGroup.position.set(0, height - 0.46, frontZ + 0.1);
   signGroup.userData = { selectable: true, kind: "sign", id: "sign" };
   root.add(signGroup);
 
-  const colCount = 6;
-  for (let i = 0; i < colCount; i++) {
-    const x = -walkW / 2 + 1.1 + (i * (walkW - 2.2)) / (colCount - 1);
-    addMallColumn(root, x, frontZ + 4.65, height, stone, dark, brass);
-  }
-
   root.add(meshBox(width + 0.5, 0.02, 0.62, stone, 0, 0.01, frontZ + 0.34));
-
-  root.add(meshBox(0.22, height + 0.2, walkD + 1.2, cream, -walkW / 2, height / 2, walkZ));
-  root.add(meshBox(0.22, height + 0.2, walkD + 1.2, cream, walkW / 2, height / 2, walkZ));
-
-  const bayW = 7.2;
-  const bayD = Math.max(9.2, depth - 1.2);
-  const bayGap = 0.2;
-  const shopZ = frontZ - bayD / 2 + 0.06;
-  root.add(
-    makeMallShop({
-      x: -(width / 2 + bayGap + bayW / 2),
-      z: shopZ,
-      w: bayW,
-      d: bayD,
-      h: height,
-      name: "LUXE",
-      fg: "#f3eee4",
-      bg: "#2a1624",
-      theme: "fashion",
-    })
-  );
-  root.add(
-    makeMallShop({
-      x: width / 2 + bayGap + bayW / 2,
-      z: shopZ,
-      w: bayW,
-      d: bayD,
-      h: height,
-      name: "NOVA",
-      fg: "#f3eee4",
-      bg: "#121214",
-      theme: "tech",
-    })
-  );
-
-  addShopFurniture(root, "bench", -2.4, frontZ + 3.2, { color: "#d8cfc2", accent: "#c6a56a", width: 1.6 });
-  addShopFurniture(root, "bench", 2.4, frontZ + 3.2, { color: "#d8cfc2", accent: "#c6a56a", width: 1.6 });
 }
 
 let grassTexCached = null;
@@ -3275,9 +4042,9 @@ export function buildRoom(state, materials) {
   const root = new THREE.Group();
   root.name = "store-model";
 
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), materials.floor);
-  floor.rotation.x = -Math.PI / 2;
-  floor.position.y = 0;
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(width, 0.06, depth), materials.floor);
+  floor.position.y = -0.03;
+  floor.castShadow = false;
   floor.receiveShadow = true;
   floor.userData = { selectable: true, kind: "floor", id: "floor" };
   root.add(floor);
@@ -3407,9 +4174,10 @@ export function buildRoom(state, materials) {
   }
 
   addInteriorCeiling(root, width, depth, height, materials.roof, state.store.surfaces.roof?.texture);
-  addInteriorFitout(root, width, depth, height, state.store.frontStyle);
+  addInteriorFitout(root, width, depth, height, state.store.frontStyle, state);
   addWallDressing(root, width, depth, height, state);
   addMallApron(root, width, depth, height);
+  addMallContext(root, width, depth, height, state.store.sign);
   if (state.store.frontStyle === "mobile") addMobileStorefront(root, width, depth, height, state);
   else addEntranceBanners(root, width, depth, height, state.store.sign, state.doors);
   return root;
@@ -3425,19 +4193,19 @@ export function defaultState() {
       roofVisible: true,
       sign: { text: "YOUR STORE", fg: "#f3f1ec", bg: "#121214" },
       lighting: {
-        exposure: 0.86,
-        sun: 0.72,
+        exposure: 0.84,
+        sun: 0.5,
         fill: 0.16,
-        hemi: 0.62,
-        warmth: 0.76,
+        hemi: 0.26,
+        warmth: 0.9,
       },
       surfaces: {
-        floor: { color: "#ffffff", texture: "tz-cottage", image: null, repeat: 3 },
-        roof: { color: "#ffffff", texture: "roof-goldleaf", image: null, repeat: 2 },
-        "wall-front": { color: "#f3ebe0", texture: "drywall", image: null, repeat: 1.85, finish: "glass", opacity: 0.08 },
-        "wall-back": { color: "#f3ebe0", texture: "limewash", image: null, repeat: 2.2, finish: "solid", opacity: 0.05 },
-        "wall-left": { color: "#f3ebe0", texture: "limewash", image: null, repeat: 2.2, finish: "solid", opacity: 0.05 },
-        "wall-right": { color: "#f3ebe0", texture: "limewash", image: null, repeat: 2.2, finish: "solid", opacity: 0.05 },
+        floor: { color: "#ffffff", texture: "floor-oakplank", image: null, repeat: 3.8 },
+        roof: { color: "#ffffff", texture: "roof-plain", image: null, repeat: 1 },
+        "wall-front": { color: "#1c1816", texture: "silk", image: null, repeat: 1.85, finish: "glass", opacity: 0.08 },
+        "wall-back": { color: "#2a221c", texture: "fluted-walnut", image: null, repeat: 1.6, finish: "solid", opacity: 0.05 },
+        "wall-left": { color: "#1c1816", texture: "silk", image: null, repeat: 1.85, finish: "solid", opacity: 0.05 },
+        "wall-right": { color: "#1c1816", texture: "silk", image: null, repeat: 1.85, finish: "solid", opacity: 0.05 },
       },
     },
     doors: [
@@ -3448,10 +4216,10 @@ export function defaultState() {
         color: "#c6a56a",
         glassType: "clear",
         glassColor: "#dce8f0",
-        opacity: 0.12,
+        opacity: 0.1,
         pos: 50,
-        width: 2.8,
-        height: 3.15,
+        width: 2.7,
+        height: 3.28,
         open: false,
       },
     ],
@@ -3461,24 +4229,26 @@ export function defaultState() {
         wall: "front",
         color: "#d8eef8",
         glassType: "clear",
-        glassColor: "#d8eef8",
-        opacity: 0.12,
+        glassColor: "#dce8f0",
+        opacity: 0.1,
+        style: "luxe",
         pos: 18,
-        width: 4.1,
-        height: 3.45,
-        sill: 0.14,
+        width: 4.2,
+        height: 3.55,
+        sill: 0.08,
       },
       {
         id: uid(),
         wall: "front",
         color: "#d8eef8",
         glassType: "clear",
-        glassColor: "#d8eef8",
-        opacity: 0.12,
+        glassColor: "#dce8f0",
+        opacity: 0.1,
+        style: "luxe",
         pos: 82,
-        width: 4.1,
-        height: 3.45,
-        sill: 0.14,
+        width: 4.2,
+        height: 3.55,
+        sill: 0.08,
       },
       {
         id: uid(),

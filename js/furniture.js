@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { Reflector } from "three/addons/objects/Reflector.js";
 import { clone as cloneSkinned } from "three/addons/utils/SkeletonUtils.js";
 import { QUALITY, capTex } from "./quality.js";
 import { loadAllWalkGirls, getWalkGirlPacks } from "./walk-girls.js?v=girlwalk1";
@@ -134,7 +135,7 @@ function mappedColorMat(color, texId, extra = {}) {
   map.needsUpdate = true;
   const nrm = QUALITY.normals ? makeNormalFromAlbedo(map, extra.nStr ?? 0.75) : null;
   if (nrm) nrm.repeat.copy(map.repeat);
-  const Ctor = extra.physical && QUALITY.physical ? THREE.MeshPhysicalMaterial : THREE.MeshStandardMaterial;
+  const Ctor = QUALITY.physical ? THREE.MeshPhysicalMaterial : THREE.MeshStandardMaterial;
   return new Ctor({
     color,
     map,
@@ -143,7 +144,7 @@ function mappedColorMat(color, texId, extra = {}) {
     roughness: extra.roughness ?? 0.42,
     metalness: extra.metalness ?? 0.04,
     envMapIntensity: extra.env ?? 0.7,
-    ...(QUALITY.physical && extra.physical
+    ...(QUALITY.physical
       ? { clearcoat: extra.clearcoat ?? 0.28, clearcoatRoughness: extra.ccr ?? 0.22 }
       : {}),
   });
@@ -231,6 +232,398 @@ function metalMat(color) {
     });
   }
   return new THREE.MeshStandardMaterial(spec);
+}
+
+function polishedGold(color = "#c6a56a") {
+  if (QUALITY.physical) {
+    return new THREE.MeshPhysicalMaterial({
+      color,
+      metalness: 0.98,
+      roughness: 0.1,
+      envMapIntensity: 2.15,
+      clearcoat: 0.7,
+      clearcoatRoughness: 0.08,
+    });
+  }
+  return new THREE.MeshStandardMaterial({
+    color,
+    metalness: 0.95,
+    roughness: 0.14,
+    envMapIntensity: 1.8,
+  });
+}
+
+class ArchRailCurve extends THREE.Curve {
+  constructor(hw, bodyH, y0 = 0.02) {
+    super();
+    this.hw = hw;
+    this.bodyH = bodyH;
+    this.y0 = y0;
+  }
+  getPoint(t, optionalTarget = new THREE.Vector3()) {
+    const hw = this.hw;
+    const bodyH = this.bodyH;
+    const y0 = this.y0;
+    const post = Math.max(0.04, bodyH - y0);
+    const arch = Math.PI * hw;
+    const d = t * (post * 2 + arch);
+    if (d <= post) return optionalTarget.set(-hw, y0 + d, 0);
+    const d2 = d - post;
+    if (d2 <= arch) {
+      const a = Math.PI - (d2 / arch) * Math.PI;
+      return optionalTarget.set(Math.cos(a) * hw, bodyH + Math.sin(a) * hw, 0);
+    }
+    return optionalTarget.set(hw, bodyH - (d2 - arch), 0);
+  }
+}
+
+function archGlassShape(hw, bodyH, segs = 28) {
+  const s = new THREE.Shape();
+  s.moveTo(-hw, 0);
+  s.lineTo(-hw, bodyH);
+  for (let i = 1; i <= segs; i++) {
+    const a = Math.PI - (i / segs) * Math.PI;
+    s.lineTo(Math.cos(a) * hw, bodyH + Math.sin(a) * hw);
+  }
+  s.lineTo(hw, 0);
+  s.lineTo(-hw, 0);
+  return s;
+}
+
+class CapsuleRailCurve extends THREE.Curve {
+  constructor(hw, bodyH) {
+    super();
+    this.hw = hw;
+    this.bodyH = bodyH;
+  }
+  getPoint(t, optionalTarget = new THREE.Vector3()) {
+    const hw = this.hw;
+    const bodyH = this.bodyH;
+    const post = Math.max(0.04, bodyH);
+    const arch = Math.PI * hw;
+    const d = t * (post * 2 + arch * 2);
+    if (d <= post) return optionalTarget.set(-hw, hw + d, 0);
+    let d2 = d - post;
+    if (d2 <= arch) {
+      const a = Math.PI - (d2 / arch) * Math.PI;
+      return optionalTarget.set(Math.cos(a) * hw, hw + bodyH + Math.sin(a) * hw, 0);
+    }
+    d2 -= arch;
+    if (d2 <= post) return optionalTarget.set(hw, hw + bodyH - d2, 0);
+    d2 -= post;
+    const a = -(d2 / arch) * Math.PI;
+    return optionalTarget.set(Math.cos(a) * hw, hw + Math.sin(a) * hw, 0);
+  }
+}
+
+function capsuleGlassShape(hw, bodyH, segs = 28) {
+  const s = new THREE.Shape();
+  s.moveTo(-hw, hw);
+  s.lineTo(-hw, hw + bodyH);
+  for (let i = 1; i <= segs; i++) {
+    const a = Math.PI - (i / segs) * Math.PI;
+    s.lineTo(Math.cos(a) * hw, hw + bodyH + Math.sin(a) * hw);
+  }
+  s.lineTo(hw, hw);
+  for (let i = 1; i < segs; i++) {
+    const a = -(i / segs) * Math.PI;
+    s.lineTo(Math.cos(a) * hw, hw + Math.sin(a) * hw);
+  }
+  s.closePath();
+  return s;
+}
+
+function makeCapsuleGlassGeometry(hw, bodyH, segs = 32) {
+  const ring = [];
+  for (let i = 0; i <= segs; i++) {
+    const a = Math.PI - (i / segs) * Math.PI;
+    ring.push([Math.cos(a) * hw, hw + bodyH + Math.sin(a) * hw]);
+  }
+  for (let i = 1; i <= segs; i++) {
+    const a = -(i / segs) * Math.PI;
+    ring.push([Math.cos(a) * hw, hw + Math.sin(a) * hw]);
+  }
+  const positions = [];
+  const uvs = [];
+  const normals = [];
+  const indices = [];
+  const totalH = bodyH + hw * 2;
+  const cx = 0;
+  const cy = hw + bodyH * 0.5;
+  const push = (x, y) => {
+    positions.push(x, y, 0);
+    uvs.push((x / hw + 1) * 0.5, y / totalH);
+    normals.push(0, 0, 1);
+  };
+  push(cx, cy);
+  for (const [x, y] of ring) push(x, y);
+  const n = ring.length;
+  for (let i = 0; i < n; i++) indices.push(0, 1 + i, 1 + ((i + 1) % n));
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
+  geo.setIndex(indices);
+  geo.computeBoundingBox();
+  geo.computeBoundingSphere();
+  return geo;
+}
+
+function makeArchGlassGeometry(hw, bodyH, segs = 32) {
+  const ring = [
+    [-hw, 0],
+    [hw, 0],
+    [hw, bodyH],
+  ];
+  for (let i = 1; i < segs; i++) {
+    const a = (i / segs) * Math.PI;
+    ring.push([Math.cos(a) * hw, bodyH + Math.sin(a) * hw]);
+  }
+  ring.push([-hw, bodyH]);
+  const positions = [];
+  const uvs = [];
+  const normals = [];
+  const indices = [];
+  const totalH = bodyH + hw;
+  const push = (x, y) => {
+    positions.push(x, y, 0);
+    uvs.push((x / hw + 1) * 0.5, y / totalH);
+    normals.push(0, 0, 1);
+  };
+  push(0, bodyH * 0.42);
+  for (const [x, y] of ring) push(x, y);
+  const n = ring.length;
+  for (let i = 0; i < n; i++) indices.push(0, 1 + i, 1 + ((i + 1) % n));
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
+  geo.setIndex(indices);
+  geo.computeBoundingBox();
+  geo.computeBoundingSphere();
+  return geo;
+}
+
+function satinBronze(color = "#5a4a3c") {
+  const spec = {
+    color,
+    roughness: 0.46,
+    metalness: 0.28,
+    envMapIntensity: 0.58,
+  };
+  return QUALITY.physical
+    ? new THREE.MeshPhysicalMaterial({
+        ...spec,
+        clearcoat: 0.1,
+        clearcoatRoughness: 0.62,
+      })
+    : new THREE.MeshStandardMaterial(spec);
+}
+
+function makeLiveGlass(geo, tint = 0xc4ced6) {
+  const size = QUALITY.phone ? 256 : QUALITY.high ? 768 : 512;
+  if (!QUALITY.phone) {
+    return new Reflector(geo, {
+      clipBias: 0.003,
+      textureWidth: size,
+      textureHeight: Math.round(size * 1.45),
+      color: tint,
+      multisample: 0,
+    });
+  }
+  const spec = {
+    color: "#c8d2da",
+    metalness: 1,
+    roughness: 0.02,
+    envMapIntensity: 2.5,
+  };
+  return new THREE.Mesh(
+    geo,
+    QUALITY.physical
+      ? new THREE.MeshPhysicalMaterial({ ...spec, clearcoat: 1, clearcoatRoughness: 0.03 })
+      : new THREE.MeshStandardMaterial(spec)
+  );
+}
+
+class RoundedRectRailCurve extends THREE.Curve {
+  constructor(hw, hh, r) {
+    super();
+    this.hw = hw;
+    this.hh = hh;
+    this.r = r;
+  }
+  getPoint(t, optionalTarget = new THREE.Vector3()) {
+    const hw = this.hw;
+    const hh = this.hh;
+    const r = this.r;
+    const sideX = Math.max(0.04, (hh - r) * 2);
+    const sideY = Math.max(0.04, (hw - r) * 2);
+    const corner = (Math.PI / 2) * r;
+    const lens = [sideX, corner, sideY, corner, sideX, corner, sideY, corner];
+    const total = lens.reduce((a, b) => a + b, 0);
+    let d = t * total;
+    let i = 0;
+    while (i < lens.length - 1 && d > lens[i]) {
+      d -= lens[i];
+      i += 1;
+    }
+    const u = lens[i] > 0 ? d / lens[i] : 0;
+    if (i === 0) return optionalTarget.set(-hw, r + u * sideX, 0);
+    if (i === 1) {
+      const a = Math.PI - u * (Math.PI / 2);
+      return optionalTarget.set(-hw + r + Math.cos(a) * r, hh - r + Math.sin(a) * r, 0);
+    }
+    if (i === 2) return optionalTarget.set(-hw + r + u * sideY, hh, 0);
+    if (i === 3) {
+      const a = Math.PI / 2 - u * (Math.PI / 2);
+      return optionalTarget.set(hw - r + Math.cos(a) * r, hh - r + Math.sin(a) * r, 0);
+    }
+    if (i === 4) return optionalTarget.set(hw, hh - r - u * sideX, 0);
+    if (i === 5) {
+      const a = -u * (Math.PI / 2);
+      return optionalTarget.set(hw - r + Math.cos(a) * r, r + Math.sin(a) * r, 0);
+    }
+    if (i === 6) return optionalTarget.set(hw - r - u * sideY, 0, 0);
+    const a = -Math.PI / 2 - u * (Math.PI / 2);
+    return optionalTarget.set(-hw + r + Math.cos(a) * r, r + Math.sin(a) * r, 0);
+  }
+}
+
+function roundedMirrorShape(hw, hh, r, segs = 10) {
+  const s = new THREE.Shape();
+  const corner = (cx, cy, a0, a1) => {
+    for (let i = 1; i <= segs; i++) {
+      const a = a0 + (a1 - a0) * (i / segs);
+      s.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+    }
+  };
+  s.moveTo(-hw, r);
+  s.lineTo(-hw, hh - r);
+  corner(-hw + r, hh - r, Math.PI, Math.PI / 2);
+  s.lineTo(hw - r, hh);
+  corner(hw - r, hh - r, Math.PI / 2, 0);
+  s.lineTo(hw, r);
+  corner(hw - r, r, 0, -Math.PI / 2);
+  s.lineTo(-hw + r, 0);
+  corner(-hw + r, r, -Math.PI / 2, -Math.PI);
+  s.closePath();
+  return s;
+}
+
+function makeRoundedRectGeometry(hw, hh, r, segs = 10) {
+  const ring = [];
+  const addCorner = (cx, cy, a0, a1) => {
+    for (let i = 0; i <= segs; i++) {
+      const a = a0 + (a1 - a0) * (i / segs);
+      ring.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]);
+    }
+  };
+  ring.push([-hw, r]);
+  ring.push([-hw, hh - r]);
+  addCorner(-hw + r, hh - r, Math.PI, Math.PI / 2);
+  ring.push([hw - r, hh]);
+  addCorner(hw - r, hh - r, Math.PI / 2, 0);
+  ring.push([hw, r]);
+  addCorner(hw - r, r, 0, -Math.PI / 2);
+  ring.push([-hw + r, 0]);
+  addCorner(-hw + r, r, -Math.PI / 2, -Math.PI);
+  const positions = [];
+  const uvs = [];
+  const normals = [];
+  const indices = [];
+  const push = (x, y) => {
+    positions.push(x, y, 0);
+    uvs.push((x / hw + 1) * 0.5, y / hh);
+    normals.push(0, 0, 1);
+  };
+  push(0, hh * 0.5);
+  for (const [x, y] of ring) push(x, y);
+  const n = ring.length;
+  for (let i = 0; i < n; i++) indices.push(0, 1 + i, 1 + ((i + 1) % n));
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setAttribute("normal", new THREE.Float32BufferAttribute(normals, 3));
+  geo.setIndex(indices);
+  geo.computeBoundingBox();
+  geo.computeBoundingSphere();
+  return geo;
+}
+
+function addArchedFloorMirror(group, w, h) {
+  const bronze = satinBronze("#5a4a3c");
+  const lipMat = satinBronze("#6a5748");
+  const tubeR = Math.min(0.04, Math.max(0.03, w * 0.034));
+  const hw = w / 2 - tubeR * 0.2;
+  const hh = h - tubeR * 0.4;
+  const r = Math.min(0.15, hw * 0.36);
+  const segs = QUALITY.phone ? 64 : 128;
+  const radial = QUALITY.phone ? 8 : 16;
+  const rail = new THREE.Mesh(new THREE.TubeGeometry(new RoundedRectRailCurve(hw, hh, r), segs, tubeR, radial, true), bronze);
+  rail.castShadow = true;
+  rail.receiveShadow = true;
+  group.add(rail);
+  const inset = tubeR * 0.95;
+  const ghw = Math.max(0.16, hw - inset);
+  const ghh = Math.max(0.3, hh - inset * 0.35);
+  const gr = Math.max(0.06, r - inset * 0.55);
+  const lip = new THREE.Mesh(
+    new THREE.TubeGeometry(new RoundedRectRailCurve(ghw + tubeR * 0.12, ghh, Math.max(0.05, gr)), segs, tubeR * 0.18, 8, true),
+    lipMat
+  );
+  lip.position.z = 0.01;
+  group.add(lip);
+  const glassSize = QUALITY.phone ? 320 : QUALITY.high ? 1024 : 704;
+  const glassGeo = makeRoundedRectGeometry(ghw, ghh, gr, QUALITY.phone ? 8 : 14);
+  const glass = QUALITY.phone
+    ? makeLiveGlass(glassGeo, 0xd6dce2)
+    : new Reflector(glassGeo, {
+        clipBias: 0.002,
+        textureWidth: glassSize,
+        textureHeight: Math.round(glassSize * 1.7),
+        color: 0xd8dee4,
+        multisample: 0,
+      });
+  glass.position.set(0, 0, 0.014);
+  group.add(glass);
+  const back = new THREE.Mesh(
+    new THREE.ExtrudeGeometry(roundedMirrorShape(hw + tubeR * 0.12, hh, r, QUALITY.phone ? 8 : 12), {
+      depth: 0.034,
+      bevelEnabled: false,
+      curveSegments: QUALITY.phone ? 10 : 18,
+    }),
+    new THREE.MeshStandardMaterial({ color: "#1a1612", roughness: 0.86, metalness: 0.06 })
+  );
+  back.position.z = -0.05;
+  back.castShadow = true;
+  group.add(back);
+  const shade = new THREE.Mesh(
+    makeRoundedRectGeometry(hw + tubeR * 1.15, hh, r + tubeR * 0.2, 10),
+    new THREE.MeshBasicMaterial({ color: "#000000", transparent: true, opacity: 0.14, depthWrite: false })
+  );
+  shade.position.z = -0.062;
+  group.add(shade);
+}
+
+function addStandingMirror(group, w, h, goldColor) {
+  const gold = polishedGold(goldColor || "#c6a56a");
+  const t = Math.min(0.03, w * 0.045);
+  const glassW = w - t * 2.2;
+  const glassH = h - t * 2.4;
+  group.add(box(t, h, 0.046, gold, -w / 2 + t / 2, h / 2, 0));
+  group.add(box(t, h, 0.046, gold, w / 2 - t / 2, h / 2, 0));
+  group.add(box(w, t, 0.05, gold, 0, t / 2, 0));
+  group.add(box(w, t, 0.05, gold, 0, h - t / 2, 0));
+  group.add(box(w - t * 0.6, t * 0.35, 0.018, polishedGold("#d4b878"), 0, t + 0.02, 0.02));
+  const glass = makeLiveGlass(new THREE.PlaneGeometry(glassW, glassH));
+  glass.position.set(0, h / 2, 0.018);
+  group.add(glass);
+  group.add(box(w - t, h - t, 0.02, new THREE.MeshStandardMaterial({ color: "#161412", roughness: 0.8, metalness: 0.1 }), 0, h / 2, -0.018));
+}
+
+function isDarkBody(color) {
+  const c = new THREE.Color(color || "#f4eee6");
+  return c.r * 0.299 + c.g * 0.587 + c.b * 0.114 < 0.38;
 }
 
 function marbleTop(color = "#f4eee6") {
@@ -843,9 +1236,9 @@ export const CATALOG = [
   { type: "dressNiche", label: "Clothing wall shelf", hint: "Hanger shirts on chrome rail" },
   { type: "marbleIsland", label: "Marble island", hint: "Low floating display" },
   { type: "marblePlinth", label: "Marble pedestal", hint: "Featured piece" },
-  { type: "goldArch", label: "Gold light arch", hint: "Back-wall portal" },
+  { type: "goldArch", label: "Arched mirror", hint: "Rounded rectangle mirror" },
   { type: "rack", label: "Dress rack", hint: "Hanging clothes" },
-  { type: "mannequin", label: "Man", hint: "Free 3D man model" },
+  { type: "mannequin", label: "Display model", hint: "Boutique fashion model" },
   { type: "mannequinCase", label: "Glass mannequin case", hint: "Front window vitrine" },
   { type: "glowRunway", label: "LED runway arch", hint: "Oval neon + platform" },
   { type: "fittingRoom", label: "Fitting room", hint: "Try-on booth" },
@@ -853,6 +1246,10 @@ export const CATALOG = [
   { type: "shoeIsland", label: "Shoe table", hint: "Pairs on top" },
   { type: "mirror", label: "Floor mirror", hint: "Fitting" },
   { type: "sofa", label: "Sofa", hint: "Waiting seat" },
+  { type: "loungeChair", label: "Lounge chair", hint: "Leather club chair" },
+  { type: "coffeeTable", label: "Coffee table", hint: "Glass + brass table" },
+  { type: "ottoman", label: "Ottoman", hint: "Leather pouf" },
+  { type: "sideboard", label: "Sideboard", hint: "Console cabinet" },
   { type: "logo", label: "Logo", hint: "A–Z or upload" },
   { type: "poster", label: "Poster stand", hint: "Store graphic" },
   { type: "ledBanner", label: "LED wall banner", hint: "Digital screen on any wall" },
@@ -861,7 +1258,7 @@ export const CATALOG = [
   { type: "plant", label: "Plant", hint: "Decor" },
   { type: "light", label: "Floor lamp", hint: "Stand light · move anywhere" },
   { type: "pendant", label: "Pendant lamp", hint: "Hanging ceiling light" },
-  { type: "crystalChandelier", label: "Crystal jhomar", hint: "Flush chrome + crystal chandelier" },
+  { type: "crystalChandelier", label: "Luxury ring light", hint: "Brass canopy + warm LED rings" },
   { type: "ceilingCan", label: "Ceiling spot", hint: "Downlight on the roof" },
   { type: "wallSconce", label: "Wall sconce", hint: "Light on any wall" },
   { type: "deskLamp", label: "Desk lamp", hint: "Light on a counter or desk" },
@@ -901,12 +1298,12 @@ export const DEFAULTS = {
   dressNiche: { width: 3.15, depth: 0.46, height: 2.24, color: "#f4eee6", accent: "#b08968", stock: "dresses" },
   marbleIsland: { width: 3.4, depth: 0.92, height: 0.4, color: "#f6f1e8", accent: "#c6a56a", stock: "dresses" },
   marblePlinth: { width: 0.42, depth: 0.42, height: 0.78, color: "#f6f1e8", accent: "#c6a56a", stock: "shoes" },
-  goldArch: { width: 1.55, depth: 0.16, height: 2.95, color: "#f6f1e8", accent: "#c6a56a", stock: "none" },
+  goldArch: { width: 1.04, depth: 0.1, height: 2.28, color: "#5a4a3c", accent: "#5a4a3c", stock: "none" },
   cube: { width: 0.7, depth: 0.7, height: 0.7, color: "#f4eee6", accent: "#c6a56a", stock: "none" },
   plant: { width: 0.45, depth: 0.45, height: 0.9, color: "#6f6964", accent: "#3f8f5a", stock: "none" },
   light: { width: 0.35, depth: 0.35, height: 1.7, color: "#f4eee6", accent: "#c6a56a", stock: "none" },
   pendant: { width: 0.42, depth: 0.42, height: 0.55, color: "#f4eee6", accent: "#c6a56a", stock: "none" },
-  crystalChandelier: { width: 1.18, depth: 1.18, height: 0.52, color: "#e8eef4", accent: "#c8d0d8", stock: "none" },
+  crystalChandelier: { width: 1.28, depth: 1.28, height: 0.58, color: "#161412", accent: "#c6a56a", stock: "none" },
   ceilingCan: { width: 0.22, depth: 0.22, height: 0.12, color: "#ece7de", accent: "#c6a56a", stock: "none" },
   wallSconce: { width: 0.22, depth: 0.12, height: 0.28, color: "#f4eee6", accent: "#c6a56a", stock: "none" },
   deskLamp: { width: 0.28, depth: 0.28, height: 0.48, color: "#f4eee6", accent: "#c6a56a", stock: "none" },
@@ -920,14 +1317,18 @@ export const DEFAULTS = {
   accessoryWall: { width: 1.8, depth: 0.42, height: 2.15, color: "#f3ebe0", accent: "#c6a56a", stock: "phones" },
   glassCase: { width: 2.2, depth: 0.5, height: 1.48, color: "#1a1612", accent: "#c6a56a", stock: "watches" },
   watchTower: { width: 0.5, depth: 0.5, height: 1.35, color: "#1a1612", accent: "#c6a56a", stock: "watches" },
-  mannequin: { width: 0.48, depth: 0.42, height: 1.72, color: "#f3ece4", accent: "#4a1d4e", stock: "dresses" },
+  mannequin: { width: 0.56, depth: 0.5, height: 1.88, color: "#f3ece4", accent: "#1a1c20", stock: "dresses" },
   mannequinCase: { width: 1.08, depth: 0.88, height: 2.28, color: "#f4f1ec", accent: "#1a2a4a", stock: "none" },
   glowRunway: { width: 1.35, depth: 1.15, height: 2.18, color: "#e8dcc8", accent: "#ffffff", stock: "none" },
-  fittingRoom: { width: 1.15, depth: 1.15, height: 2.2, color: "#f3ebe0", accent: "#3a2a1e", stock: "none" },
+  fittingRoom: { width: 1.82, depth: 1.72, height: 2.42, color: "#f3ebe0", accent: "#3a2a1e", stock: "none" },
   shoeWall: { width: 1.9, depth: 0.42, height: 2.05, color: "#f4eee6", accent: "#c6a56a", stock: "shoes" },
   shoeIsland: { width: 1.6, depth: 0.85, height: 0.72, color: "#f4eee6", accent: "#c6a56a", stock: "shoes" },
   mirror: { width: 0.72, depth: 0.1, height: 1.85, color: "#e7ecf2", accent: "#c6a56a", stock: "none" },
   sofa: { width: 1.85, depth: 0.78, height: 0.78, color: "#3a2e28", accent: "#c6a56a", stock: "none" },
+  loungeChair: { width: 0.78, depth: 0.82, height: 0.8, color: "#121014", accent: "#c6a56a", stock: "none" },
+  coffeeTable: { width: 1.05, depth: 0.58, height: 0.4, color: "#1a1612", accent: "#c6a56a", stock: "none" },
+  ottoman: { width: 0.62, depth: 0.62, height: 0.4, color: "#121014", accent: "#c6a56a", stock: "none" },
+  sideboard: { width: 1.95, depth: 0.42, height: 0.74, color: "#1a1612", accent: "#c6a56a", stock: "none" },
   poster: { width: 1.15, depth: 0.1, height: 1.85, color: "#1a1612", accent: "#c6a56a", stock: "none" },
   logo: { width: 0.78, depth: 0.08, height: 1.65, color: "#1a1612", accent: "#c6a56a", stock: "none" },
   ledBanner: { width: 0.72, depth: 0.07, height: 1.52, color: "#101218", accent: "#c6a56a", stock: "none" },
@@ -1260,7 +1661,7 @@ function fillStock(group, item) {
       });
       return;
     }
-    if (item.type === "cube" || item.type === "table" || item.type === "counter" || item.type === "marbleIsland") {
+    if (item.type === "cube" || item.type === "table" || item.type === "coffeeTable" || item.type === "counter" || item.type === "marbleIsland") {
       const n = Math.max(3, Math.round(w / 0.28));
       for (let i = 0; i < n; i++) {
         const x = -w / 2 + 0.2 + (i * (w - 0.4)) / Math.max(1, n - 1);
@@ -1719,6 +2120,7 @@ export function resetLampBudget() {
   lampBudget = 0;
   watchColorSeq = 0;
   manOutfitSeq = 0;
+  mannequinWalkers.length = 0;
 }
 function nextWatchColor() {
   return watchColorSeq++;
@@ -1867,7 +2269,7 @@ export function loadMannequinModels() {
         const gltf = await loadGlbFile(spec.url);
         if (!gltf?.scene) return null;
         applyIdlePose(gltf);
-        return { kind: spec.kind, outfit: spec.outfit, root: fitManGlb(gltf.scene) };
+        return { kind: spec.kind, outfit: spec.outfit, root: fitManGlb(gltf.scene), clips: gltf.animations || [] };
       })
     );
     MAN_MASTERS.length = 0;
@@ -1876,39 +2278,119 @@ export function loadMannequinModels() {
   })();
   return manLoad;
 }
-loadMannequinModels();
+
+export function mannequinModelsReady() {
+  return MAN_MASTERS.length > 0;
+}
+
+export function compileMannequinModels(renderer, scene, camera) {
+  if (!renderer || !camera || !MAN_MASTERS.length) return;
+  const tmp = new THREE.Scene();
+  if (scene?.environment) tmp.environment = scene.environment;
+  for (const m of MAN_MASTERS) {
+    if (!m?.root) continue;
+    tmp.add(m.root);
+    try {
+      renderer.compile(tmp, camera);
+    } catch {}
+    tmp.remove(m.root);
+  }
+}
 
 function nextManOutfit() {
   return manOutfitSeq++;
 }
 
-function pickManMaster(prefer, slot) {
+export const MAN_OUTFITS = [
+  { id: "suit", label: "Tailored suit" },
+  { id: "cool", label: "Modern look" },
+  { id: "lumber", label: "Wool layer" },
+  { id: "casual", label: "Smart casual" },
+];
+
+function pickManMaster(prefer, slot, outfit) {
   if (!MAN_MASTERS.length) return null;
+  if (outfit) {
+    const hit = MAN_MASTERS.find((m) => m.outfit === outfit);
+    if (hit) return hit;
+  }
   const pool = MAN_MASTERS.filter((m) => m.kind === prefer);
   const list = pool.length ? pool : MAN_MASTERS;
   return list[slot % list.length];
 }
 
-function tintMan(root, item, look = {}) {
-  const accent = new THREE.Color(item.accent || "#4a1d4e");
-  const needTint = MAN_MASTERS.length < 2;
-  const tint = new THREE.Color(needTint ? OUTFIT_TINTS[(look.slot || 0) % OUTFIT_TINTS.length] : "#ffffff");
+function manMeshRole(mesh, mat) {
+  const n = `${mat?.name || ""} ${mesh.name || ""} ${mesh.parent?.name || ""}`.toLowerCase();
+  if (/eye|cornea|sclera|tears/.test(n)) return "eye";
+  if (/hair|brow|beard|mustache|lash|fur/.test(n)) return "hair";
+  if (/glass|hat|headwear|cap_/.test(n)) return "prop";
+  if (/shoe|boot|footwear|footwear|sneaker/.test(n)) return "shoe";
+  if (/skin|body|face|arm|leg|hand|neck|wolf3d_body|wolf3d_head(?!wear)/.test(n)) return "skin";
+  if (/outfit|shirt|pant|cloth|jacket|coat|top|bottom|suit|denim|hoodie/.test(n)) return "cloth";
+  return "keep";
+}
+
+function styleBoutiqueMan(root, item, outfit = "") {
+  const accent = new THREE.Color(item.accent || "#1a1c20");
+  const keepTex = !item.color || /#f3ece4|#f7f2ec|#ffffff|#f7f3ec/i.test(item.color);
+  const wash = {
+    suit: "#e8e6e2",
+    cool: "#ece6de",
+    lumber: "#d8cfc2",
+    casual: "#e4e7ec",
+  }[outfit] || "#ece8e2";
   root.traverse((m) => {
     if (!m.isMesh || !m.material) return;
     const mats = Array.isArray(m.material) ? m.material : [m.material];
     const next = mats.map((mat) => {
+      const role = manMeshRole(m, mat);
       const copy = mat.clone();
       if (copy.map) {
         copy.map.colorSpace = THREE.SRGBColorSpace;
-        copy.color.copy(tint);
-      } else if (copy.color && needTint) {
-        copy.color.lerp(tint, 0.55);
+        copy.map.anisotropy = Math.max(copy.map.anisotropy || 1, QUALITY.aniso);
+        copy.color.set(keepTex ? wash : item.color);
+      } else if (copy.color && !keepTex) {
+        copy.color.lerp(new THREE.Color(item.color), 0.4);
       }
-      const name = `${copy.name || ""} ${m.name || ""}`;
-      if (!copy.map && /outfit_top|outfit_bottom|headwear/i.test(name) && copy.color) {
-        copy.color.lerp(accent, 0.18);
+      if (role === "cloth" && copy.color) copy.color.lerp(accent, 0.16);
+      if (role === "skin") {
+        copy.roughness = 0.52;
+        copy.metalness = 0.02;
+        copy.envMapIntensity = 0.62;
+        if ("sheen" in copy) {
+          copy.sheen = 0.22;
+          copy.sheenRoughness = 0.72;
+          copy.sheenColor?.set("#f3e6d8");
+        }
+      } else if (role === "cloth") {
+        copy.roughness = Math.max(copy.roughness ?? 0.5, outfit === "suit" ? 0.38 : 0.5);
+        copy.metalness = Math.min(copy.metalness ?? 0.04, 0.06);
+        copy.envMapIntensity = outfit === "suit" ? 0.95 : 0.72;
+        if ("sheen" in copy) {
+          copy.sheen = outfit === "suit" ? 0.34 : 0.18;
+          copy.sheenRoughness = 0.55;
+          copy.sheenColor?.set("#f4efe6");
+        }
+      } else if (role === "shoe") {
+        copy.roughness = 0.28;
+        copy.metalness = 0.12;
+        copy.envMapIntensity = 1.05;
+        if ("clearcoat" in copy) {
+          copy.clearcoat = 0.28;
+          copy.clearcoatRoughness = 0.22;
+        }
+      } else if (role === "hair") {
+        copy.roughness = 0.62;
+        copy.envMapIntensity = 0.45;
+        if (copy.alphaMap || /hair|lash|brow/i.test(`${copy.name || ""} ${m.name || ""}`)) copy.alphaTest = 0.38;
+      } else if (role === "eye") {
+        copy.roughness = 0.08;
+        copy.metalness = 0.02;
+        copy.envMapIntensity = 1.15;
+      } else {
+        copy.roughness = Math.min(Math.max(copy.roughness ?? 0.42, 0.28), 0.68);
+        copy.envMapIntensity = 0.88;
       }
-      copy.envMapIntensity = 1.35;
       copy.needsUpdate = true;
       return copy;
     });
@@ -1919,27 +2401,193 @@ function tintMan(root, item, look = {}) {
   });
 }
 
+function applyFashionStance(root, slot = 0) {
+  const side = slot % 2 ? 1 : -1;
+  const twist = side * 0.09;
+  root.traverse((o) => {
+    const n = o.name || "";
+    if (/(^|_|:)(Hips|pelvis)$/i.test(n) || /Hips_jt/i.test(n)) {
+      o.rotation.y += twist * 0.5;
+      o.rotation.z += side * 0.03;
+    } else if (/Spine2|spine_02|Chest|Spine_jt/i.test(n)) {
+      o.rotation.y += twist * 0.32;
+    }
+  });
+}
+
+function addBoutiqueStand(group) {
+  const ink = QUALITY.physical
+    ? new THREE.MeshPhysicalMaterial({
+        color: "#141518",
+        roughness: 0.26,
+        metalness: 0.24,
+        clearcoat: 0.4,
+        clearcoatRoughness: 0.2,
+        envMapIntensity: 1.18,
+      })
+    : new THREE.MeshStandardMaterial({ color: "#141518", roughness: 0.28, metalness: 0.2, envMapIntensity: 1.05 });
+  const brass = metalMat("#c6a56a");
+  const glow = new THREE.MeshStandardMaterial({
+    color: "#fff6ea",
+    emissive: "#ffe3b8",
+    emissiveIntensity: 1.45,
+    roughness: 0.28,
+  });
+  const ph = 0.08;
+  const slab = new THREE.Mesh(extrudeRoundSlab(0.5, 0.4, 0.07, ph, QUALITY.low ? 6 : 12), ink);
+  slab.castShadow = true;
+  slab.receiveShadow = true;
+  group.add(slab);
+  group.add(box(0.42, 0.004, 0.008, brass, 0, ph + 0.003, 0.168, false));
+  group.add(box(0.34, 0.007, 0.01, glow, 0, 0.01, 0.188, false));
+  return ph + 0.008;
+}
+
+function plantMan(man, y0 = 0) {
+  man.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(man);
+  if (!Number.isFinite(box.min.x)) return;
+  man.position.x -= (box.max.x + box.min.x) / 2;
+  man.position.z -= (box.max.z + box.min.z) / 2;
+  man.position.y -= box.min.y - y0;
+  man.updateMatrixWorld(true);
+}
+
 function addManModel(group, item, opts = {}) {
   const slot = nextManOutfit();
-  const master = pickManMaster(opts.kind || "man", slot);
+  const master = pickManMaster(opts.kind || "man", slot, opts.outfit || item.outfit);
   if (!master) return false;
   const man = cloneSkinned(master.root);
   const height = opts.height ?? 1.68;
+  const y0 = opts.y ?? 0;
   man.scale.multiplyScalar(height);
-  man.position.y = opts.y ?? 0;
-  man.updateMatrixWorld(true);
-  const box = new THREE.Box3().setFromObject(man);
-  man.position.x -= (box.max.x + box.min.x) / 2;
-  man.position.z -= (box.max.z + box.min.z) / 2;
-  man.position.y -= box.min.y - (opts.y ?? 0);
-  tintMan(man, item, { slot });
-  const lookIdx = slot % Math.max(1, MAN_MASTERS.length);
-  tagProduct(man, "dresses", lookIdx, { color: item.accent, x: item.x, z: item.z, outfit: master.outfit });
+  man.position.y = y0;
+  plantMan(man, y0);
+  styleBoutiqueMan(man, item, master.outfit);
+  const lookIdx = ["suit", "cool", "lumber", "casual"].indexOf(master.outfit);
+  const poseSlot = lookIdx >= 0 ? lookIdx : slot;
+  tagProduct(man, "dresses", Math.max(0, lookIdx), { color: item.accent, x: item.x, z: item.z, outfit: master.outfit, furnId: item.id });
+  man.userData.selectable = false;
   group.add(man);
+  if (master.clips?.length) holdDisplayPose(man, master.clips);
+  applyFashionStance(man, poseSlot);
+  plantMan(man, y0);
   return true;
 }
 
-const WALK_GLB_URLS = ["./models/mannequin/business_man.glb"];
+const mannequinWalkers = [];
+const ARM_TRACK_RE = /(Clavicle|Shoulder|Elbow|Wrist|Thumb|Index|Middle|Ring|Pinky)_jt/i;
+const _armDown = new THREE.Vector3(0, -1, 0);
+const _armAxis = new THREE.Vector3();
+const _armLocal = new THREE.Vector3();
+const _armQ = new THREE.Quaternion();
+const _armParentQ = new THREE.Quaternion();
+
+function isArmBoneTrack(name) {
+  return ARM_TRACK_RE.test(name || "");
+}
+
+function stripArmTracks(clip) {
+  const next = clip.clone();
+  next.name = `${clip.name || "walk"}-arms-down`;
+  next.tracks = next.tracks.filter((t) => !isArmBoneTrack(t.name));
+  return next;
+}
+
+function cacheClavicleBind(root) {
+  root.traverse((o) => {
+    if (/Clavicle_jt/i.test(o.name || "") && !o.userData.armBind) {
+      o.userData.armBind = o.quaternion.clone();
+    }
+  });
+}
+
+function boneHangAxis(bone) {
+  const child = bone.children.find((c) => /(Elbow|Wrist|Knee|Ankle|Ball)_jt/i.test(c.name || ""));
+  if (child && child.position.lengthSq() > 1e-6) return child.position;
+  return _armAxis.set(/^(Rt_|Right)/i.test(bone.name || "") ? -1 : 1, 0, 0);
+}
+
+function pointBoneWorld(bone, localAxis, worldDir) {
+  if (!bone?.parent) return;
+  bone.parent.updateWorldMatrix(true, false);
+  bone.parent.getWorldQuaternion(_armParentQ);
+  _armLocal.copy(worldDir).applyQuaternion(_armQ.copy(_armParentQ).invert()).normalize();
+  _armAxis.copy(localAxis).normalize();
+  if (_armAxis.lengthSq() < 1e-6 || _armLocal.lengthSq() < 1e-6) return;
+  bone.quaternion.setFromUnitVectors(_armAxis, _armLocal);
+  bone.updateMatrix();
+}
+
+function lockArmsDown(root) {
+  if (!root) return;
+  if (!root.userData.armBones) {
+    const clav = [];
+    const arms = [];
+    root.traverse((o) => {
+      const n = o.name || "";
+      if (/Clavicle_jt/i.test(n)) clav.push(o);
+      else if (/Shoulder_jt|Elbow_jt|Wrist_jt/i.test(n)) arms.push(o);
+    });
+    arms.sort((a, b) => {
+      const rank = (n) => (/Shoulder/i.test(n) ? 0 : /Elbow/i.test(n) ? 1 : 2);
+      return rank(a.name) - rank(b.name);
+    });
+    root.userData.armBones = { clav, arms };
+  }
+  const { clav, arms } = root.userData.armBones;
+  for (const bone of clav) {
+    if (bone.userData.armBind) bone.quaternion.copy(bone.userData.armBind);
+  }
+  for (const bone of arms) {
+    pointBoneWorld(bone, boneHangAxis(bone), _armDown);
+    bone.updateWorldMatrix(true, false);
+  }
+}
+
+function holdDisplayPose(man, clips) {
+  const idle =
+    pickWalkClip(clips || [], /rig\|idle$/i, /(^|[|_ -])idle([|_ -]|$)/i) ||
+    pickWalkClip(clips || [], /static_pose|standing|stand$/i);
+  const src =
+    idle ||
+    pickWalkClip(clips || [], /rig\|walk$/i, /(^|[|_ -])walk(ing)?([|_ -]|$)/i) ||
+    (clips && clips[0]);
+  if (!src) return;
+  cacheClavicleBind(man);
+  const clip = (idle ? src : stripArmTracks(src)).clone();
+  clip.tracks = clip.tracks.filter((t) => !/\.position$/.test(t.name));
+  const mixer = new THREE.AnimationMixer(man);
+  const action = mixer.clipAction(clip);
+  action.enabled = true;
+  action.play();
+  mixer.update(idle ? 0.12 : 0);
+  action.stop();
+  lockArmsDown(man);
+  man.updateMatrixWorld(true);
+  man.traverse((m) => {
+    if (m.isSkinnedMesh) {
+      m.skeleton.update();
+      m.computeBoundingBox?.();
+      m.computeBoundingSphere?.();
+    }
+  });
+}
+
+export function hasMannequinWalks() {
+  return mannequinWalkers.length > 0;
+}
+
+export function updateMannequinWalks(dt) {
+  if (!mannequinWalkers.length) return false;
+  for (const walker of mannequinWalkers) {
+    walker.mixer.update(dt);
+    lockArmsDown(walker.root);
+  }
+  return true;
+}
+
+const WALK_GLB_URLS = ["./models/mannequin/lumberjack.glb?v=tex1", "./models/mannequin/business_man.glb"];
 let walkGltf = null;
 let walkLoad = null;
 let walkGirlLoad = null;
@@ -1991,7 +2639,6 @@ export function loadWalkAvatar() {
   })();
   return walkLoad;
 }
-loadWalkAvatar();
 
 function fitWalkModel(src, height, skinned = false) {
   const model = skinned ? cloneSkinned(src) : src.clone(true);
@@ -2026,14 +2673,18 @@ function holdPoseClip(clip, name = "idle-hold") {
   return hold;
 }
 
-function makeWalkActions(mixer, clips) {
+function makeWalkActions(mixer, clips, opts = {}) {
   let idleClip = pickWalkClip(clips, /rig\|idle$/i, /(^|[|_ -])idle([|_ -]|$)/i);
-  const walkClip =
+  let walkClip =
     pickWalkClip(clips, /rig\|walk$/i, /(^|[|_ -])walk(ing)?([|_ -]|$)/i) ||
     pickWalkClip(clips, /run/i) ||
     pickWalkClip(clips, /mixamo/i) ||
     clips.find((c) => c !== idleClip) ||
     clips[0];
+  if (opts.armsDown) {
+    if (walkClip) walkClip = stripArmTracks(walkClip);
+    if (idleClip && idleClip !== walkClip) idleClip = stripArmTracks(idleClip);
+  }
   if (!idleClip && walkClip) idleClip = holdPoseClip(walkClip);
   const actions = {};
   try {
@@ -2112,8 +2763,10 @@ export function createWalkAvatar() {
   root.name = "walk-avatar";
   root.add(model);
   const mixer = new THREE.AnimationMixer(model);
-  const manAnim = { ...makeWalkActions(mixer, walkGltf.animations || []), gait: "idle" };
+  cacheClavicleBind(model);
+  const manAnim = { ...makeWalkActions(mixer, walkGltf.animations || [], { armsDown: true }), gait: "idle" };
   if (manAnim.actions.walk) manAnim.actions.walk.timeScale = 0.72;
+  lockArmsDown(model);
   const actor = {
     root,
     mixer,
@@ -2130,6 +2783,7 @@ export function createWalkAvatar() {
     },
     update(dt, moving) {
       mixer.update(dt);
+      if (actor.man?.visible !== false) lockArmsDown(model);
       const manWalk = manAnim.actions.walk;
       for (const girl of actor.girls) {
         if (girl.update) girl.update(dt, moving);
@@ -2156,8 +2810,6 @@ export function createWalkAvatar() {
       }
     },
   };
-  attachWalkGirls(actor);
-  loadWalkGirl().then(() => attachWalkGirls(actor));
   return actor;
 }
 function takeLampSlot() {
@@ -2224,6 +2876,158 @@ function extrudeRoundSlab(w, d, r, thick, segs) {
   });
   geo.rotateX(-Math.PI / 2);
   return geo;
+}
+
+function addLoungeChair(group, item) {
+  const w = item.width || 0.78;
+  const d = item.depth || 0.82;
+  const h = item.height || 0.8;
+  const leather = leatherMat(item.color || "#121014");
+  leather.side = THREE.DoubleSide;
+  const piped = leatherMat(item.color || "#1a1612");
+  const gold = metalMat(item.accent || "#c6a56a");
+  const segs = QUALITY.low ? 14 : 28;
+  const seatH = 0.4;
+
+  const seat = shadow(new THREE.Mesh(extrudeRoundSlab(w * 0.84, d * 0.72, 0.08, 0.1, segs), leather));
+  seat.position.y = seatH;
+  group.add(seat);
+  const cushion = new THREE.Mesh(extrudeRoundSlab(w * 0.7, d * 0.56, 0.07, 0.05, segs), piped);
+  cushion.position.y = seatH + 0.078;
+  group.add(cushion);
+
+  const back = shadow(
+    new THREE.Mesh(
+      new THREE.CylinderGeometry(d * 0.42, d * 0.44, h * 0.5, segs, 1, true, Math.PI * 0.22, Math.PI * 0.56),
+      leather
+    )
+  );
+  back.position.set(0, seatH + h * 0.22, -d * 0.1);
+  group.add(back);
+  const backPad = new THREE.Mesh(
+    new THREE.CylinderGeometry(d * 0.35, d * 0.36, h * 0.34, segs, 1, true, Math.PI * 0.28, Math.PI * 0.44),
+    piped
+  );
+  backPad.position.set(0, seatH + h * 0.2, -d * 0.08);
+  group.add(backPad);
+
+  for (const side of [-1, 1]) {
+    const arm = shadow(new THREE.Mesh(extrudeRoundSlab(0.11, d * 0.5, 0.04, 0.08, 10), leather));
+    arm.position.set(side * w * 0.36, seatH + 0.12, -d * 0.02);
+    group.add(arm);
+  }
+  const lx = w * 0.3;
+  const lz = d * 0.26;
+  for (const [x, z] of [
+    [-lx, lz],
+    [lx, lz],
+    [-lx, -lz],
+    [lx, -lz],
+  ]) {
+    group.add(post(0.016, seatH - 0.02, gold, x, (seatH - 0.02) / 2, z, true));
+  }
+}
+
+function addCoffeeTable(group, item) {
+  const w = item.width || 1.05;
+  const d = item.depth || 0.58;
+  const h = item.height || 0.4;
+  const gold = metalMat(item.accent || "#c6a56a");
+  const wood = woodMat(item.color || "#1a1612");
+  const segs = QUALITY.low ? 16 : 32;
+  const glass = QUALITY.physical
+    ? new THREE.MeshPhysicalMaterial({
+        color: "#f4f7fb",
+        metalness: 0.04,
+        roughness: 0.05,
+        transmission: 0.86,
+        thickness: 0.025,
+        ior: 1.5,
+        envMapIntensity: 1.7,
+        clearcoat: 1,
+        clearcoatRoughness: 0.04,
+      })
+    : new THREE.MeshStandardMaterial({
+        color: "#dce4ee",
+        metalness: 0.15,
+        roughness: 0.08,
+        transparent: true,
+        opacity: 0.32,
+        envMapIntensity: 1.5,
+      });
+  const top = new THREE.Mesh(extrudeRoundSlab(w, d, 0.08, 0.016, segs), glass);
+  top.position.y = h;
+  group.add(top);
+  const rim = new THREE.Mesh(extrudeRoundSlab(w + 0.02, d + 0.02, 0.085, 0.008, segs), gold);
+  rim.position.y = h - 0.01;
+  group.add(rim);
+  const shelf = shadow(new THREE.Mesh(extrudeRoundSlab(w * 0.78, d * 0.72, 0.06, 0.016, segs), wood));
+  shelf.position.y = h * 0.38;
+  group.add(shelf);
+  const lx = w * 0.38;
+  const lz = d * 0.32;
+  for (const [x, z] of [
+    [-lx, lz],
+    [lx, lz],
+    [-lx, -lz],
+    [lx, -lz],
+  ]) {
+    group.add(post(0.012, h - 0.02, gold, x, (h - 0.02) / 2, z, true));
+  }
+}
+
+function addOttoman(group, item) {
+  const w = item.width || 0.62;
+  const h = item.height || 0.4;
+  const leather = leatherMat(item.color || "#121014");
+  const gold = metalMat(item.accent || "#c6a56a");
+  const segs = QUALITY.low ? 16 : 28;
+  const body = shadow(new THREE.Mesh(new THREE.CylinderGeometry(w * 0.42, w * 0.46, h * 0.72, segs), leather));
+  body.position.y = h * 0.42;
+  group.add(body);
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(w * 0.42, segs, 10, 0, Math.PI * 2, 0, Math.PI * 0.45), leather);
+  cap.position.y = h * 0.72;
+  group.add(cap);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(w * 0.44, 0.012, 8, segs), gold);
+  ring.rotation.x = Math.PI / 2;
+  ring.position.y = h * 0.18;
+  group.add(ring);
+  const button = new THREE.Mesh(new THREE.SphereGeometry(0.018, 10, 8), gold);
+  button.position.y = h * 0.86;
+  group.add(button);
+}
+
+function addSideboard(group, item) {
+  const w = item.width || 1.95;
+  const d = item.depth || 0.42;
+  const h = item.height || 0.74;
+  const body = bodyMat(item.color || "#1a1612");
+  const gold = metalMat(item.accent || "#c6a56a");
+  const stone = marbleTop(isDarkBody(item.color) ? "#2a2420" : "#f6f1e8");
+  const segs = QUALITY.low ? 8 : 14;
+  const cab = shadow(new THREE.Mesh(extrudeRoundSlab(w, d, 0.04, h - 0.12, segs), body));
+  cab.position.y = 0.08;
+  group.add(cab);
+  const top = new THREE.Mesh(extrudeRoundSlab(w + 0.04, d + 0.04, 0.045, 0.028, segs), stone);
+  top.position.y = h - 0.02;
+  group.add(top);
+  group.add(box(w + 0.05, 0.006, d + 0.05, gold, 0, h - 0.036, 0, false));
+  for (const x of [0, -w * 0.22, w * 0.22]) {
+    group.add(box(0.006, h * 0.52, 0.01, gold, x, h * 0.42, d / 2 + 0.002, false));
+  }
+  for (const x of [-w * 0.33, -w * 0.11, w * 0.11, w * 0.33]) {
+    group.add(box(0.07, 0.01, 0.012, gold, x, h * 0.48, d / 2 + 0.008, false));
+  }
+  const lx = w * 0.42;
+  const lz = d * 0.32;
+  for (const [x, z] of [
+    [-lx, lz],
+    [lx, lz],
+    [-lx, -lz],
+    [lx, -lz],
+  ]) {
+    group.add(post(0.014, 0.08, gold, x, 0.04, z, true));
+  }
 }
 
 function wrapLedBand(w, d, r, bandH, inset, segs) {
@@ -3343,235 +4147,145 @@ function addHaloDesk(group, item, w, h, d) {
   }
 }
 
-function chromeCrystalMat() {
-  if (QUALITY.physical) {
-    return new THREE.MeshPhysicalMaterial({
-      color: "#d4dbe6",
-      metalness: 1,
-      roughness: 0.055,
-      envMapIntensity: 1.75,
-      clearcoat: 0.9,
-      clearcoatRoughness: 0.06,
-    });
-  }
-  return new THREE.MeshStandardMaterial({
-    color: "#d4dbe6",
-    metalness: 1,
-    roughness: 0.08,
-    envMapIntensity: 1.45,
-  });
+function addLuxuryRod(group, ax, ay, az, bx, by, bz, r, mat) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const dz = bz - az;
+  const len = Math.hypot(dx, dy, dz) || 0.01;
+  const rod = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 1, 10), mat);
+  rod.scale.set(1, len, 1);
+  rod.position.set((ax + bx) / 2, (ay + by) / 2, (az + bz) / 2);
+  rod.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(dx, dy, dz).normalize());
+  rod.castShadow = false;
+  group.add(rod);
 }
 
-function facetedCrystalMat(on) {
-  const glow = on ? 0.62 : 0.05;
-  if (QUALITY.physical && QUALITY.high) {
-    return new THREE.MeshPhysicalMaterial({
-      color: "#f3f8ff",
-      metalness: 0.04,
-      roughness: 0.035,
-      transmission: 0.78,
-      thickness: 0.04,
-      ior: 1.55,
-      clearcoat: 1,
-      clearcoatRoughness: 0.04,
-      envMapIntensity: 2.2,
-      emissive: "#e8f2ff",
-      emissiveIntensity: glow,
-    });
-  }
-  return new THREE.MeshStandardMaterial({
-    color: "#eef6ff",
-    metalness: 0.08,
-    roughness: 0.06,
-    transparent: true,
-    opacity: 0.62,
-    envMapIntensity: 1.9,
-    emissive: "#e8f2ff",
-    emissiveIntensity: glow,
-    depthWrite: false,
-  });
-}
+function addLuxuryHaloRing(group, radius, y, brass, led, haze, on) {
+  const segs = QUALITY.low ? 28 : 64;
+  const radial = QUALITY.low ? 8 : 12;
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(radius, 0.015, radial, segs), brass);
+  rim.rotation.x = Math.PI / 2;
+  rim.position.y = y;
+  rim.castShadow = false;
+  group.add(rim);
 
-function starSquareEdges(half, y, thick, tall, rotY) {
-  const len = half * 2 + thick;
-  const c = Math.cos(rotY);
-  const s = Math.sin(rotY);
-  const edges = [
-    [0, half],
-    [0, -half],
-    [half, 0],
-    [-half, 0],
-  ];
-  return edges.map(([lx, lz], i) => {
-    const alongX = i < 2;
-    return {
-      x: lx * c - lz * s,
-      y,
-      z: lx * s + lz * c,
-      ry: rotY + (alongX ? 0 : Math.PI / 2),
-      w: len,
-      h: tall,
-      d: thick,
-    };
-  });
-}
-
-function addCrystalRing(group, radius, y, chrome, crystal, count, size) {
-  const tube = new THREE.Mesh(new THREE.TorusGeometry(radius, Math.max(0.008, size * 0.32), 7, QUALITY.low ? 20 : 32), chrome);
+  const tube = new THREE.Mesh(new THREE.TorusGeometry(radius, 0.01, radial, segs), led);
   tube.rotation.x = Math.PI / 2;
-  tube.position.y = y;
-  tube.castShadow = false;
+  tube.position.y = y - 0.003;
   group.add(tube);
 
-  const geo = QUALITY.low
-    ? new THREE.BoxGeometry(size, size * 0.58, size)
-    : new THREE.OctahedronGeometry(size * 0.62, 0);
-  const inst = new THREE.InstancedMesh(geo, crystal, count);
-  inst.castShadow = false;
-  inst.receiveShadow = false;
-  for (let i = 0; i < count; i++) {
-    const a = (i / count) * Math.PI * 2;
-    INST.position.set(Math.cos(a) * radius, y, Math.sin(a) * radius);
-    INST.rotation.set(0.35, a, 0.22);
-    INST.scale.set(1, 1.18, 1);
-    INST.updateMatrix();
-    inst.setMatrixAt(i, INST.matrix);
+  const core = new THREE.Mesh(
+    new THREE.TorusGeometry(radius, 0.006, 6, segs),
+    new THREE.MeshBasicMaterial({ color: on ? "#fff4dc" : "#5a5048" })
+  );
+  core.rotation.x = Math.PI / 2;
+  core.position.y = y - 0.004;
+  group.add(core);
+
+  if (haze && !QUALITY.low) {
+    const bloom = new THREE.Mesh(new THREE.TorusGeometry(radius, 0.03, 8, segs), haze);
+    bloom.rotation.x = Math.PI / 2;
+    bloom.position.y = y - 0.003;
+    bloom.renderOrder = 2;
+    group.add(bloom);
   }
-  inst.instanceMatrix.needsUpdate = true;
-  inst.computeBoundingSphere();
-  group.add(inst);
 }
 
 function addCrystalChandelier(group, item) {
   const on = item.lightOn !== false;
   const y = item.lift ?? 4.66;
-  const span = Math.max(0.88, item.width || 1.18);
-  const chrome = chromeCrystalMat();
-  const crystal = facetedCrystalMat(on);
-  const glow = glowMat(item.lightColor || "#f2f6ff", on);
-  glow.emissiveIntensity = on ? 1.85 : 0.05;
+  const span = Math.max(0.95, item.width || 1.28);
+  const oldChrome = !item.color || item.color === "#e8eef4" || item.color === "#f4efe6" || item.color === "#f4eee6";
+  const housing = metalMat(oldChrome ? "#161412" : item.color);
+  const brass = metalMat(!item.accent || item.accent === "#c8d0d8" ? "#c6a56a" : item.accent);
+  const warm = item.lightColor && item.lightColor !== "#f2f6ff" ? item.lightColor : "#ffe4b8";
+  const led = new THREE.MeshStandardMaterial({
+    color: "#fff6ea",
+    emissive: warm,
+    emissiveIntensity: on ? 2.7 : 0.04,
+    roughness: 0.16,
+    metalness: 0.02,
+  });
+  const haze = new THREE.MeshBasicMaterial({
+    color: on ? "#ffd39a" : "#4a4038",
+    transparent: true,
+    opacity: on ? 0.2 : 0.03,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide,
+  });
 
-  const plateR = span * 0.46;
-  const plate = new THREE.Mesh(new THREE.CylinderGeometry(plateR, plateR, 0.016, 8), chrome);
-  plate.position.y = y + 0.018;
-  plate.rotation.y = Math.PI / 8;
-  plate.castShadow = false;
-  group.add(plate);
-
-  const mirror = new THREE.Mesh(
-    new THREE.CircleGeometry(plateR * 0.72, 8),
-    new THREE.MeshStandardMaterial({
-      color: "#cfd6e0",
-      metalness: 1,
-      roughness: 0.04,
-      envMapIntensity: 2.1,
-    })
+  const roseR = Math.min(0.2, span * 0.16);
+  const contact = new THREE.Mesh(
+    new THREE.CircleGeometry(roseR + 0.05, 28),
+    new THREE.MeshBasicMaterial({ color: "#070605", transparent: true, opacity: 0.42, depthWrite: false })
   );
-  mirror.rotation.x = Math.PI / 2;
-  mirror.rotation.z = Math.PI / 8;
-  mirror.position.y = y + 0.008;
-  group.add(mirror);
+  contact.rotation.x = -Math.PI / 2;
+  contact.position.y = y + 0.046;
+  group.add(contact);
 
-  const half = span * 0.34;
-  const chromeParts = [
-    ...starSquareEdges(half, y - 0.006, 0.034, 0.042, 0),
-    ...starSquareEdges(half, y - 0.006, 0.034, 0.042, Math.PI / 4),
-    ...starSquareEdges(half * 0.52, y - 0.004, 0.026, 0.032, Math.PI / 8),
-  ];
-  const crystalParts = [
-    ...starSquareEdges(half, y - 0.028, 0.022, 0.03, 0),
-    ...starSquareEdges(half, y - 0.028, 0.022, 0.03, Math.PI / 4),
-  ];
-  const glowParts = [
-    ...starSquareEdges(half * 0.97, y - 0.016, 0.014, 0.012, 0),
-    ...starSquareEdges(half * 0.97, y - 0.016, 0.014, 0.012, Math.PI / 4),
-  ];
-  group.add(instancedBoxes(chrome, chromeParts, { castShadow: false, receiveShadow: false }));
-  group.add(instancedBoxes(crystal, crystalParts, { castShadow: false, receiveShadow: false }));
-  group.add(instancedBoxes(glow, glowParts, { castShadow: false, receiveShadow: false }));
+  const rose = new THREE.Mesh(new THREE.CylinderGeometry(roseR, roseR + 0.01, 0.05, 32), housing);
+  rose.position.y = y + 0.02;
+  rose.castShadow = false;
+  group.add(rose);
+  const lip = new THREE.Mesh(new THREE.TorusGeometry(roseR + 0.006, 0.008, 10, 32), brass);
+  lip.rotation.x = Math.PI / 2;
+  lip.position.y = y - 0.004;
+  group.add(lip);
+  const well = new THREE.Mesh(new THREE.CylinderGeometry(roseR * 0.55, roseR * 0.62, 0.016, 24), housing);
+  well.position.y = y - 0.006;
+  group.add(well);
+  const canopyGlow = new THREE.Mesh(new THREE.CircleGeometry(roseR * 0.42, 22), led);
+  canopyGlow.rotation.x = -Math.PI / 2;
+  canopyGlow.position.y = y - 0.016;
+  group.add(canopyGlow);
 
-  const gemsPerEdge = QUALITY.low ? 5 : 8;
-  const gemParts = [];
-  for (const rot of [0, Math.PI / 4]) {
-    for (const edge of starSquareEdges(half, y - 0.03, 0.02, 0.02, rot)) {
-      const along = edge.ry;
-      for (let g = 0; g < gemsPerEdge; g++) {
-        const t = (g + 0.5) / gemsPerEdge - 0.5;
-        gemParts.push({
-          x: edge.x + Math.cos(along) * t * edge.w * 0.86,
-          y: edge.y,
-          z: edge.z + Math.sin(along) * t * edge.w * 0.86,
-          rx: 0.4,
-          ry: along + g * 0.35,
-          rz: 0.2,
-          w: 0.026,
-          h: 0.018,
-          d: 0.026,
-        });
-      }
+  const stemH = 0.11;
+  group.add(post(0.007, stemH, brass, 0, y - stemH / 2 - 0.01, 0));
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.032, 0.022, 16), brass);
+  hub.position.y = y - stemH - 0.02;
+  group.add(hub);
+
+  const rings = [
+    { r: span * 0.4, drop: 0.17, rods: 3, twist: 0 },
+    { r: span * 0.26, drop: 0.3, rods: 3, twist: Math.PI / 3 },
+    { r: span * 0.14, drop: 0.43, rods: 3, twist: Math.PI / 6 },
+  ];
+  const hangFrom = y - 0.018;
+  for (const ring of rings) {
+    const ringY = y - ring.drop;
+    addLuxuryHaloRing(group, ring.r, ringY, brass, led, haze, on);
+    for (let i = 0; i < ring.rods; i++) {
+      const a = ring.twist + (i / ring.rods) * Math.PI * 2;
+      const x = Math.cos(a) * ring.r;
+      const z = Math.sin(a) * ring.r;
+      addLuxuryRod(group, x * 0.18, hangFrom, z * 0.18, x, ringY + 0.01, z, 0.0036, brass);
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(0.007, 8, 6), brass);
+      cap.position.set(x, ringY + 0.01, z);
+      group.add(cap);
     }
   }
-  if (gemParts.length) {
-    const gemGeo = QUALITY.low ? BOX : new THREE.OctahedronGeometry(1, 0);
-    const gems = new THREE.InstancedMesh(gemGeo, crystal, gemParts.length);
-    gems.castShadow = false;
-    gems.receiveShadow = false;
-    for (let i = 0; i < gemParts.length; i++) {
-      const p = gemParts[i];
-      INST.position.set(p.x, p.y, p.z);
-      INST.rotation.set(p.rx || 0, p.ry || 0, p.rz || 0);
-      INST.scale.set(p.w, p.h, p.d);
-      INST.updateMatrix();
-      gems.setMatrixAt(i, INST.matrix);
-    }
-    gems.instanceMatrix.needsUpdate = true;
-    gems.computeBoundingSphere();
-    group.add(gems);
-  }
 
-  const upperR = span * 0.3;
-  const lowerR = span * 0.188;
-  const upperY = y - 0.2;
-  const lowerY = y - 0.4;
-  const ringCount = QUALITY.low ? 16 : 28;
-  addCrystalRing(group, upperR, upperY, chrome, crystal, ringCount, 0.03);
-  addCrystalRing(group, lowerR, lowerY, chrome, crystal, QUALITY.low ? 12 : 20, 0.026);
+  const dropY = y - rings[2].drop - 0.07;
+  addLuxuryRod(group, 0, y - stemH - 0.03, 0, 0, dropY + 0.012, 0, 0.0032, brass);
+  const finial = new THREE.Mesh(new THREE.SphereGeometry(0.011, 12, 10), brass);
+  finial.position.y = dropY;
+  group.add(finial);
 
-  for (let i = 0; i < 4; i++) {
-    const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
-    group.add(post(0.006, 0.2, chrome, Math.cos(a) * upperR * 0.92, y - 0.1, Math.sin(a) * upperR * 0.92));
-    group.add(post(0.005, 0.2, chrome, Math.cos(a + Math.PI / 4) * lowerR, y - 0.3, Math.sin(a + Math.PI / 4) * lowerR));
-  }
-
-  const beads = QUALITY.low ? 5 : 8;
-  const dropTop = y - 0.06;
-  for (let i = 0; i < beads; i++) {
-    const bead = new THREE.Mesh(new THREE.SphereGeometry(0.011 - i * 0.00035, 8, 6), crystal);
-    bead.position.y = dropTop - i * 0.026;
-    bead.castShadow = false;
-    group.add(bead);
-  }
-  const tear = new THREE.Mesh(new THREE.OctahedronGeometry(0.026, 0), crystal);
-  tear.scale.set(0.68, 1.42, 0.68);
-  tear.position.y = dropTop - beads * 0.026 - 0.018;
-  tear.castShadow = false;
-  group.add(tear);
-
-  const color = item.lightColor || "#f2f6ff";
-  const power = Math.min(QUALITY.high ? 24 : 12, Math.max(0, Number(item.lightPower ?? 52)));
+  const power = Math.min(QUALITY.high ? 18 : 10, Math.max(0, Number(item.lightPower ?? 64)));
   if (takeLampSlot()) {
-    const lamp = new THREE.PointLight(color, on ? power : 0, 11, 1.55);
-    lamp.position.set(0, y - 0.28, 0);
-    group.add(lamp);
-  }
-  if (QUALITY.high && takeLampSlot()) {
-    const spot = new THREE.SpotLight(color, on ? power * 0.42 : 0, 10, 0.88, 0.48, 1.35);
-    spot.position.set(0, y - 0.12, 0);
+    const spot = new THREE.SpotLight(warm, on ? power : 0, 14, 0.7, 0.58, 1.2);
+    spot.position.set(0, y - 0.1, 0);
     const target = new THREE.Object3D();
-    target.position.set(0, 0.1, 0);
+    target.position.set(0, 0.05, 0);
     group.add(target);
     spot.target = target;
     group.add(spot);
+  }
+  if (takeLampSlot()) {
+    const fill = new THREE.PointLight(warm, on ? power * 0.32 : 0, 7.2, 1.75);
+    fill.position.set(0, y - 0.3, 0);
+    group.add(fill);
   }
 }
 
@@ -3631,32 +4345,41 @@ export function createFurniture(item) {
   const acc = metalMat(item.accent);
   const group = new THREE.Group();
 
-  const top = marbleTop("#f6f1e8");
+  const top = marbleTop(isDarkBody(item.color) ? "#2a2420" : "#f6f1e8");
   const brass = metalMat("#c6a56a");
 
   if (type === "desk") {
-    group.add(box(w, h - 0.08, d - 0.04, main, 0, (h - 0.08) / 2, 0));
-    group.add(box(w + 0.04, 0.028, d + 0.04, brass, 0, h - 0.02, 0));
-    group.add(box(w - 0.02, 0.03, d - 0.02, top, 0, h + 0.01, 0));
-    const ox = w / 2 - 0.08;
-    const oz = d / 2 - 0.08;
+    const stone = marbleTop(isDarkBody(item.color) ? "#2a2420" : "#f6f1e8");
+    const plinth = metalMat("#2a2622");
+    group.add(box(w - 0.14, 0.07, d - 0.12, plinth, 0, 0.035, 0));
+    group.add(box(w - 0.06, h - 0.14, d - 0.08, main, 0, (h - 0.14) / 2 + 0.06, 0));
+    group.add(box(w - 0.18, 0.1, 0.02, main, 0, h * 0.52, d / 2 - 0.032));
+    group.add(box(0.14, 0.012, 0.012, brass, 0, h * 0.52, d / 2 - 0.018, false));
+    group.add(box(w + 0.08, 0.014, d + 0.08, brass, 0, h - 0.018, 0));
+    group.add(box(w + 0.05, 0.046, d + 0.05, stone, 0, h + 0.014, 0));
+    group.add(box(w - 0.08, 0.008, d - 0.08, brass, 0, h + 0.038, 0, false));
+    const ox = w / 2 - 0.11;
+    const oz = d / 2 - 0.1;
     for (const [x, z] of [[ox, oz], [-ox, oz], [ox, -oz], [-ox, -oz]]) {
-      group.add(post(0.028, h - 0.06, brass, x, (h - 0.06) / 2, z, true));
+      group.add(post(0.022, h - 0.12, brass, x, (h - 0.12) / 2 + 0.05, z, true));
     }
-    group.add(box(w - 0.16, 0.04, 0.03, brass, 0, 0.18, -d / 2 + 0.05));
     addBrandPlate(group, 0, 0.42, d / 2 - 0.01);
-    addMallKickLight(group, w, d, 0.05);
-    if (item.liveCheckout) addLiveCheckout(group, w, h + 0.02, d, brass);
+    addMallKickLight(group, w, d, 0.055);
+    if (item.liveCheckout) addLiveCheckout(group, w, h + 0.04, d, brass);
   } else if (type === "counter") {
-    const kick = 0.09;
-    group.add(box(w, h - 0.1 - kick, d - 0.08, main, 0, kick + (h - 0.1 - kick) / 2, 0.02));
-    group.add(box(w + 0.12, 0.03, d + 0.08, brass, 0, h - 0.04, -0.01));
-    group.add(box(w + 0.04, 0.045, d + 0.02, top, 0, h + 0.01, -0.01));
-    group.add(box(w - 0.1, 0.018, d - 0.12, glassMat("#eaf4fc"), 0, h + 0.04, 0, false));
-    group.add(box(w, h * 0.5, 0.03, main, 0, kick + h * 0.28, d / 2 - 0.04));
-    group.add(box(w - 0.2, 0.01, 0.018, LED_MAT, 0, h - 0.07, d / 2 - 0.055, false));
-    addBrandPlate(group, 0, kick + 0.38, d / 2 - 0.018);
-    addMallKickLight(group, w, d, kick * 0.52);
+    const kick = 0.08;
+    const stone = marbleTop("#f7f3ec");
+    group.add(box(w - 0.1, 0.06, d - 0.08, metalMat("#1c1916"), 0, 0.03, 0));
+    group.add(box(w - 0.04, h - 0.14 - kick, d - 0.06, main, 0, kick + (h - 0.14 - kick) / 2, 0.01));
+    group.add(box(0.05, h - 0.12, d + 0.02, stone, -w / 2 + 0.02, h / 2 + 0.02, 0));
+    group.add(box(0.05, h - 0.12, d + 0.02, stone, w / 2 - 0.02, h / 2 + 0.02, 0));
+    group.add(box(w + 0.1, 0.016, d + 0.08, brass, 0, h - 0.028, 0));
+    group.add(box(w + 0.06, 0.05, d + 0.04, stone, 0, h + 0.012, 0));
+    group.add(box(w - 0.12, 0.016, d - 0.1, glassMat("#eaf4fc"), 0, h + 0.042, 0, false));
+    group.add(box(w - 0.18, 0.09, 0.018, main, 0, kick + h * 0.32, d / 2 - 0.028));
+    group.add(box(w - 0.22, 0.01, 0.016, LED_MAT, 0, h - 0.06, d / 2 - 0.05, false));
+    addBrandPlate(group, 0, kick + 0.38, d / 2 - 0.014);
+    addMallKickLight(group, w, d, kick * 0.55);
   } else if (type === "haloDesk") {
     addHaloDesk(group, item, w, h, d);
   } else if (type === "cashier") {
@@ -3670,10 +4393,25 @@ export function createFurniture(item) {
     addMallKickLight(group, w, d, kick * 0.52);
     addLiveCheckout(group, w, h * 0.72 + 0.04, d, brass);
   } else if (type === "table") {
-    group.add(post(Math.min(w, d) * 0.12, h - 0.06, brass, 0, (h - 0.06) / 2, 0, true));
-    group.add(box(w * 0.42, 0.03, d * 0.42, main, 0, 0.04, 0));
-    group.add(box(w + 0.02, 0.04, d + 0.02, top, 0, h, 0));
-    group.add(box(w * 0.36, 0.012, d * 0.36, brass, 0, h - 0.03, 0, false));
+    const segs = QUALITY.low ? 10 : 18;
+    const slab = shadow(new THREE.Mesh(extrudeRoundSlab(w, d, 0.07, 0.034, segs), top));
+    slab.position.y = h - 0.01;
+    group.add(slab);
+    group.add(box(w - 0.06, 0.008, d - 0.06, brass, 0, h - 0.04, 0, false));
+    const ped = shadow(new THREE.Mesh(new THREE.CylinderGeometry(Math.min(w, d) * 0.14, Math.min(w, d) * 0.18, h - 0.08, 16), brass));
+    ped.position.y = (h - 0.08) / 2;
+    group.add(ped);
+    const foot = new THREE.Mesh(extrudeRoundSlab(w * 0.42, d * 0.42, 0.05, 0.03, 12), main);
+    foot.position.y = 0.02;
+    group.add(foot);
+  } else if (type === "coffeeTable") {
+    addCoffeeTable(group, item);
+  } else if (type === "loungeChair") {
+    addLoungeChair(group, item);
+  } else if (type === "ottoman") {
+    addOttoman(group, item);
+  } else if (type === "sideboard") {
+    addSideboard(group, item);
   } else if (type === "shelf") {
     group.add(box(w, h, 0.04, main, 0, h / 2, -d / 2 + 0.02));
     group.add(box(w, 0.05, d, top, 0, 0.03, 0));
@@ -3701,7 +4439,7 @@ export function createFurniture(item) {
     group.add(box(w - 0.12, 0.035, d - 0.12, brass, 0, 0.028, 0));
     addMallKickLight(group, w, d, 0.05);
   } else if (type === "marblePlinth") {
-    const stone = marbleTop("#f7f3ec");
+    const stone = marbleTop(isDarkBody(item.color) ? "#2a2420" : "#f7f3ec");
     const shaft = shadow(new THREE.Mesh(new THREE.CylinderGeometry(w * 0.4, w * 0.44, h, 28), stone));
     shaft.position.y = h / 2 + 0.03;
     group.add(shaft);
@@ -3710,38 +4448,11 @@ export function createFurniture(item) {
     group.add(base);
     addMallKickLight(group, w * 1.05, d * 1.05, 0.045);
   } else if (type === "goldArch") {
-    const stone = marbleTop("#f7f3ec");
-    const glow = new THREE.MeshStandardMaterial({
-      color: "#c6a56a",
-      emissive: "#ffd089",
-      emissiveIntensity: 0.85,
-      metalness: 0.7,
-      roughness: 0.28,
-    });
-    const colH = h * 0.7;
-    group.add(box(w + 0.22, h + 0.12, 0.06, stone, 0, (h + 0.08) / 2, -0.05));
-    const mirror = new THREE.Mesh(
-      PLANE,
-      new THREE.MeshStandardMaterial({
-        color: "#d5e2ec",
-        metalness: 0.92,
-        roughness: 0.04,
-        envMapIntensity: 2.1,
-      })
-    );
-    mirror.scale.set(w - 0.18, h * 0.88, 1);
-    mirror.position.set(0, h * 0.46, 0.01);
-    group.add(mirror);
-    group.add(box(0.075, colH, 0.075, brass, -w / 2, colH / 2, 0.02));
-    group.add(box(0.075, colH, 0.075, brass, w / 2, colH / 2, 0.02));
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(w / 2, 0.038, 12, 28, Math.PI), brass);
-    ring.position.set(0, colH, 0.02);
-    group.add(ring);
-    const halo = new THREE.Mesh(new THREE.TorusGeometry(w / 2, 0.02, 10, 28, Math.PI), glow);
-    halo.position.set(0, colH, 0.03);
-    group.add(halo);
-    group.add(box(0.02, colH, 0.015, glow, -w / 2, colH / 2, 0.06, false));
-    group.add(box(0.02, colH, 0.015, glow, w / 2, colH / 2, 0.06, false));
+    const lift = item.lift ?? 0.14;
+    const mount = new THREE.Group();
+    addArchedFloorMirror(mount, w, h);
+    mount.position.y = lift;
+    group.add(mount);
   } else if (type === "rack") {
     const gold = metalMat(item.accent || "#c6a56a");
     const r = 0.0125;
@@ -3778,27 +4489,31 @@ export function createFurniture(item) {
     group.add(box(w - 0.02, 0.02, d - 0.02, top, 0, h + 0.03, 0, false));
   } else if (type === "plant") {
     const goldPot = item.pot === "gold";
-    const pot = shadow(
-      new THREE.Mesh(
-        new THREE.CylinderGeometry(w * (goldPot ? 0.2 : 0.24), w * (goldPot ? 0.24 : 0.32), goldPot ? h * 0.42 : h * 0.28, 18),
-        goldPot ? brass : ceramicMat("#f3ebe0")
-      )
-    );
-    pot.position.y = goldPot ? h * 0.21 : h * 0.14;
+    const potPts = [];
+    potPts.push(new THREE.Vector2(0, 0));
+    potPts.push(new THREE.Vector2(w * 0.22, 0.01));
+    potPts.push(new THREE.Vector2(w * 0.26, h * 0.08));
+    potPts.push(new THREE.Vector2(w * 0.2, h * 0.34));
+    potPts.push(new THREE.Vector2(w * 0.18, h * 0.38));
+    const pot = shadow(new THREE.Mesh(new THREE.LatheGeometry(potPts, 22), goldPot ? brass : ceramicMat("#f3ebe0")));
     group.add(pot);
-    if (!goldPot) group.add(box(w * 0.52, 0.012, w * 0.52, brass, 0, h * 0.28, 0, false));
-    const leaf = new THREE.MeshStandardMaterial({ color: item.accent, roughness: 0.62, envMapIntensity: 0.28 });
-    const dark = new THREE.MeshStandardMaterial({ color: "#2a6a3e", roughness: 0.7, envMapIntensity: 0.22 });
-    const mid = new THREE.MeshStandardMaterial({ color: "#3f8f5a", roughness: 0.66, envMapIntensity: 0.25 });
+    group.add(box(w * 0.36, 0.01, w * 0.36, goldPot ? brass : metalMat("#c6a56a"), 0, h * 0.38, 0, false));
+    const soil = new THREE.Mesh(new THREE.CylinderGeometry(w * 0.16, w * 0.16, 0.03, 16), new THREE.MeshStandardMaterial({ color: "#2a2018", roughness: 0.92 }));
+    soil.position.y = h * 0.36;
+    group.add(soil);
+    const leaf = new THREE.MeshStandardMaterial({ color: item.accent || "#3f8f5a", roughness: 0.58, envMapIntensity: 0.32 });
+    const dark = new THREE.MeshStandardMaterial({ color: "#245a38", roughness: 0.7, envMapIntensity: 0.22 });
+    const mid = new THREE.MeshStandardMaterial({ color: "#3f8f5a", roughness: 0.64, envMapIntensity: 0.26 });
     const greens = [leaf, dark, mid];
-    const stem = shadow(new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.016, h * 0.4, 8), woodMat("#3a2a18", { roughness: 0.84 })));
-    stem.position.y = h * 0.46;
+    const stem = shadow(new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.014, h * 0.38, 8), woodMat("#3a2a18", { roughness: 0.84 })));
+    stem.position.y = h * 0.52;
     group.add(stem);
-    for (let i = 0; i < 7; i++) {
-      const bush = new THREE.Mesh(new THREE.SphereGeometry(w * (0.12 + (i % 3) * 0.035), 12, 10), greens[i % 3]);
-      const a = (i / 7) * Math.PI * 2;
-      const r = 0.05 + (i % 2) * 0.03;
-      bush.position.set(Math.cos(a) * r, h * 0.54 + (i % 3) * 0.08, Math.sin(a) * r);
+    for (let i = 0; i < 11; i++) {
+      const bush = new THREE.Mesh(new THREE.SphereGeometry(w * (0.1 + (i % 4) * 0.03), 14, 12), greens[i % 3]);
+      const a = (i / 11) * Math.PI * 2;
+      const r = 0.04 + (i % 3) * 0.035;
+      bush.position.set(Math.cos(a) * r, h * 0.58 + (i % 4) * 0.07, Math.sin(a) * r);
+      bush.scale.set(1, 0.72 + (i % 3) * 0.08, 1);
       group.add(bush);
     }
   } else if (type === "light") {
@@ -4221,11 +4936,9 @@ export function createFurniture(item) {
     heels.scale.setScalar(0.95);
     group.add(heels);
   } else if (type === "mannequin") {
-    const base = shadow(new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.04, 16), brass));
-    base.position.y = 0.02;
-    group.add(base);
-    if (addManModel(group, item, { kind: "man", height: 1.7, y: 0.04 })) {
-      /* real free 3D man */
+    const standH = addBoutiqueStand(group);
+    if (addManModel(group, item, { kind: "man", height: 1.74, y: standH })) {
+      /* boutique display model */
     } else {
     const skin = ceramicMat(item.color || "#f3ece4");
     const pole = shadow(new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.7, 8), brass));
@@ -4272,18 +4985,35 @@ export function createFurniture(item) {
     }
     }
   } else if (type === "fittingRoom") {
+    const open = !!item.open;
     group.add(box(w, h, 0.04, main, 0, h / 2, -d / 2 + 0.02));
     group.add(box(0.04, h, d, main, -w / 2 + 0.02, h / 2, 0));
     group.add(box(0.04, h, d, main, w / 2 - 0.02, h / 2, 0));
     group.add(box(w, 0.05, d, main, 0, h, 0));
+    group.add(box(0.05, h, 0.05, brass, -w / 2 + 0.04, h / 2, d / 2 - 0.02));
+    group.add(box(0.05, h, 0.05, brass, w / 2 - 0.04, h / 2, d / 2 - 0.02));
+    const gold = polishedGold(item.accent || "#c6a56a");
+    const mw = Math.max(0.72, w - 0.42);
+    const mh = Math.max(1.55, h - 0.55);
+    const mz = -d / 2 + 0.055;
+    const my = mh / 2 + 0.12;
+    group.add(box(mw + 0.08, mh + 0.08, 0.03, gold, 0, my, mz - 0.012));
+    group.add(box(mw + 0.04, 0.018, 0.02, gold, 0, my + mh / 2 + 0.02, mz + 0.006));
+    group.add(box(mw + 0.04, 0.018, 0.02, gold, 0, my - mh / 2 - 0.02, mz + 0.006));
+    const glass = makeLiveGlass(new THREE.PlaneGeometry(mw, mh));
+    glass.position.set(0, my, mz + 0.012);
+    group.add(glass);
     const curtain = fabricMat(item.accent);
     const rod = shadow(new THREE.Mesh(TUBE, brass));
     rod.scale.set(0.012, w - 0.08, 0.012);
     rod.rotation.z = Math.PI / 2;
     rod.position.set(0, h - 0.08, d / 2 - 0.02);
     group.add(rod);
-    group.add(box(w * 0.42, h * 0.88, 0.03, curtain, -w * 0.18, h * 0.48, d / 2 - 0.03));
-    group.add(box(w * 0.28, h * 0.88, 0.03, curtain, w * 0.22, h * 0.48, d / 2 - 0.03));
+    const slide = open ? w * 0.34 : 0;
+    const leftW = open ? w * 0.22 : w * 0.42;
+    const rightW = open ? w * 0.2 : w * 0.28;
+    group.add(box(leftW, h * 0.88, 0.03, curtain, -w * 0.18 - slide, h * 0.48, d / 2 - 0.03));
+    group.add(box(rightW, h * 0.88, 0.03, curtain, w * 0.22 + slide, h * 0.48, d / 2 - 0.03));
     addBrandPlate(group, 0, h - 0.16, -d / 2 + 0.03, Math.PI);
   } else if (type === "shoeWall") {
     group.add(box(w, h, 0.05, main, 0, h / 2, -d / 2 + 0.03));
@@ -4299,17 +5029,7 @@ export function createFurniture(item) {
     group.add(box(w - 0.02, 0.024, d - 0.02, top, 0, h + 0.02, 0));
     addBrandPlate(group, 0, 0.28, d / 2 + 0.01);
   } else if (type === "mirror") {
-    group.add(box(w, h, 0.045, brass, 0, h / 2, 0));
-    group.add(box(w - 0.05, h - 0.05, 0.02, main, 0, h / 2, -0.008));
-    const glass = new THREE.Mesh(PLANE, new THREE.MeshStandardMaterial({
-      color: "#d5e2ec",
-      metalness: 0.92,
-      roughness: 0.04,
-      envMapIntensity: 2.1,
-    }));
-    glass.scale.set(w - 0.1, h - 0.12, 1);
-    glass.position.set(0, h / 2, 0.028);
-    group.add(glass);
+    addStandingMirror(group, w, h, item.accent || "#c6a56a");
   } else if (type === "sofa") {
     if (!addSofaModel(group, item)) {
       const hide = leatherMat(item.color || "#3a2e28");

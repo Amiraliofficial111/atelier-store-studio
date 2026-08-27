@@ -119,9 +119,9 @@ export function resolveWallId(id) {
 
 export const SURFACE_PBR = {
   drywall: { roughness: 0.48, metalness: 0, clearcoat: 0.1 },
-  silk: { roughness: 0.32, metalness: 0, clearcoat: 0.16 },
-  limewash: { roughness: 0.64, metalness: 0, clearcoat: 0.03 },
-  venetian: { roughness: 0.28, metalness: 0.02, clearcoat: 0.22 },
+  silk: { roughness: 0.28, metalness: 0, clearcoat: 0.28 },
+  limewash: { roughness: 0.58, metalness: 0, clearcoat: 0.08 },
+  venetian: { roughness: 0.22, metalness: 0.03, clearcoat: 0.34 },
   microcement: { roughness: 0.42, metalness: 0.03, clearcoat: 0.08 },
   clay: { roughness: 0.72, metalness: 0, clearcoat: 0 },
   travertine: { roughness: 0.46, metalness: 0.04, clearcoat: 0.06 },
@@ -212,6 +212,66 @@ export const SURFACE_PBR = {
   "roof-pearl": { roughness: 0.36, metalness: 0.05, clearcoat: 0.18 },
   "roof-inlay": { roughness: 0.42, metalness: 0.12, clearcoat: 0.14 },
   "roof-stepcove": { roughness: 0.72, metalness: 0.03, clearcoat: 0.08 },
+  "roof-contrast": { roughness: 0.18, metalness: 0.16, clearcoat: 0.48 },
+  "roof-medallion": { roughness: 0.2, metalness: 0.14, clearcoat: 0.42 },
+  "roof-lattice": { roughness: 0.26, metalness: 0.14, clearcoat: 0.34 },
+  "roof-showroom": { roughness: 0.42, metalness: 0.08, clearcoat: 0.12 },
+  "roof-mallgold": { roughness: 0.22, metalness: 0.14, clearcoat: 0.28 },
+  "roof-arch": { roughness: 0.58, metalness: 0.06, clearcoat: 0.08 },
+  "roof-float": { roughness: 0.28, metalness: 0.08, clearcoat: 0.16 },
+  "roof-nature": { roughness: 0.48, metalness: 0.04, clearcoat: 0.08 },
+  "roof-slatluxe": { roughness: 0.42, metalness: 0.08, clearcoat: 0.12 },
+  "roof-geofloat": { roughness: 0.22, metalness: 0.14, clearcoat: 0.26 },
+  "roof-wave": { roughness: 0.36, metalness: 0.06, clearcoat: 0.1 },
+  "roof-industrial": { roughness: 0.58, metalness: 0.06, clearcoat: 0.08 },
+  "roof-star": { roughness: 0.72, metalness: 0.04, clearcoat: 0.06 },
+  "roof-marbleceil": { roughness: 0.14, metalness: 0.1, clearcoat: 0.38 },
+  "roof-hex": { roughness: 0.48, metalness: 0.08, clearcoat: 0.1 },
+  "roof-minimal": { roughness: 0.62, metalness: 0.03, clearcoat: 0.06 },
+  "roof-ledline": { roughness: 0.78, metalness: 0.04, clearcoat: 0.06 },
+  "roof-timber": { roughness: 0.52, metalness: 0.04, clearcoat: 0.08 },
+  "roof-cofferlux": { roughness: 0.28, metalness: 0.1, clearcoat: 0.22 },
+  "roof-blackgrid": { roughness: 0.7, metalness: 0.06, clearcoat: 0.06 },
+  "roof-glassglow": { roughness: 0.18, metalness: 0.06, clearcoat: 0.34 },
+  "roof-cloudwave": { roughness: 0.62, metalness: 0.03, clearcoat: 0.08 },
+  "roof-diapanel": { roughness: 0.28, metalness: 0.14, clearcoat: 0.2 },
+  "roof-goldrings": { roughness: 0.22, metalness: 0.16, clearcoat: 0.28 },
+  "roof-woodmarble": { roughness: 0.2, metalness: 0.1, clearcoat: 0.24 },
+  "roof-rgbline": { roughness: 0.72, metalness: 0.05, clearcoat: 0.08 },
+  "roof-goldframe": { roughness: 0.32, metalness: 0.14, clearcoat: 0.22 },
+  "roof-plain": { roughness: 0.88, metalness: 0.02, clearcoat: 0.04 },
+  "roof-organic": { roughness: 0.4, metalness: 0.05, clearcoat: 0.1 },
+  "roof-traylux": { roughness: 0.2, metalness: 0.16, clearcoat: 0.34 },
+  "roof-roselux": { roughness: 0.18, metalness: 0.16, clearcoat: 0.4 },
+  "roof-cofferoyal": { roughness: 0.22, metalness: 0.16, clearcoat: 0.3 },
+  "roof-noirgold": { roughness: 0.16, metalness: 0.18, clearcoat: 0.42 },
+  "roof-corinth": { roughness: 0.2, metalness: 0.18, clearcoat: 0.36 },
+  "floor-contrast": { roughness: 0.038, metalness: 0.09, clearcoat: 0.74 },
+  "floor-diamond": { roughness: 0.04, metalness: 0.08, clearcoat: 0.7 },
+  "floor-medallion": { roughness: 0.05, metalness: 0.07, clearcoat: 0.62 },
+  "floor-chevron": { roughness: 0.26, metalness: 0.04, clearcoat: 0.18 },
+  "floor-arabesque": { roughness: 0.08, metalness: 0.09, clearcoat: 0.48 },
+  "floor-brass": { roughness: 0.045, metalness: 0.16, clearcoat: 0.64 },
+  "floor-noir": { roughness: 0.04, metalness: 0.08, clearcoat: 0.66 },
+  "floor-bone": { roughness: 0.05, metalness: 0.06, clearcoat: 0.58 },
+  "floor-check": { roughness: 0.042, metalness: 0.07, clearcoat: 0.64 },
+  "floor-plain": { roughness: 0.22, metalness: 0.02, clearcoat: 0.08 },
+  "floor-inkgold": { roughness: 0.04, metalness: 0.14, clearcoat: 0.68 },
+  "floor-wineivory": { roughness: 0.044, metalness: 0.08, clearcoat: 0.62 },
+  "floor-navygold": { roughness: 0.042, metalness: 0.12, clearcoat: 0.66 },
+  "floor-emerald": { roughness: 0.044, metalness: 0.08, clearcoat: 0.62 },
+  "floor-sandink": { roughness: 0.048, metalness: 0.07, clearcoat: 0.58 },
+  "floor-runway": { roughness: 0.08, metalness: 0.08, clearcoat: 0.52 },
+  "floor-mall": { roughness: 0.04, metalness: 0.08, clearcoat: 0.7 },
+  "floor-arch": { roughness: 0.22, metalness: 0.04, clearcoat: 0.22 },
+  "floor-warm": { roughness: 0.16, metalness: 0.05, clearcoat: 0.28 },
+  "floor-geo": { roughness: 0.06, metalness: 0.09, clearcoat: 0.58 },
+  "floor-hexlux": { roughness: 0.036, metalness: 0.12, clearcoat: 0.76 },
+  "floor-honey": { roughness: 0.038, metalness: 0.11, clearcoat: 0.74 },
+  "floor-octolux": { roughness: 0.04, metalness: 0.1, clearcoat: 0.7 },
+  "floor-chevgold": { roughness: 0.042, metalness: 0.1, clearcoat: 0.68 },
+  "floor-fanlux": { roughness: 0.038, metalness: 0.11, clearcoat: 0.72 },
+  "floor-oakplank": { roughness: 0.22, metalness: 0.03, clearcoat: 0.26 },
 };
 
 export function loadPhotoTextures() {
@@ -237,6 +297,7 @@ export function loadPhotoTextures() {
 export function makePresetTexture(id) {
   if (!id) return null;
   id = resolveWallId(id);
+  id = resolveFloorId(id);
   if (id.startsWith("roof-")) id = resolveRoofId(id);
   if (PRESET_CACHE.has(id)) return PRESET_CACHE.get(id);
   const built = buildPresetTexture(id);
@@ -409,36 +470,80 @@ export function isTerrazzo(id) {
   return id === "terrazzo" || (id && id.startsWith("tz-"));
 }
 
+export function isDesignFloor(id) {
+  return id && id.startsWith("floor-");
+}
+
+const FLOOR_ALIAS = {
+  "tz-dove": "floor-contrast",
+  "tz-cinnamon": "floor-brass",
+  "tz-mint": "floor-arabesque",
+  "tz-ginger": "floor-brass",
+  "tz-spearmint": "floor-arabesque",
+  "tz-cottage": "floor-contrast",
+  "tz-turtle": "floor-diamond",
+  "tz-glossy": "floor-contrast",
+  "tz-sage": "floor-arabesque",
+  "tz-green": "floor-arabesque",
+  terrazzo: "floor-contrast",
+  "terrazzo-noir": "floor-noir",
+  "tile-white": "floor-bone",
+  "tile-ivory": "floor-bone",
+  "tile-beige": "floor-brass",
+  "tile-gray": "floor-diamond",
+  "tile-slate": "floor-diamond",
+  "tile-charcoal": "floor-noir",
+  "tile-black": "floor-noir",
+  "tile-subway": "floor-bone",
+  "tile-hex": "floor-arabesque",
+  "tile-check": "floor-check",
+  tiles: "floor-bone",
+  luxury: "floor-contrast",
+  carrara: "floor-medallion",
+  espresso: "floor-noir",
+  photo: "floor-medallion",
+  marble: "floor-bone",
+  mobileFloor: "floor-contrast",
+  stone: "floor-brass",
+  herringbone: "floor-chevron",
+  walnut: "floor-chevron",
+  granite: "floor-diamond",
+  checker: "floor-check",
+};
+
+export function resolveFloorId(id) {
+  return FLOOR_ALIAS[id] || id;
+}
+
+export function floorRepeat(id) {
+  id = resolveFloorId(id);
+  if (id === "floor-oakplank") return 3.8;
+  if (id === "floor-chevron" || id === "floor-chevgold") return 4.2;
+  if (id === "floor-hexlux" || id === "floor-honey" || id === "floor-octolux" || id === "floor-fanlux") return 1.35;
+  if (
+    id === "floor-contrast" ||
+    id === "floor-medallion" ||
+    id === "floor-runway" ||
+    id === "floor-mall" ||
+    id === "floor-arch" ||
+    id === "floor-warm" ||
+    id === "floor-geo" ||
+    id === "floor-inkgold" ||
+    id === "floor-sandink"
+  ) {
+    return 1.15;
+  }
+  return 2;
+}
+
 export const FLOOR_MATERIALS = [
-  { id: "tz-dove", label: "Morning Dove" },
-  { id: "tz-cinnamon", label: "Cinnamon" },
-  { id: "tz-mint", label: "Mint Julep" },
-  { id: "tz-ginger", label: "Ginger Terrazzo" },
-  { id: "tz-spearmint", label: "Spearmint" },
-  { id: "tz-cottage", label: "Cottage Gray" },
-  { id: "tz-turtle", label: "Turtle Dove" },
-  { id: "tz-glossy", label: "Glossy Terrazzo" },
-  { id: "tz-sage", label: "Sage Terrazzo" },
-  { id: "tz-green", label: "Green Terrazzo" },
-  { id: "tile-white", label: "White gloss tiles" },
-  { id: "tile-ivory", label: "Ivory tiles" },
-  { id: "tile-beige", label: "Beige tiles" },
-  { id: "tile-gray", label: "Gray tiles" },
-  { id: "tile-slate", label: "Slate tiles" },
-  { id: "tile-charcoal", label: "Charcoal tiles" },
-  { id: "tile-black", label: "Black gloss tiles" },
-  { id: "tile-subway", label: "Subway tiles" },
-  { id: "tile-hex", label: "Hex mosaic" },
-  { id: "tile-check", label: "Checker tiles" },
-  { id: "tiles", label: "Cream tiles" },
-  { id: "luxury", label: "Luxury mix" },
-  { id: "carrara", label: "Carrara" },
-  { id: "espresso", label: "Espresso" },
-  { id: "photo", label: "Photo marble" },
-  { id: "marble", label: "Marble slab" },
-  { id: "mobileFloor", label: "Mobile porcelain" },
-  { id: "stone", label: "Taupe stone" },
-  { id: "terrazzo", label: "Classic terrazzo" },
+  { id: "floor-plain", label: "Plain" },
+  { id: "floor-oakplank", label: "Honey Oak" },
+  { id: "floor-hexlux", label: "Hex Portoro" },
+  { id: "floor-honey", label: "Honeycomb" },
+  { id: "floor-octolux", label: "Octagon Inlay" },
+  { id: "floor-chevgold", label: "Chevron Gold" },
+  { id: "floor-fanlux", label: "Deco Fan" },
 ];
 
 export function isTileTexture(id) {
@@ -458,7 +563,6 @@ const ROOF_ALIAS = {
   "roof-gold": "roof-goldleaf",
   "roof-tin": "roof-goldleaf",
   "roof-stretch": "roof-silk",
-  "roof-wave": "roof-silk",
   "roof-dark": "roof-noir",
   "roof-stars": "roof-noir",
   "roof-border": "roof-noir",
@@ -478,7 +582,6 @@ const ROOF_ALIAS = {
   "roof-brass": "roof-bronze",
   "roof-metal": "roof-bronze",
   "roof-perforated": "roof-bronze",
-  "roof-industrial": "roof-bronze",
   "roof-grid": "roof-pearl",
   "roof-acoustic": "roof-pearl",
   "roof-tech": "roof-pearl",
@@ -486,42 +589,59 @@ const ROOF_ALIAS = {
   "roof-plaster": "roof-pearl",
   "roof-vault": "roof-pearl",
   "roof-cloud": "roof-pearl",
-  "roof-mirror": "roof-lacquer",
-  "roof-dome": "roof-crystal",
-  "roof-rings": "roof-crystal",
-  "roof-circles": "roof-crystal",
-  "roof-skylight": "roof-alabaster",
-  "roof-baffle": "roof-fluted",
-  "roof-slots": "roof-fluted",
-  "roof-board": "roof-fluted",
-  "roof-shiplap": "roof-fluted",
-  "roof-jaali": "roof-inlay",
-  "roof-diamond": "roof-inlay",
-  "roof-hex": "roof-inlay",
-  "roof-waffle": "roof-travertine",
+  "roof-mirror": "roof-contrast",
+  "roof-dome": "roof-medallion",
+  "roof-rings": "roof-medallion",
+  "roof-circles": "roof-medallion",
+  "roof-skylight": "roof-medallion",
+  "roof-baffle": "roof-lattice",
+  "roof-slots": "roof-lattice",
+  "roof-board": "roof-lattice",
+  "roof-shiplap": "roof-lattice",
+  "roof-jaali": "roof-lattice",
+  "roof-waffle": "roof-contrast",
+  "roof-goldleaf": "roof-contrast",
+  "roof-silk": "roof-contrast",
+  "roof-marble": "roof-medallion",
+  "roof-champagne": "roof-contrast",
+  "roof-stepcove": "roof-contrast",
+  "roof-pearl": "roof-lattice",
+  "roof-onyx": "roof-contrast",
+  "roof-alabaster": "roof-medallion",
+  "roof-noir": "roof-contrast",
+  "roof-lacquer": "roof-contrast",
+  "roof-walnutinlay": "roof-lattice",
+  "roof-bronze": "roof-lattice",
+  "roof-fluted": "roof-lattice",
+  "roof-travertine": "roof-medallion",
+  "roof-crystal": "roof-medallion",
+  "roof-inlay": "roof-lattice",
+  "roof-showroom": "roof-slatluxe",
+  "roof-mallgold": "roof-geofloat",
+  "roof-float": "roof-geofloat",
+  "roof-arch": "roof-industrial",
+  "roof-nature": "roof-minimal",
 };
 
 export function resolveRoofId(id) {
-  return ROOF_ALIAS[id] || id;
+  for (let i = 0; i < 4 && ROOF_ALIAS[id]; i++) id = ROOF_ALIAS[id];
+  return id;
+}
+
+export function roofRepeat(id) {
+  id = resolveRoofId(id);
+  if (id === "roof-traylux" || id === "roof-roselux" || id === "roof-cofferoyal" || id === "roof-noirgold" || id === "roof-corinth") return 1;
+  if (id === "roof-walnutinlay" || id === "roof-bronze" || id === "roof-fluted") return 6;
+  return 2;
 }
 
 export const ROOF_MATERIALS = [
-  { id: "roof-goldleaf", label: "Gold leaf coffers" },
-  { id: "roof-silk", label: "Silk stretch" },
-  { id: "roof-marble", label: "Calacatta marble" },
-  { id: "roof-champagne", label: "Champagne tray" },
-  { id: "roof-stepcove", label: "Stepped ivory cove" },
-  { id: "roof-pearl", label: "Pearl gypsum" },
-  { id: "roof-onyx", label: "Backlit onyx" },
-  { id: "roof-alabaster", label: "Alabaster glow" },
-  { id: "roof-noir", label: "Noir hotel" },
-  { id: "roof-lacquer", label: "Piano lacquer" },
-  { id: "roof-walnutinlay", label: "Walnut + brass" },
-  { id: "roof-bronze", label: "Bronze linear" },
-  { id: "roof-fluted", label: "Fluted plaster" },
-  { id: "roof-travertine", label: "Travertine coffers" },
-  { id: "roof-crystal", label: "Crystal well" },
-  { id: "roof-inlay", label: "Gold geometric inlay" },
+  { id: "roof-plain", label: "Plain" },
+  { id: "roof-traylux", label: "Royal Tray" },
+  { id: "roof-roselux", label: "Ceiling Rose" },
+  { id: "roof-cofferoyal", label: "Palace Coffer" },
+  { id: "roof-noirgold", label: "Noir Cove" },
+  { id: "roof-corinth", label: "Corinthian" },
 ];
 
 function paintTerrazzo(ctx, s, spec) {
@@ -564,21 +684,48 @@ function paintTerrazzo(ctx, s, spec) {
 
 function paintMarble(ctx, x, y, w, h, kind, seed) {
   const pal = {
-    cream: { r: 246, g: 238, b: 224, vein: "rgba(168,138,98,0.22)", hi: "rgba(255,252,246,0.16)" },
-    grey: { r: 172, g: 164, b: 168, vein: "rgba(78,68,80,0.28)", hi: "rgba(232,226,230,0.2)" },
-    dark: { r: 36, g: 24, b: 20, vein: "rgba(244,236,220,0.55)", hi: "rgba(198,165,106,0.22)" },
+    cream: { r: 246, g: 238, b: 224, vein: "rgba(138,112,82,0.32)", hi: "rgba(255,252,246,0.2)", mid: [228, 214, 196] },
+    ivory: { r: 250, g: 244, b: 234, vein: "rgba(168,148,120,0.28)", hi: "rgba(255,254,250,0.22)", mid: [236, 226, 210] },
+    carrara: { r: 244, g: 242, b: 238, vein: "rgba(92,96,102,0.4)", hi: "rgba(255,255,255,0.3)", mid: [220, 222, 226] },
+    grey: { r: 176, g: 170, b: 172, vein: "rgba(68,60,70,0.34)", hi: "rgba(232,226,230,0.22)", mid: [148, 144, 148] },
+    charcoal: { r: 42, g: 42, b: 44, vein: "rgba(180,178,176,0.28)", hi: "rgba(90,90,88,0.2)", mid: [56, 56, 58] },
+    dark: { r: 34, g: 24, b: 20, vein: "rgba(232,214,176,0.42)", hi: "rgba(198,165,106,0.2)", mid: [52, 38, 32] },
+    noir: { r: 20, g: 18, b: 20, vein: "rgba(210,206,200,0.38)", hi: "rgba(160,156,152,0.18)", mid: [36, 32, 34] },
+    portoro: { r: 14, g: 12, b: 14, vein: "rgba(220,176,72,0.58)", hi: "rgba(255,228,150,0.34)", mid: [34, 28, 24] },
+    gold: { r: 198, g: 165, b: 106, vein: "rgba(92,62,24,0.38)", hi: "rgba(255,230,176,0.28)", mid: [176, 140, 80] },
+    wine: { r: 92, g: 28, b: 38, vein: "rgba(220,170,150,0.32)", hi: "rgba(180,80,90,0.22)", mid: [72, 22, 32] },
+    navy: { r: 22, g: 36, b: 68, vein: "rgba(176,198,220,0.3)", hi: "rgba(90,120,170,0.2)", mid: [32, 48, 86] },
+    emerald: { r: 18, g: 72, b: 58, vein: "rgba(176,220,190,0.3)", hi: "rgba(70,150,118,0.2)", mid: [28, 88, 70] },
+    sand: { r: 220, g: 196, b: 160, vein: "rgba(120,90,50,0.28)", hi: "rgba(255,246,220,0.2)", mid: [200, 176, 140] },
   };
   const p = pal[kind] || pal.cream;
+  const darkKind = kind === "dark" || kind === "noir" || kind === "charcoal" || kind === "wine" || kind === "navy" || kind === "emerald" || kind === "portoro";
+  x = Math.max(0, Math.floor(x));
+  y = Math.max(0, Math.floor(y));
+  w = Math.max(2, Math.floor(w));
+  h = Math.max(2, Math.floor(h));
   ctx.fillStyle = `rgb(${p.r},${p.g},${p.b})`;
   ctx.fillRect(x, y, w, h);
   const img = ctx.getImageData(x, y, w, h);
   for (let py = 0; py < h; py++) {
     for (let px = 0; px < w; px++) {
       const i = (py * w + px) * 4;
-      const n = (hash(px * 0.07 + seed) + hash(py * 0.09 + seed * 1.7) - 1) * 10;
-      img.data[i] = Math.max(0, Math.min(255, img.data[i] + n));
-      img.data[i + 1] = Math.max(0, Math.min(255, img.data[i + 1] + n * 0.85));
-      img.data[i + 2] = Math.max(0, Math.min(255, img.data[i + 2] + n * 0.7));
+      const n = fbm(px * 0.014 + seed, py * 0.012 + seed * 1.4, seed, 4);
+      const n2v = fbm(px * 0.04 + 8, py * 0.033 + 5, seed + 4, 3);
+      const t = n * 0.7 + n2v * 0.3;
+      const wave = Math.sin(px * 0.021 + py * 0.034 + n * 5.2 + seed);
+      const v1 = Math.pow(Math.abs(wave), 10);
+      const v2 = Math.pow(Math.abs(Math.sin(px * -0.015 + py * 0.046 + n2v * 3.4)), 14);
+      const v = Math.min(1, v1 * 1.6 + v2);
+      const mr = p.mid ? p.mid[0] : p.r;
+      const mg = p.mid ? p.mid[1] : p.g;
+      const mb = p.mid ? p.mid[2] : p.b;
+      const vr = kind === "portoro" ? 118 : darkKind ? 70 : -38;
+      const vg = kind === "portoro" ? 86 : darkKind ? 55 : -32;
+      const vb = kind === "portoro" ? 18 : darkKind ? 38 : -28;
+      img.data[i] = Math.max(0, Math.min(255, p.r + (mr - p.r) * t + vr * v));
+      img.data[i + 1] = Math.max(0, Math.min(255, p.g + (mg - p.g) * t + vg * v));
+      img.data[i + 2] = Math.max(0, Math.min(255, p.b + (mb - p.b) * t + vb * v));
     }
   }
   ctx.putImageData(img, x, y);
@@ -587,13 +734,13 @@ function paintMarble(ctx, x, y, w, h, kind, seed) {
   ctx.rect(x, y, w, h);
   ctx.clip();
   ctx.lineCap = "round";
-  const veins = kind === "dark" ? 16 : 10;
+  const veins = kind === "portoro" ? 30 : darkKind ? 22 : kind === "carrara" ? 20 : 16;
   for (let k = 0; k < veins; k++) {
-    const a = hash(seed + k * 11);
     ctx.strokeStyle = k % 3 ? p.vein : p.hi;
-    ctx.lineWidth = kind === "dark" ? 1 + (k % 4) * 0.7 : 0.8 + (k % 3) * 0.5;
+    ctx.lineWidth = (darkKind ? 0.8 : 0.6) + (k % 5) * 0.55;
+    ctx.globalAlpha = 0.35 + hash(seed + k) * 0.45;
     ctx.beginPath();
-    const x0 = x + a * w;
+    const x0 = x + hash(seed + k * 11) * w;
     const y0 = y + hash(seed + k * 19) * h;
     ctx.moveTo(x0, y0);
     ctx.bezierCurveTo(
@@ -606,6 +753,13 @@ function paintMarble(ctx, x, y, w, h, kind, seed) {
     );
     ctx.stroke();
   }
+  ctx.globalAlpha = 1;
+  const gloss = ctx.createLinearGradient(x, y, x + w, y + h);
+  gloss.addColorStop(0, "rgba(255,255,255,0.05)");
+  gloss.addColorStop(0.45, "rgba(255,255,255,0)");
+  gloss.addColorStop(1, darkKind ? "rgba(255,230,180,0.04)" : "rgba(0,0,0,0.03)");
+  ctx.fillStyle = gloss;
+  ctx.fillRect(x, y, w, h);
   ctx.restore();
 }
 
@@ -669,10 +823,10 @@ function buildMobileFloor() {
   const s = 1536;
   const albedo = document.createElement("canvas");
   albedo.width = albedo.height = s;
-  const actx = albedo.getContext("2d");
+  const actx = albedo.getContext("2d", { willReadFrequently: true });
   const rough = document.createElement("canvas");
   rough.width = rough.height = s;
-  const rctx = rough.getContext("2d");
+  const rctx = rough.getContext("2d", { willReadFrequently: true });
   actx.fillStyle = "#8d8b87";
   actx.fillRect(0, 0, s, s);
   rctx.fillStyle = "#d0d0d0";
@@ -757,10 +911,10 @@ function fillCeramicTile(ctx, x, y, w, h, rgb, seed) {
 function makeMaps(s, grout) {
   const albedo = document.createElement("canvas");
   albedo.width = albedo.height = s;
-  const actx = albedo.getContext("2d");
+  const actx = albedo.getContext("2d", { willReadFrequently: true });
   const rough = document.createElement("canvas");
   rough.width = rough.height = s;
-  const rctx = rough.getContext("2d");
+  const rctx = rough.getContext("2d", { willReadFrequently: true });
   actx.fillStyle = grout;
   actx.fillRect(0, 0, s, s);
   rctx.fillStyle = "#c8c8c8";
@@ -874,6 +1028,1151 @@ function buildCeramicTiles(id) {
   return finishTileMaps(albedo, rough);
 }
 
+function goldFill(ctx, alpha = 0.92) {
+  ctx.fillStyle = `rgba(198,165,106,${alpha})`;
+}
+
+function strokeDiamond(ctx, cx, cy, r) {
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - r);
+  ctx.lineTo(cx + r, cy);
+  ctx.lineTo(cx, cy + r);
+  ctx.lineTo(cx - r, cy);
+  ctx.closePath();
+}
+
+function paintStar(ctx, cx, cy, r, points = 8) {
+  ctx.beginPath();
+  for (let i = 0; i < points * 2; i++) {
+    const a = (Math.PI * i) / points - Math.PI / 2;
+    const rad = i % 2 ? r * 0.42 : r;
+    const x = cx + Math.cos(a) * rad;
+    const y = cy + Math.sin(a) * rad;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+}
+
+function paintBrassFill(ctx) {
+  const g = ctx.createLinearGradient(0, 0, 1024, 220);
+  g.addColorStop(0, "#6a4a22");
+  g.addColorStop(0.35, "#e4c878");
+  g.addColorStop(0.7, "#b88840");
+  g.addColorStop(1, "#7a5428");
+  ctx.fillStyle = g;
+  ctx.strokeStyle = "#a07838";
+}
+
+function paintBrassBand(ctx, x, y, w, h, seed = 1) {
+  const g = ctx.createLinearGradient(x, y, x + Math.max(w, 8), y + h);
+  g.addColorStop(0, "#5a3e1a");
+  g.addColorStop(0.2, "#c6a056");
+  g.addColorStop(0.48, "#f2d892");
+  g.addColorStop(0.72, "#b07a38");
+  g.addColorStop(1, "#6a4820");
+  ctx.fillStyle = g;
+  ctx.fillRect(x, y, w, h);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.clip();
+  ctx.globalAlpha = 0.16;
+  for (let i = 0; i < 10; i++) {
+    ctx.strokeStyle = hash(seed + i) > 0.5 ? "#fff4d0" : "#3a2410";
+    ctx.lineWidth = 0.6;
+    ctx.beginPath();
+    ctx.moveTo(x + hash(seed + i * 2) * w, y);
+    ctx.lineTo(x + hash(seed + i * 3) * w, y + h);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 0.28;
+  ctx.fillStyle = "rgba(255,240,200,0.35)";
+  ctx.fillRect(x, y, w, Math.max(1, h * 0.22));
+  ctx.fillStyle = "rgba(40,24,8,0.28)";
+  ctx.fillRect(x, y + h - Math.max(1, h * 0.2), w, Math.max(1, h * 0.2));
+  ctx.restore();
+}
+
+function brassFrame(ctx, x, y, w, h, t, seed = 1) {
+  paintBrassBand(ctx, x, y, w, t, seed);
+  paintBrassBand(ctx, x, y + h - t, w, t, seed + 1);
+  paintBrassBand(ctx, x, y, t, h, seed + 2);
+  paintBrassBand(ctx, x + w - t, y, t, h, seed + 3);
+}
+
+function paintWoodField(ctx, x, y, w, h, kind = "walnut", seed = 1) {
+  const pal = {
+    walnut: { base: [118, 74, 44], spread: 22, grain: "rgba(42,22,12,0.28)", gap: "rgba(28,14,8,0.55)", hi: "rgba(210,160,100,0.08)" },
+    oak: { base: [186, 142, 88], spread: 18, grain: "rgba(110,70,36,0.22)", gap: "rgba(90,56,28,0.4)", hi: "rgba(255,230,190,0.08)" },
+    darkwalnut: { base: [62, 38, 26], spread: 14, grain: "rgba(18,8,4,0.32)", gap: "rgba(10,6,4,0.6)", hi: "rgba(140,96,60,0.1)" },
+  };
+  const p = pal[kind] || pal.walnut;
+  x = Math.max(0, Math.floor(x));
+  y = Math.max(0, Math.floor(y));
+  w = Math.max(2, Math.floor(w));
+  h = Math.max(2, Math.floor(h));
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.clip();
+  const vertical = h >= w;
+  const along = vertical ? w : h;
+  const count = Math.max(2, Math.ceil(along / 36));
+  const slab = along / count;
+  for (let i = 0; i < count; i++) {
+    const t0 = Math.max(0, Math.min(255, p.base[0] + (hash(seed + i * 7) - 0.5) * p.spread * 2));
+    const t1 = Math.max(0, Math.min(255, p.base[1] + (hash(seed + i * 11) - 0.5) * p.spread * 1.6));
+    const t2 = Math.max(0, Math.min(255, p.base[2] + (hash(seed + i * 13) - 0.5) * p.spread * 1.2));
+    ctx.fillStyle = `rgb(${t0 | 0},${t1 | 0},${t2 | 0})`;
+    if (vertical) ctx.fillRect(x + i * slab, y, slab + 1, h);
+    else ctx.fillRect(x, y + i * slab, w, slab + 1);
+    ctx.strokeStyle = p.grain;
+    ctx.lineWidth = 0.8;
+    ctx.globalAlpha = 0.72;
+    for (let k = 0; k < 7; k++) {
+      ctx.beginPath();
+      if (vertical) {
+        const px = x + i * slab + 4 + hash(seed + i + k) * (slab - 8);
+        ctx.moveTo(px, y);
+        ctx.bezierCurveTo(px + 2, y + h * 0.3, px - 2, y + h * 0.65, px + 1, y + h);
+      } else {
+        const py = y + i * slab + 4 + hash(seed + i + k) * (slab - 8);
+        ctx.moveTo(x, py);
+        ctx.bezierCurveTo(x + w * 0.3, py + 2, x + w * 0.65, py - 2, x + w, py + 1);
+      }
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = p.gap;
+    if (vertical) ctx.fillRect(x + (i + 1) * slab - 1.4, y, 1.4, h);
+    else ctx.fillRect(x, y + (i + 1) * slab - 1.4, w, 1.4);
+  }
+  const gloss = ctx.createLinearGradient(x, y, x + w, y + h);
+  gloss.addColorStop(0, p.hi);
+  gloss.addColorStop(0.5, "rgba(0,0,0,0)");
+  gloss.addColorStop(1, "rgba(0,0,0,0.06)");
+  ctx.fillStyle = gloss;
+  ctx.fillRect(x, y, w, h);
+  ctx.restore();
+}
+
+function paintConcreteField(ctx, x, y, w, h, seed = 1) {
+  x = Math.max(0, Math.floor(x));
+  y = Math.max(0, Math.floor(y));
+  w = Math.max(2, Math.floor(w));
+  h = Math.max(2, Math.floor(h));
+  ctx.fillStyle = "#c6c2b8";
+  ctx.fillRect(x, y, w, h);
+  const img = ctx.getImageData(x, y, w, h);
+  for (let py = 0; py < h; py++) {
+    for (let px = 0; px < w; px++) {
+      const i = (py * w + px) * 4;
+      const n = (fbm(px * 0.012 + seed, py * 0.011 + seed, seed, 3) - 0.5) * 22;
+      const grit = (hash(px * 0.4 + py * 0.37 + seed) - 0.5) * 10;
+      img.data[i] = Math.max(0, Math.min(255, 198 + n + grit));
+      img.data[i + 1] = Math.max(0, Math.min(255, 194 + n + grit * 0.9));
+      img.data[i + 2] = Math.max(0, Math.min(255, 184 + n * 0.85 + grit * 0.7));
+    }
+  }
+  ctx.putImageData(img, x, y);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.clip();
+  const sheen = ctx.createLinearGradient(x, y, x + w, y + h * 0.4);
+  sheen.addColorStop(0, "rgba(255,255,255,0.08)");
+  sheen.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = sheen;
+  ctx.fillRect(x, y, w, h);
+  ctx.restore();
+}
+
+function paintTravertineField(ctx, x, y, w, h, seed = 1) {
+  x = Math.max(0, Math.floor(x));
+  y = Math.max(0, Math.floor(y));
+  w = Math.max(2, Math.floor(w));
+  h = Math.max(2, Math.floor(h));
+  ctx.fillStyle = "#e6d4b6";
+  ctx.fillRect(x, y, w, h);
+  const img = ctx.getImageData(x, y, w, h);
+  for (let py = 0; py < h; py++) {
+    for (let px = 0; px < w; px++) {
+      const i = (py * w + px) * 4;
+      const bed = Math.sin(py * 0.034 + fbm(px * 0.008, py * 0.02, seed, 2) * 4) * 10;
+      const vein = (fbm(px * 0.015, py * 0.006, seed + 3, 2) - 0.5) * 16;
+      const grit = (hash(px * 0.9 + py * 0.85 + seed) - 0.5) * 8;
+      const v = bed + vein + grit;
+      img.data[i] = Math.max(0, Math.min(255, 230 + v));
+      img.data[i + 1] = Math.max(0, Math.min(255, 212 + v * 0.88));
+      img.data[i + 2] = Math.max(0, Math.min(255, 182 + v * 0.7));
+    }
+  }
+  ctx.putImageData(img, x, y);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.clip();
+  for (let i = 0; i < 90; i++) {
+    const px = x + hash(seed + i * 4.1) * w;
+    const py = y + hash(seed + i * 7.3) * h;
+    const filled = hash(seed + i * 2.2) > 0.42;
+    ctx.fillStyle = filled ? "rgba(214,196,168,0.55)" : "rgba(92,74,58,0.28)";
+    ctx.beginPath();
+    ctx.ellipse(px, py, 1.4 + hash(seed + i) * 5.5, 0.7 + hash(seed + i + 1) * 2.2, hash(seed + i + 2) * Math.PI, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function strokeBrass(ctx, width = 4) {
+  paintBrassFill(ctx);
+  ctx.lineWidth = width;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  ctx.stroke();
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,236,190,0.35)";
+  ctx.lineWidth = Math.max(1, width * 0.35);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function paintLuxuryCorner(ctx, x, y, size, flipX, flipY) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
+  paintBrassBand(ctx, 0, 0, Math.max(2.4, size * 0.07), size, 4);
+  paintBrassBand(ctx, 0, 0, size, Math.max(2.4, size * 0.07), 5);
+  ctx.beginPath();
+  ctx.moveTo(size * 0.18, size * 0.72);
+  ctx.quadraticCurveTo(size * 0.18, size * 0.18, size * 0.72, size * 0.18);
+  strokeBrass(ctx, Math.max(2.2, size * 0.045));
+  ctx.beginPath();
+  ctx.moveTo(size * 0.3, size * 0.58);
+  ctx.quadraticCurveTo(size * 0.3, size * 0.3, size * 0.58, size * 0.3);
+  strokeBrass(ctx, Math.max(1.6, size * 0.03));
+  strokeDiamond(ctx, size * 0.38, size * 0.38, size * 0.1);
+  paintBrassFill(ctx);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(size * 0.22, size * 0.22, size * 0.045, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function paintCornerMotif(ctx, x, y, size, flipX, flipY) {
+  paintLuxuryCorner(ctx, x, y, size, flipX, flipY);
+}
+
+function paintCompassRose(ctx, cx, cy, r) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  for (const rad of [r, r * 0.78, r * 0.58, r * 0.38, r * 0.2]) {
+    ctx.beginPath();
+    ctx.arc(0, 0, rad, 0, Math.PI * 2);
+    strokeBrass(ctx, rad > r * 0.7 ? 6 : 3.2);
+  }
+  paintStar(ctx, 0, 0, r * 0.52, 8);
+  ctx.save();
+  ctx.clip();
+  paintMarble(ctx, -r * 0.52, -r * 0.52, r * 1.04, r * 1.04, "dark", 131);
+  ctx.restore();
+  paintStar(ctx, 0, 0, r * 0.52, 8);
+  strokeBrass(ctx, 3.2);
+  paintStar(ctx, 0, 0, r * 0.22, 8);
+  paintBrassFill(ctx);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.07, 0, Math.PI * 2);
+  ctx.fillStyle = "#f7f0e4";
+  ctx.fill();
+  for (let i = 0; i < 8; i++) {
+    const a = (Math.PI / 4) * i - Math.PI / 2;
+    strokeDiamond(ctx, Math.cos(a) * r * 0.68, Math.sin(a) * r * 0.68, r * 0.055);
+    paintBrassFill(ctx);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function paintOctagon(ctx, cx, cy, r) {
+  ctx.beginPath();
+  for (let i = 0; i < 8; i++) {
+    const a = (Math.PI / 4) * i + Math.PI / 8;
+    const x = cx + Math.cos(a) * r;
+    const y = cy + Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+}
+
+function markGloss(rctx, x, y, w, h, tone = "#262626") {
+  rctx.fillStyle = tone;
+  rctx.fillRect(x, y, w, h);
+}
+
+function strokeHex(ctx, cx, cy, r, pointy = true) {
+  ctx.beginPath();
+  const rot = pointy ? -Math.PI / 6 : 0;
+  for (let i = 0; i < 6; i++) {
+    const a = (Math.PI / 3) * i + rot;
+    const x = cx + Math.cos(a) * r;
+    const y = cy + Math.sin(a) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+}
+
+function makeMarbleStamp(kind, size, seed) {
+  const c = document.createElement("canvas");
+  c.width = c.height = size;
+  paintMarble(c.getContext("2d", { willReadFrequently: true }), 0, 0, size, size, kind, seed);
+  return c;
+}
+
+function paintGoldField(ctx, rctx, s) {
+  const g = ctx.createLinearGradient(0, 0, s, s * 0.42);
+  g.addColorStop(0, "#5a3c18");
+  g.addColorStop(0.22, "#d4a85a");
+  g.addColorStop(0.48, "#f2d890");
+  g.addColorStop(0.72, "#b88840");
+  g.addColorStop(1, "#6a4820");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, s, s);
+  ctx.save();
+  ctx.globalAlpha = 0.15;
+  for (let i = 0; i < 40; i++) {
+    ctx.strokeStyle = i % 2 ? "#fff4cc" : "#3a2410";
+    ctx.lineWidth = 0.7;
+    ctx.beginPath();
+    ctx.moveTo(hash(i * 1.7) * s, 0);
+    ctx.lineTo(hash(i * 2.9) * s, s);
+    ctx.stroke();
+  }
+  ctx.restore();
+  ctx.fillStyle = "rgba(255,236,180,0.14)";
+  ctx.fillRect(0, 0, s, 7);
+  ctx.fillStyle = "rgba(40,24,8,0.16)";
+  ctx.fillRect(0, s - 8, s, 8);
+  rctx.fillStyle = "#0a0a0a";
+  rctx.fillRect(0, 0, s, s);
+}
+
+function wrapDraw(s, x, y, pad, fn) {
+  const copies = [[0, 0]];
+  if (x - pad < 0) copies.push([s, 0]);
+  if (x + pad > s) copies.push([-s, 0]);
+  if (y - pad < 0) copies.push([0, s]);
+  if (y + pad > s) copies.push([0, -s]);
+  if (x - pad < 0 && y - pad < 0) copies.push([s, s]);
+  if (x + pad > s && y - pad < 0) copies.push([-s, s]);
+  if (x - pad < 0 && y + pad > s) copies.push([s, -s]);
+  if (x + pad > s && y + pad > s) copies.push([-s, -s]);
+  for (const [dx, dy] of copies) fn(x + dx, y + dy);
+}
+
+function fillClippedStamp(ctx, pathFn, stamp, x, y, w, h) {
+  ctx.save();
+  pathFn();
+  ctx.clip();
+  ctx.drawImage(stamp, x, y, w, h);
+  ctx.restore();
+}
+
+function fillClippedRough(rctx, pathFn, tone) {
+  rctx.save();
+  pathFn();
+  rctx.fillStyle = tone;
+  rctx.fill();
+  rctx.restore();
+}
+
+function bevelGold(ctx, pathFn) {
+  ctx.save();
+  pathFn();
+  ctx.strokeStyle = "rgba(255,232,170,0.42)";
+  ctx.lineWidth = 2.4;
+  ctx.stroke();
+  ctx.strokeStyle = "rgba(40,24,8,0.3)";
+  ctx.lineWidth = 1.15;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function paintHoneyOakPlanks(ctx, rctx, s) {
+  const cols = 7;
+  const pw = s / cols;
+  const gap = 2;
+  const base = [176, 130, 78];
+
+  ctx.fillStyle = "rgb(86, 54, 28)";
+  ctx.fillRect(0, 0, s, s);
+  rctx.fillStyle = "#7a7a7a";
+  rctx.fillRect(0, 0, s, s);
+
+  for (let col = 0; col < cols; col++) {
+    const x = col * pw;
+    const plankW = pw - gap;
+    const shift = (hash(col * 4.7) - 0.5) * 9;
+    const pr = Math.max(0, Math.min(255, base[0] + shift));
+    const pg = Math.max(0, Math.min(255, base[1] + shift * 0.68));
+    const pb = Math.max(0, Math.min(255, base[2] + shift * 0.4));
+    ctx.fillStyle = `rgb(${pr | 0},${pg | 0},${pb | 0})`;
+    ctx.fillRect(x, 0, plankW, s);
+
+    const ix = Math.max(0, x | 0);
+    const bw = Math.max(1, Math.min(s - ix, plankW | 0));
+    const img = ctx.getImageData(ix, 0, bw, s);
+    const d = img.data;
+    const seed = col * 19.3;
+    for (let y = 0; y < s; y++) {
+      for (let px = 0; px < bw; px++) {
+        const i = (y * bw + px) * 4;
+        const grain = (hash(seed + y * 0.07 + px * 0.31) - 0.5) * 12;
+        const wave = Math.sin(y * 0.035 + px * 0.2 + seed) * 4;
+        d[i] = Math.max(0, Math.min(255, d[i] + grain + wave));
+        d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + (grain + wave) * 0.7));
+        d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + (grain + wave) * 0.4));
+      }
+    }
+    ctx.putImageData(img, ix, 0);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, 0, plankW, s);
+    ctx.clip();
+    ctx.strokeStyle = "rgba(86, 48, 20, 0.2)";
+    ctx.lineWidth = 1.05;
+    for (let k = 0; k < 8; k++) {
+      const gx = x + 6 + hash(seed + k * 2.1) * (plankW - 12);
+      ctx.beginPath();
+      ctx.moveTo(gx, 0);
+      ctx.bezierCurveTo(gx + 3, s * 0.28, gx - 3, s * 0.64, gx + 1.5, s);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    ctx.fillStyle = "rgba(255, 224, 176, 0.09)";
+    ctx.fillRect(x + 1, 0, 2.2, s);
+    ctx.fillStyle = "rgba(48, 28, 12, 0.24)";
+    ctx.fillRect(x + plankW, 0, gap, s);
+
+    rctx.fillStyle = "#6e6e6e";
+    rctx.fillRect(x, 0, plankW, s);
+    rctx.fillStyle = "#b4b4b4";
+    rctx.fillRect(x + plankW, 0, gap, s);
+  }
+}
+
+function buildDesignFloor(id) {
+  const s = 1024;
+  const { albedo, actx, rough, rctx } = makeMaps(s, "#5a544c");
+  const ctx = actx;
+  const mid = s / 2;
+
+  if (id === "floor-plain") {
+    ctx.fillStyle = "#efe9df";
+    ctx.fillRect(0, 0, s, s);
+    rctx.fillStyle = "#6a6a6a";
+    rctx.fillRect(0, 0, s, s);
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-oakplank") {
+    paintHoneyOakPlanks(ctx, rctx, s);
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-hexlux") {
+    paintGoldField(ctx, rctx, s);
+    const dark = makeMarbleStamp("portoro", 280, 61);
+    const light = makeMarbleStamp("carrara", 220, 88);
+    const periodX = 256;
+    const periodY = 256;
+    const hexW = 188;
+    const r = hexW / Math.sqrt(3);
+    const inset = 8;
+    for (let row = 0; row < s / periodY; row++) {
+      const cy = row * periodY + periodY / 2;
+      for (let col = 0; col < s / periodX; col++) {
+        const x0 = col * periodX;
+        const hx = x0 + hexW / 2 + 6;
+        const hy = cy;
+        const pathHex = (c, x, y) => strokeHex(c, x, y, r - inset);
+        wrapDraw(s, hx, hy, r, (x, y) => {
+          fillClippedStamp(ctx, () => pathHex(ctx, x, y), dark, x - r, y - r, r * 2, r * 2);
+          fillClippedRough(rctx, () => pathHex(rctx, x, y), "#101010");
+          bevelGold(ctx, () => pathHex(ctx, x, y));
+        });
+        const bx = x0 + hexW + 8;
+        const bw = 42;
+        const bh = periodY * 0.78;
+        wrapDraw(s, bx + bw / 2, cy, bh / 2 + 8, (x, y) => {
+          const rx = x - bw / 2;
+          const ry = y - bh / 2;
+          const pathBar = (c) => {
+            c.beginPath();
+            c.rect(rx, ry, bw, bh);
+          };
+          fillClippedStamp(ctx, () => pathBar(ctx), light, rx - 8, ry, bw + 16, bh);
+          fillClippedRough(rctx, () => pathBar(rctx), "#2a2a2a");
+          bevelGold(ctx, () => pathBar(ctx));
+        });
+      }
+    }
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-honey") {
+    paintGoldField(ctx, rctx, s);
+    const dark = makeMarbleStamp("portoro", 256, 44);
+    const light = makeMarbleStamp("carrara", 256, 102);
+    const r = 92;
+    const horiz = r * Math.sqrt(3);
+    const vert = r * 1.5;
+    const inset = 7;
+    for (let row = -1; row <= s / vert + 1; row++) {
+      const cy = row * vert + r * 0.15;
+      const ox = row % 2 ? horiz / 2 : 0;
+      for (let col = -1; col <= s / horiz + 1; col++) {
+        const hx = ox + col * horiz;
+        const stamp = (row + col) % 2 === 0 ? dark : light;
+        const gloss = stamp === dark ? "#101010" : "#2c2c2c";
+        wrapDraw(s, hx, cy, r, (x, y) => {
+          const path = (c) => strokeHex(c, x, y, r - inset);
+          fillClippedStamp(ctx, () => path(ctx), stamp, x - r, y - r, r * 2, r * 2);
+          fillClippedRough(rctx, () => path(rctx), gloss);
+          bevelGold(ctx, () => path(ctx));
+        });
+      }
+    }
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-octolux") {
+    paintGoldField(ctx, rctx, s);
+    const dark = makeMarbleStamp("portoro", 280, 33);
+    const light = makeMarbleStamp("carrara", 160, 119);
+    const cell = 256;
+    const inset = 8;
+    for (let row = 0; row < s / cell; row++) {
+      for (let col = 0; col < s / cell; col++) {
+        const cx = col * cell + cell / 2;
+        const cy = row * cell + cell / 2;
+        const pathOct = (c) => paintOctagon(c, cx, cy, cell * 0.42 - inset);
+        fillClippedStamp(ctx, () => pathOct(ctx), dark, cx - cell * 0.46, cy - cell * 0.46, cell * 0.92, cell * 0.92);
+        fillClippedRough(rctx, () => pathOct(rctx), "#101010");
+        bevelGold(ctx, () => pathOct(ctx));
+        const sq = 34;
+        const corners = [
+          [col * cell + 10, row * cell + 10],
+          [col * cell + cell - 10 - sq, row * cell + 10],
+          [col * cell + 10, row * cell + cell - 10 - sq],
+          [col * cell + cell - 10 - sq, row * cell + cell - 10 - sq],
+        ];
+        corners.forEach(([sx, sy]) => {
+          const pathSq = (c) => {
+            c.beginPath();
+            c.rect(sx, sy, sq, sq);
+          };
+          fillClippedStamp(ctx, () => pathSq(ctx), light, sx - 6, sy - 6, sq + 12, sq + 12);
+          fillClippedRough(rctx, () => pathSq(rctx), "#2a2a2a");
+          bevelGold(ctx, () => pathSq(ctx));
+        });
+      }
+    }
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-chevgold") {
+    paintGoldField(ctx, rctx, s);
+    const dark = makeMarbleStamp("portoro", 300, 71);
+    const light = makeMarbleStamp("carrara", 300, 95);
+    const h = 92;
+    const w = 168;
+    const lean = 46;
+    const gap = 11;
+    for (let row = -1; row < 14; row++) {
+      const y = row * (h + gap);
+      const ox = row % 2 ? w * 0.5 : 0;
+      for (let col = -2; col < 10; col++) {
+        const x = ox + col * (w + gap);
+        const stamp = (row + col) % 2 === 0 ? dark : light;
+        const path = (c, px, py) => {
+          c.beginPath();
+          c.moveTo(px + lean, py);
+          c.lineTo(px + w + lean, py);
+          c.lineTo(px + w - lean, py + h);
+          c.lineTo(px - lean, py + h);
+          c.closePath();
+        };
+        wrapDraw(s, x + w / 2, y + h / 2, w, (cx, cy) => {
+          const px = cx - w / 2;
+          const py = cy - h / 2;
+          fillClippedStamp(ctx, () => path(ctx, px, py), stamp, px - lean, py, w + lean * 2, h);
+          fillClippedRough(rctx, () => path(rctx, px, py), stamp === dark ? "#101010" : "#2a2a2a");
+          bevelGold(ctx, () => path(ctx, px, py));
+        });
+      }
+    }
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-fanlux") {
+    paintGoldField(ctx, rctx, s);
+    const dark = makeMarbleStamp("portoro", 256, 27);
+    const light = makeMarbleStamp("carrara", 256, 134);
+    const rad = 90;
+    const rowH = rad * 0.72;
+    for (let row = -1; row < s / rowH + 2; row++) {
+      const cy = row * rowH + 8;
+      const ox = row % 2 ? rad : 0;
+      for (let col = -1; col < s / (rad * 2) + 2; col++) {
+        const hx = ox + col * rad * 2;
+        const stamp = (row + col) % 2 === 0 ? dark : light;
+        wrapDraw(s, hx, cy, rad, (x, y) => {
+          const path = (c) => {
+            c.beginPath();
+            c.arc(x, y, rad - 7, Math.PI, 0, false);
+            c.closePath();
+          };
+          fillClippedStamp(ctx, () => path(ctx), stamp, x - rad, y - rad, rad * 2, rad * 2);
+          fillClippedRough(rctx, () => path(rctx), stamp === dark ? "#101010" : "#2c2c2c");
+          bevelGold(ctx, () => path(ctx));
+        });
+      }
+    }
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-contrast") {
+    paintMarble(ctx, 0, 0, s, s, "ivory", 19);
+    markGloss(rctx, 0, 0, s, s, "#2a2a2a");
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, s, 78);
+    ctx.rect(0, s - 78, s, 78);
+    ctx.rect(0, 0, 78, s);
+    ctx.rect(s - 78, 0, 78, s);
+    ctx.clip();
+    paintMarble(ctx, 0, 0, s, s, "noir", 27);
+    ctx.restore();
+    markGloss(rctx, 0, 0, s, 78, "#141414");
+    markGloss(rctx, 0, s - 78, s, 78, "#141414");
+    paintBrassBand(ctx, 10, 10, s - 20, 10, 1);
+    paintBrassBand(ctx, 10, s - 20, s - 20, 10, 2);
+    paintBrassBand(ctx, 10, 10, 10, s - 20, 3);
+    paintBrassBand(ctx, s - 20, 10, 10, s - 20, 4);
+    paintBrassBand(ctx, 26, 26, s - 52, 5, 5);
+    paintBrassBand(ctx, 26, s - 31, s - 52, 5, 6);
+    paintBrassBand(ctx, 26, 26, 5, s - 52, 7);
+    paintBrassBand(ctx, s - 31, 26, 5, s - 52, 8);
+    paintBrassBand(ctx, 70, 70, s - 140, 6, 9);
+    paintBrassBand(ctx, 70, s - 76, s - 140, 6, 10);
+    paintBrassBand(ctx, 70, 70, 6, s - 140, 11);
+    paintBrassBand(ctx, s - 76, 70, 6, s - 140, 12);
+    paintLuxuryCorner(ctx, 88, 88, 118, false, false);
+    paintLuxuryCorner(ctx, s - 88, 88, 118, true, false);
+    paintLuxuryCorner(ctx, 88, s - 88, 118, false, true);
+    paintLuxuryCorner(ctx, s - 88, s - 88, 118, true, true);
+    ctx.save();
+    paintOctagon(ctx, mid, mid, 210);
+    ctx.clip();
+    paintMarble(ctx, mid - 210, mid - 210, 420, 420, "cream", 41);
+    ctx.restore();
+    paintOctagon(ctx, mid, mid, 210);
+    strokeBrass(ctx, 6);
+    paintOctagon(ctx, mid, mid, 178);
+    strokeBrass(ctx, 3);
+    ctx.save();
+    strokeDiamond(ctx, mid, mid, 128);
+    ctx.clip();
+    paintMarble(ctx, mid - 128, mid - 128, 256, 256, "dark", 53);
+    ctx.restore();
+    strokeDiamond(ctx, mid, mid, 128);
+    strokeBrass(ctx, 4.5);
+    paintCompassRose(ctx, mid, mid, 86);
+    rctx.fillStyle = "#101010";
+    rctx.fillRect(10, 10, s - 20, 10);
+    rctx.fillRect(10, s - 20, s - 20, 10);
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-diamond") {
+    paintMarble(ctx, 0, 0, s, s, "ivory", 41);
+    markGloss(rctx, 0, 0, s, s, "#303030");
+    const step = 160;
+    let n = 0;
+    for (let y = -step; y < s + step; y += step) {
+      for (let x = -step; x < s + step; x += step) {
+        const dark = ((x / step + y / step) | 0) % 2 === 0;
+        ctx.save();
+        strokeDiamond(ctx, x + step / 2, y + step / 2, step * 0.46);
+        ctx.clip();
+        paintMarble(ctx, x, y, step, step, dark ? "noir" : "cream", 50 + n);
+        ctx.restore();
+        rctx.save();
+        strokeDiamond(rctx, x + step / 2, y + step / 2, step * 0.46);
+        rctx.fillStyle = dark ? "#1a1a1a" : "#2e2e2e";
+        rctx.fill();
+        rctx.restore();
+        ctx.save();
+        strokeDiamond(ctx, x + step / 2, y + step / 2, step * 0.46);
+        paintBrassFill(ctx);
+        ctx.lineWidth = 4.5;
+        ctx.stroke();
+        ctx.restore();
+        n += 1;
+      }
+    }
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-medallion") {
+    paintMarble(ctx, 0, 0, s, s, "ivory", 63);
+    markGloss(rctx, 0, 0, s, s, "#2a2a2a");
+    paintBrassBand(ctx, 14, 14, s - 28, 12, 8);
+    paintBrassBand(ctx, 14, s - 26, s - 28, 12, 9);
+    paintBrassBand(ctx, 14, 14, 12, s - 28, 10);
+    paintBrassBand(ctx, s - 26, 14, 12, s - 28, 11);
+    paintBrassBand(ctx, 36, 36, s - 72, 5, 12);
+    paintBrassBand(ctx, 36, s - 41, s - 72, 5, 13);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(mid, mid, s * 0.38, 0, Math.PI * 2);
+    ctx.clip();
+    paintMarble(ctx, mid - s * 0.38, mid - s * 0.38, s * 0.76, s * 0.76, "cream", 99);
+    ctx.restore();
+    paintCompassRose(ctx, mid, mid, s * 0.3);
+    paintLuxuryCorner(ctx, 52, 52, 120, false, false);
+    paintLuxuryCorner(ctx, s - 52, 52, 120, true, false);
+    paintLuxuryCorner(ctx, 52, s - 52, 120, false, true);
+    paintLuxuryCorner(ctx, s - 52, s - 52, 120, true, true);
+    rctx.fillStyle = "#101010";
+    rctx.fillRect(14, 14, s - 28, 12);
+    rctx.fillRect(14, s - 26, s - 28, 12);
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-arabesque") {
+    paintMarble(ctx, 0, 0, s, s, "cream", 71);
+    markGloss(rctx, 0, 0, s, s, "#2a2a2a");
+    const step = 256;
+    let n = 0;
+    for (let y = 0; y < s; y += step) {
+      for (let x = 0; x < s; x += step) {
+        const cx = x + step / 2;
+        const cy = y + step / 2;
+        ctx.save();
+        paintStar(ctx, cx, cy, 90, 8);
+        ctx.clip();
+        paintMarble(ctx, x + 20, y + 20, step - 40, step - 40, n % 2 ? "dark" : "ivory", 120 + n);
+        ctx.restore();
+        paintStar(ctx, cx, cy, 90, 8);
+        paintBrassFill(ctx);
+        ctx.lineWidth = 3.2;
+        ctx.stroke();
+        ctx.save();
+        strokeDiamond(ctx, cx, cy, 26);
+        ctx.clip();
+        paintMarble(ctx, cx - 26, cy - 26, 52, 52, n % 2 ? "ivory" : "noir", 140 + n);
+        ctx.restore();
+        n += 1;
+      }
+    }
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-brass") {
+    const gap = 12;
+    const tw = (s - gap * 3) / 2;
+    const kinds = ["ivory", "cream", "grey", "ivory"];
+    kinds.forEach((kind, i) => {
+      const c = i % 2;
+      const r = Math.floor(i / 2);
+      const x = gap + c * (tw + gap);
+      const y = gap + r * (tw + gap);
+      paintMarble(ctx, x, y, tw, tw, kind, 77 + i * 19);
+      markGloss(rctx, x, y, tw, tw, "#2a2a2a");
+    });
+    paintBrassBand(ctx, 0, 0, s, gap, 12);
+    paintBrassBand(ctx, 0, s - gap, s, gap, 13);
+    paintBrassBand(ctx, 0, 0, gap, s, 14);
+    paintBrassBand(ctx, s - gap, 0, gap, s, 15);
+    paintBrassBand(ctx, mid - gap / 2, 0, gap, s, 16);
+    paintBrassBand(ctx, 0, mid - gap / 2, s, gap, 17);
+    rctx.fillStyle = "#101010";
+    rctx.fillRect(0, 0, s, gap);
+    rctx.fillRect(0, mid - gap / 2, s, gap);
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-chevron") {
+    ctx.fillStyle = "#2a1a10";
+    ctx.fillRect(0, 0, s, s);
+    rctx.fillStyle = "#8a8a8a";
+    rctx.fillRect(0, 0, s, s);
+    const pl = 72;
+    const pw = 24;
+    let n = 0;
+    for (let y = -pl; y < s + pl; y += pl * 0.7) {
+      for (let x = -pl; x < s + pl; x += pl) {
+        const tone = 112 + hash(n * 3.1) * 42;
+        ctx.save();
+        ctx.translate(x + pl / 2, y + pl / 2);
+        ctx.rotate((((x / pl) | 0) % 2 ? 1 : -1) * Math.PI / 4.15);
+        ctx.fillStyle = `rgb(${tone + 48},${tone + 10},${tone - 26})`;
+        ctx.fillRect(-pw / 2, -pl / 2, pw - 1.5, pl - 1.5);
+        ctx.strokeStyle = "rgba(90,52,22,0.22)";
+        ctx.lineWidth = 0.8;
+        for (let k = 0; k < 4; k++) {
+          ctx.beginPath();
+          ctx.moveTo(-pw / 2 + 2, -pl / 2 + 8 + k * 12);
+          ctx.bezierCurveTo(0, -pl / 2 + 14 + k * 11, pw / 4, -pl / 2 + 6 + k * 12, pw / 2 - 2, -pl / 2 + 10 + k * 11);
+          ctx.stroke();
+        }
+        ctx.restore();
+        rctx.fillStyle = "#3a3a3a";
+        rctx.fillRect(x + 2, y + 2, pw, pl);
+        n += 1;
+      }
+    }
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-noir") {
+    const gap = 8;
+    const tw = (s - gap * 3) / 2;
+    ["noir", "dark", "dark", "noir"].forEach((kind, i) => {
+      const c = i % 2;
+      const r = Math.floor(i / 2);
+      const x = gap + c * (tw + gap);
+      const y = gap + r * (tw + gap);
+      paintMarble(ctx, x, y, tw, tw, kind, 31 + i * 14);
+      markGloss(rctx, x, y, tw, tw, "#161616");
+      ctx.save();
+      strokeDiamond(ctx, x + tw / 2, y + tw / 2, tw * 0.2);
+      ctx.clip();
+      paintMarble(ctx, x + tw * 0.25, y + tw * 0.25, tw * 0.5, tw * 0.5, "ivory", 90 + i);
+      ctx.restore();
+    });
+    paintBrassBand(ctx, 0, 0, s, gap, 41);
+    paintBrassBand(ctx, 0, s - gap, s, gap, 42);
+    paintBrassBand(ctx, 0, 0, gap, s, 43);
+    paintBrassBand(ctx, s - gap, 0, gap, s, 44);
+    paintBrassBand(ctx, mid - gap / 2, 0, gap, s, 45);
+    paintBrassBand(ctx, 0, mid - gap / 2, s, gap, 46);
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-bone") {
+    const gap = 9;
+    const tw = (s - gap * 3) / 2;
+    ["ivory", "cream", "cream", "ivory"].forEach((kind, i) => {
+      const c = i % 2;
+      const r = Math.floor(i / 2);
+      const x = gap + c * (tw + gap);
+      const y = gap + r * (tw + gap);
+      paintMarble(ctx, x, y, tw, tw, kind, 44 + i * 11);
+      markGloss(rctx, x, y, tw, tw, "#2c2c2c");
+    });
+    paintBrassBand(ctx, 0, 0, s, gap, 51);
+    paintBrassBand(ctx, 0, s - gap, s, gap, 52);
+    paintBrassBand(ctx, 0, 0, gap, s, 53);
+    paintBrassBand(ctx, s - gap, 0, gap, s, 54);
+    paintBrassBand(ctx, mid - gap / 2, 0, gap, s, 55);
+    paintBrassBand(ctx, 0, mid - gap / 2, s, gap, 56);
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-check") {
+    const n = 4;
+    const gap = 6;
+    const tw = (s - gap * (n + 1)) / n;
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        const x = gap + c * (tw + gap);
+        const y = gap + r * (tw + gap);
+        const dark = (r + c) % 2 === 0;
+        paintMarble(ctx, x, y, tw, tw, dark ? "noir" : "ivory", 60 + r * 7 + c);
+        markGloss(rctx, x, y, tw, tw, dark ? "#141414" : "#2e2e2e");
+      }
+    }
+    paintBrassBand(ctx, 0, 0, s, gap, 61);
+    paintBrassBand(ctx, 0, s - gap, s, gap, 62);
+    paintBrassBand(ctx, 0, 0, gap, s, 63);
+    paintBrassBand(ctx, s - gap, 0, gap, s, 64);
+    for (let i = 1; i < n; i++) {
+      paintBrassBand(ctx, gap + i * (tw + gap) - gap, 0, gap, s, 65 + i);
+      paintBrassBand(ctx, 0, gap + i * (tw + gap) - gap, s, gap, 70 + i);
+    }
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-inkgold") {
+    paintMarble(ctx, 0, 0, s, s, "noir", 71);
+    markGloss(rctx, 0, 0, s, s, "#101010");
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, s, 86);
+    ctx.rect(0, s - 86, s, 86);
+    ctx.rect(0, 0, 86, s);
+    ctx.rect(s - 86, 0, 86, s);
+    ctx.clip();
+    paintMarble(ctx, 0, 0, s, s, "gold", 77);
+    ctx.restore();
+    markGloss(rctx, 0, 0, s, 86, "#3a2a12");
+    markGloss(rctx, 0, s - 86, s, 86, "#3a2a12");
+    brassFrame(ctx, 12, 12, s - 24, s - 24, 8, 81);
+    brassFrame(ctx, 78, 78, s - 156, s - 156, 5, 82);
+    paintOctagon(ctx, mid, mid, 228);
+    ctx.save();
+    paintOctagon(ctx, mid, mid, 228);
+    ctx.clip();
+    paintMarble(ctx, mid - 228, mid - 228, 456, 456, "gold", 88);
+    ctx.restore();
+    strokeBrass(ctx, 7);
+    paintOctagon(ctx, mid, mid, 168);
+    ctx.save();
+    paintOctagon(ctx, mid, mid, 168);
+    ctx.clip();
+    paintMarble(ctx, mid - 168, mid - 168, 336, 336, "ivory", 91);
+    ctx.restore();
+    strokeBrass(ctx, 4);
+    paintCompassRose(ctx, mid, mid, 92);
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-wineivory") {
+    const n = 4;
+    const gap = 7;
+    const tw = (s - gap * (n + 1)) / n;
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        const x = gap + c * (tw + gap);
+        const y = gap + r * (tw + gap);
+        const dark = (r + c) % 2 === 0;
+        paintMarble(ctx, x, y, tw, tw, dark ? "wine" : "ivory", 100 + r * 8 + c);
+        markGloss(rctx, x, y, tw, tw, dark ? "#1a0a0c" : "#2c2c2c");
+      }
+    }
+    paintBrassBand(ctx, 0, 0, s, gap, 101);
+    paintBrassBand(ctx, 0, s - gap, s, gap, 102);
+    paintBrassBand(ctx, 0, 0, gap, s, 103);
+    paintBrassBand(ctx, s - gap, 0, gap, s, 104);
+    for (let i = 1; i < n; i++) {
+      paintBrassBand(ctx, gap + i * (tw + gap) - gap, 0, gap, s, 105 + i);
+      paintBrassBand(ctx, 0, gap + i * (tw + gap) - gap, s, gap, 110 + i);
+    }
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-navygold") {
+    const gap = 8;
+    const tw = (s - gap * 3) / 2;
+    ["navy", "ivory", "ivory", "navy"].forEach((kind, i) => {
+      const c = i % 2;
+      const r = Math.floor(i / 2);
+      const x = gap + c * (tw + gap);
+      const y = gap + r * (tw + gap);
+      paintMarble(ctx, x, y, tw, tw, kind, 120 + i * 12);
+      markGloss(rctx, x, y, tw, tw, kind === "navy" ? "#0c1420" : "#2c2c2c");
+      ctx.save();
+      strokeDiamond(ctx, x + tw / 2, y + tw / 2, tw * 0.22);
+      ctx.clip();
+      paintMarble(ctx, x + tw * 0.22, y + tw * 0.22, tw * 0.56, tw * 0.56, "gold", 130 + i);
+      ctx.restore();
+    });
+    paintBrassBand(ctx, 0, 0, s, gap, 141);
+    paintBrassBand(ctx, 0, s - gap, s, gap, 142);
+    paintBrassBand(ctx, 0, 0, gap, s, 143);
+    paintBrassBand(ctx, s - gap, 0, gap, s, 144);
+    paintBrassBand(ctx, mid - gap / 2, 0, gap, s, 145);
+    paintBrassBand(ctx, 0, mid - gap / 2, s, gap, 146);
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-emerald") {
+    const n = 4;
+    const gap = 7;
+    const tw = (s - gap * (n + 1)) / n;
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        const x = gap + c * (tw + gap);
+        const y = gap + r * (tw + gap);
+        const dark = (r + c) % 2 === 0;
+        paintMarble(ctx, x, y, tw, tw, dark ? "emerald" : "cream", 150 + r * 7 + c);
+        markGloss(rctx, x, y, tw, tw, dark ? "#061410" : "#2a2a2a");
+      }
+    }
+    paintBrassBand(ctx, 0, 0, s, gap, 161);
+    paintBrassBand(ctx, 0, s - gap, s, gap, 162);
+    paintBrassBand(ctx, 0, 0, gap, s, 163);
+    paintBrassBand(ctx, s - gap, 0, gap, s, 164);
+    for (let i = 1; i < n; i++) {
+      paintBrassBand(ctx, gap + i * (tw + gap) - gap, 0, gap, s, 165 + i);
+      paintBrassBand(ctx, 0, gap + i * (tw + gap) - gap, s, gap, 170 + i);
+    }
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-sandink") {
+    paintMarble(ctx, 0, 0, s, s, "sand", 181);
+    markGloss(rctx, 0, 0, s, s, "#3a3a3a");
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, s, 80);
+    ctx.rect(0, s - 80, s, 80);
+    ctx.rect(0, 0, 80, s);
+    ctx.rect(s - 80, 0, 80, s);
+    ctx.clip();
+    paintMarble(ctx, 0, 0, s, s, "noir", 186);
+    ctx.restore();
+    markGloss(rctx, 0, 0, s, 80, "#121212");
+    markGloss(rctx, 0, s - 80, s, 80, "#121212");
+    brassFrame(ctx, 12, 12, s - 24, s - 24, 6, 190);
+    brassFrame(ctx, 72, 72, s - 144, s - 144, 4, 191);
+    ctx.save();
+    strokeDiamond(ctx, mid, mid, 210);
+    ctx.clip();
+    paintMarble(ctx, mid - 210, mid - 210, 420, 420, "noir", 194);
+    ctx.restore();
+    strokeDiamond(ctx, mid, mid, 210);
+    strokeBrass(ctx, 5);
+    ctx.save();
+    strokeDiamond(ctx, mid, mid, 118);
+    ctx.clip();
+    paintMarble(ctx, mid - 118, mid - 118, 236, 236, "ivory", 198);
+    ctx.restore();
+    strokeDiamond(ctx, mid, mid, 118);
+    strokeBrass(ctx, 3);
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-runway") {
+    paintMarble(ctx, 0, 0, s, s, "noir", 21);
+    markGloss(rctx, 0, 0, s, s, "#141414");
+    const inset = 92;
+    paintWoodField(ctx, inset, inset, s - inset * 2, s - inset * 2, "walnut", 8);
+    markGloss(rctx, inset, inset, s - inset * 2, s - inset * 2, "#6a6a6a");
+    const runW = 168;
+    const runX = mid - runW / 2;
+    paintMarble(ctx, runX, inset, runW, s - inset * 2, "noir", 33);
+    markGloss(rctx, runX, inset, runW, s - inset * 2, "#121212");
+    brassFrame(ctx, 10, 10, s - 20, s - 20, 5, 2);
+    brassFrame(ctx, inset - 4, inset - 4, s - inset * 2 + 8, s - inset * 2 + 8, 3, 6);
+    brassFrame(ctx, runX - 3, inset - 3, runW + 6, s - inset * 2 + 6, 3, 10);
+    rctx.fillStyle = "#101010";
+    rctx.fillRect(10, 10, s - 20, 5);
+    rctx.fillRect(runX - 3, inset, 3, s - inset * 2);
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-mall") {
+    const gap = 8;
+    const cols = 3;
+    const rows = 2;
+    const tw = (s - gap * (cols + 1)) / cols;
+    const th = (s - gap * (rows + 1)) / rows;
+    const kinds = ["carrara", "noir", "carrara", "carrara", "carrara", "noir"];
+    kinds.forEach((kind, i) => {
+      const c = i % cols;
+      const r = Math.floor(i / cols);
+      const x = gap + c * (tw + gap);
+      const y = gap + r * (th + gap);
+      paintMarble(ctx, x, y, tw, th, kind, 80 + i * 13);
+      markGloss(rctx, x, y, tw, th, kind === "noir" ? "#141414" : "#2c2c2c");
+      ctx.save();
+      ctx.strokeStyle = "rgba(22,18,16,0.55)";
+      ctx.lineWidth = 1.6;
+      ctx.strokeRect(x + 2, y + 2, tw - 4, th - 4);
+      ctx.restore();
+    });
+    brassFrame(ctx, 0, 0, s, s, gap, 20);
+    for (let c = 1; c < cols; c++) paintBrassBand(ctx, gap + c * (tw + gap) - gap, 0, gap, s, 24 + c);
+    for (let r = 1; r < rows; r++) paintBrassBand(ctx, 0, gap + r * (th + gap) - gap, s, gap, 30 + r);
+    rctx.fillStyle = "#101010";
+    rctx.fillRect(0, 0, s, gap);
+    rctx.fillRect(0, mid - gap / 2, s, gap);
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-arch") {
+    const border = 70;
+    paintMarble(ctx, 0, 0, s, s, "charcoal", 17);
+    markGloss(rctx, 0, 0, s, s, "#4a4a4a");
+    const inner = s - border * 2;
+    const split = Math.floor(inner * 0.52);
+    paintConcreteField(ctx, border, border, split, inner, 4);
+    markGloss(rctx, border, border, split, inner, "#7a7a7a");
+    paintWoodField(ctx, border + split, border, inner - split, inner, "oak", 9);
+    markGloss(rctx, border + split, border, inner - split, inner, "#6a6a6a");
+    brassFrame(ctx, border - 3, border - 3, inner + 6, inner + 6, 3, 14);
+    paintBrassBand(ctx, border + split - 2, border, 4, inner, 18);
+    rctx.fillStyle = "#2a2a2a";
+    rctx.fillRect(0, 0, s, border);
+    rctx.fillRect(border + split - 2, border, 4, inner);
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-warm") {
+    const border = 68;
+    paintTravertineField(ctx, 0, 0, s, s, 5);
+    markGloss(rctx, 0, 0, s, s, "#5a5a5a");
+    paintWoodField(ctx, 0, 0, s, border, "darkwalnut", 2);
+    paintWoodField(ctx, 0, s - border, s, border, "darkwalnut", 3);
+    paintWoodField(ctx, 0, border, border, s - border * 2, "darkwalnut", 4);
+    paintWoodField(ctx, s - border, border, border, s - border * 2, "darkwalnut", 5);
+    markGloss(rctx, 0, 0, s, border, "#6a6a6a");
+    markGloss(rctx, 0, s - border, s, border, "#6a6a6a");
+    const strip = 28;
+    paintWoodField(ctx, border + 36, mid - strip / 2, s - border * 2 - 72, strip, "darkwalnut", 6);
+    paintWoodField(ctx, mid - strip / 2, border + 36, strip, s - border * 2 - 72, "darkwalnut", 7);
+    markGloss(rctx, border + 36, mid - strip / 2, s - border * 2 - 72, strip, "#6a6a6a");
+    brassFrame(ctx, border - 3, border - 3, s - border * 2 + 6, s - border * 2 + 6, 3, 22);
+    return finishTileMaps(albedo, rough);
+  }
+
+  if (id === "floor-geo") {
+    paintMarble(ctx, 0, 0, s, s, "cream", 12);
+    markGloss(rctx, 0, 0, s, s, "#2c2c2c");
+    const step = 340;
+    const mats = ["noir", "ivory", "walnut"];
+    let n = 0;
+    for (let y = -step; y < s + step; y += step) {
+      for (let x = -step; x < s + step; x += step) {
+        const mat = mats[n % mats.length];
+        ctx.save();
+        strokeDiamond(ctx, x + step / 2, y + step / 2, step * 0.48);
+        ctx.clip();
+        if (mat === "walnut") {
+          paintWoodField(ctx, x, y, step, step, "walnut", 20 + n);
+          markGloss(rctx, x, y, step, step, "#6a6a6a");
+        } else {
+          paintMarble(ctx, x, y, step, step, mat, 40 + n);
+          markGloss(rctx, x, y, step, step, mat === "noir" ? "#141414" : "#2c2c2c");
+        }
+        ctx.restore();
+        ctx.save();
+        strokeDiamond(ctx, x + step / 2, y + step / 2, step * 0.48);
+        paintBrassFill(ctx);
+        ctx.lineWidth = 2.2;
+        ctx.stroke();
+        ctx.restore();
+        n += 1;
+      }
+    }
+    return finishTileMaps(albedo, rough);
+  }
+
+  paintMarble(ctx, 0, 0, s, s, "cream", 11);
+  markGloss(rctx, 0, 0, s, s);
+  return finishTileMaps(albedo, rough);
+}
+
 function marbleTiles(kinds, cols = 2) {
   return canvasTex((ctx, s) => {
     ctx.fillStyle = "#cfc6ba";
@@ -909,7 +2208,7 @@ function fbm(x, y, seed, oct = 2) {
 }
 
 function shadePixels(ctx, s, fn) {
-  if (s > 256 && !QUALITY.high) {
+  if (s > 256 && QUALITY.phone) {
     const step = 2;
     const img = ctx.getImageData(0, 0, s, s);
     const d = img.data;
@@ -1653,6 +2952,10 @@ function buildPresetTexture(id) {
     return buildCeramicTiles(id);
   }
 
+  if (id && id.startsWith("floor-")) {
+    return buildDesignFloor(id);
+  }
+
   if (id === "luxury") {
     return marbleTiles(["cream", "grey", "grey", "dark"], 2);
   }
@@ -2153,9 +3456,236 @@ function leafSpeckle(ctx, s, n = 90) {
   }
 }
 
+function paintInnerShade(ctx, x, y, w, h, depth = 16, alpha = 0.14) {
+  const a = `rgba(48,32,16,${alpha})`;
+  const z = "rgba(48,32,16,0)";
+  let g = ctx.createLinearGradient(x, y, x, y + depth);
+  g.addColorStop(0, a);
+  g.addColorStop(1, z);
+  ctx.fillStyle = g;
+  ctx.fillRect(x, y, w, depth);
+  g = ctx.createLinearGradient(x, y + h, x, y + h - depth);
+  g.addColorStop(0, a);
+  g.addColorStop(1, z);
+  ctx.fillStyle = g;
+  ctx.fillRect(x, y + h - depth, w, depth);
+  g = ctx.createLinearGradient(x, y, x + depth, y);
+  g.addColorStop(0, a);
+  g.addColorStop(1, z);
+  ctx.fillStyle = g;
+  ctx.fillRect(x, y, depth, h);
+  g = ctx.createLinearGradient(x + w, y, x + w - depth, y);
+  g.addColorStop(0, a);
+  g.addColorStop(1, z);
+  ctx.fillStyle = g;
+  ctx.fillRect(x + w - depth, y, depth, h);
+}
+
+function paintDentil(ctx, x, y, w, h, t = 7) {
+  const step = 18;
+  const tooth = 10;
+  for (let i = x + 6; i < x + w - tooth; i += step) {
+    paintBrassBand(ctx, i, y, tooth, t, 2);
+    paintBrassBand(ctx, i, y + h - t, tooth, t, 3);
+  }
+  for (let i = y + 6; i < y + h - tooth; i += step) {
+    paintBrassBand(ctx, x, i, t, tooth, 4);
+    paintBrassBand(ctx, x + w - t, i, t, tooth, 5);
+  }
+}
+
+function paintCoveSpots(ctx, x, y, w, h, inset, nx, ny) {
+  const pts = [];
+  for (let i = 0; i < nx; i++) {
+    const px = x + inset + ((w - inset * 2) * i) / Math.max(1, nx - 1);
+    pts.push([px, y + inset], [px, y + h - inset]);
+  }
+  for (let j = 1; j < ny - 1; j++) {
+    const py = y + inset + ((h - inset * 2) * j) / Math.max(1, ny - 1);
+    pts.push([x + inset, py], [x + w - inset, py]);
+  }
+  for (const [px, py] of pts) {
+    const glow = ctx.createRadialGradient(px, py, 0, px, py, 11);
+    glow.addColorStop(0, "rgba(255,244,210,0.95)");
+    glow.addColorStop(0.35, "rgba(255,214,140,0.4)");
+    glow.addColorStop(1, "rgba(255,200,120,0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(px, py, 11, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#fff6dc";
+    ctx.beginPath();
+    ctx.arc(px, py, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function paintCeilingRose(ctx, cx, cy, r) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fillStyle = "#f7f1e6";
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  strokeBrass(ctx, Math.max(4, r * 0.045));
+  const petals = 16;
+  for (let i = 0; i < petals; i++) {
+    ctx.save();
+    ctx.rotate((Math.PI * 2 * i) / petals);
+    ctx.beginPath();
+    ctx.ellipse(0, -r * 0.62, r * 0.09, r * 0.22, 0, 0, Math.PI * 2);
+    paintBrassFill(ctx);
+    ctx.globalAlpha = 0.88;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+  for (const rad of [r * 0.78, r * 0.58, r * 0.4, r * 0.22]) {
+    ctx.beginPath();
+    ctx.arc(0, 0, rad, 0, Math.PI * 2);
+    strokeBrass(ctx, rad > r * 0.5 ? 4.5 : 2.8);
+  }
+  paintStar(ctx, 0, 0, r * 0.18, 8);
+  paintBrassFill(ctx);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 0.06, 0, Math.PI * 2);
+  ctx.fillStyle = "#f7f0e4";
+  ctx.fill();
+  ctx.restore();
+}
+
 function buildRoofTexture(id) {
   return canvasTex((ctx, s) => {
     const mid = s / 2;
+    if (id === "roof-plain") {
+      ctx.fillStyle = "#efe9df";
+      ctx.fillRect(0, 0, s, s);
+      return;
+    }
+    if (id === "roof-traylux") {
+      noiseFill(ctx, s, "#f3eadc", 7);
+      brassFrame(ctx, 10, 10, s - 20, s - 20, 12, 2);
+      paintDentil(ctx, 26, 26, s - 52, s - 52, 7);
+      paintInnerShade(ctx, 36, 36, s - 72, s - 72, 18, 0.16);
+      ctx.fillStyle = "#f7f1e6";
+      ctx.fillRect(48, 48, s - 96, s - 96);
+      brassFrame(ctx, 48, 48, s - 96, s - 96, 8, 6);
+      paintCoveSpots(ctx, 48, 48, s - 96, s - 96, 22, 5, 5);
+      paintInnerShade(ctx, 72, 72, s - 144, s - 144, 14, 0.12);
+      ctx.fillStyle = "#faf6ee";
+      ctx.fillRect(84, 84, s - 168, s - 168);
+      brassFrame(ctx, 84, 84, s - 168, s - 168, 6, 10);
+      paintInnerShade(ctx, 108, 108, s - 216, s - 216, 12, 0.1);
+      ctx.fillStyle = "#fffaf3";
+      ctx.fillRect(118, 118, s - 236, s - 236);
+      brassFrame(ctx, 118, 118, s - 236, s - 236, 5, 14);
+      paintCeilingRose(ctx, mid, mid, s * 0.16);
+      paintLuxuryCorner(ctx, 64, 64, 88, false, false);
+      paintLuxuryCorner(ctx, s - 64, 64, 88, true, false);
+      paintLuxuryCorner(ctx, 64, s - 64, 88, false, true);
+      paintLuxuryCorner(ctx, s - 64, s - 64, 88, true, true);
+      leafSpeckle(ctx, s, 70);
+      return;
+    }
+    if (id === "roof-roselux") {
+      noiseFill(ctx, s, "#f6f0e6", 6);
+      brassFrame(ctx, 14, 14, s - 28, s - 28, 10, 3);
+      brassFrame(ctx, 36, 36, s - 72, s - 72, 4, 7);
+      paintCeilingRose(ctx, mid, mid, s * 0.3);
+      ctx.beginPath();
+      ctx.arc(mid, mid, s * 0.38, 0, Math.PI * 2);
+      strokeBrass(ctx, 5);
+      ctx.beginPath();
+      ctx.arc(mid, mid, s * 0.42, 0, Math.PI * 2);
+      strokeBrass(ctx, 2.4);
+      paintLuxuryCorner(ctx, 52, 52, 120, false, false);
+      paintLuxuryCorner(ctx, s - 52, 52, 120, true, false);
+      paintLuxuryCorner(ctx, 52, s - 52, 120, false, true);
+      paintLuxuryCorner(ctx, s - 52, s - 52, 120, true, true);
+      paintCoveSpots(ctx, 20, 20, s - 40, s - 40, 28, 4, 4);
+      leafSpeckle(ctx, s, 90);
+      return;
+    }
+    if (id === "roof-cofferoyal") {
+      const gold = ctx.createLinearGradient(0, 0, s, s * 0.4);
+      gold.addColorStop(0, "#5a3c18");
+      gold.addColorStop(0.45, "#e8c878");
+      gold.addColorStop(1, "#7a5428");
+      ctx.fillStyle = gold;
+      ctx.fillRect(0, 0, s, s);
+      const n = 3;
+      const beam = 22;
+      const cell = (s - beam * (n + 1)) / n;
+      for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+          const x = beam + c * (cell + beam);
+          const y = beam + r * (cell + beam);
+          ctx.fillStyle = "#f6f0e6";
+          ctx.fillRect(x, y, cell, cell);
+          paintInnerShade(ctx, x, y, cell, cell, 12, 0.14);
+          brassFrame(ctx, x + 6, y + 6, cell - 12, cell - 12, 5, 20 + r * 3 + c);
+          paintCeilingRose(ctx, x + cell / 2, y + cell / 2, cell * 0.18);
+        }
+      }
+      brassFrame(ctx, 6, 6, s - 12, s - 12, 8, 1);
+      paintDentil(ctx, 8, 8, s - 16, s - 16, 6);
+      leafSpeckle(ctx, s, 50);
+      return;
+    }
+    if (id === "roof-noirgold") {
+      ctx.fillStyle = "#161310";
+      ctx.fillRect(0, 0, s, s);
+      brassFrame(ctx, 12, 12, s - 24, s - 24, 14, 2);
+      brassFrame(ctx, 32, 32, s - 64, s - 64, 5, 4);
+      paintCoveSpots(ctx, 12, 12, s - 24, s - 24, 28, 5, 5);
+      ctx.fillStyle = "#f4eee4";
+      ctx.fillRect(78, 78, s - 156, s - 156);
+      paintInnerShade(ctx, 78, 78, s - 156, s - 156, 16, 0.12);
+      brassFrame(ctx, 78, 78, s - 156, s - 156, 8, 8);
+      brassFrame(ctx, 100, 100, s - 200, s - 200, 4, 12);
+      paintCeilingRose(ctx, mid, mid, s * 0.17);
+      const blk = 54;
+      [
+        [22, 22],
+        [s - 22 - blk, 22],
+        [22, s - 22 - blk],
+        [s - 22 - blk, s - 22 - blk],
+      ].forEach(([x, y]) => {
+        ctx.fillStyle = "#0e0c0a";
+        ctx.fillRect(x, y, blk, blk);
+        brassFrame(ctx, x, y, blk, blk, 4, 16);
+        strokeDiamond(ctx, x + blk / 2, y + blk / 2, 12);
+        paintBrassFill(ctx);
+        ctx.fill();
+      });
+      leafSpeckle(ctx, s, 40);
+      return;
+    }
+    if (id === "roof-corinth") {
+      noiseFill(ctx, s, "#f5efe4", 6);
+      brassFrame(ctx, 8, 8, s - 16, s - 16, 16, 2);
+      paintDentil(ctx, 28, 28, s - 56, s - 56, 8);
+      brassFrame(ctx, 44, 44, s - 88, s - 88, 7, 6);
+      paintInnerShade(ctx, 56, 56, s - 112, s - 112, 14, 0.12);
+      brassFrame(ctx, 72, 72, s - 144, s - 144, 5, 10);
+      brassFrame(ctx, 98, 98, s - 196, s - 196, 3, 14);
+      paintLuxuryCorner(ctx, 56, 56, 130, false, false);
+      paintLuxuryCorner(ctx, s - 56, 56, 130, true, false);
+      paintLuxuryCorner(ctx, 56, s - 56, 130, false, true);
+      paintLuxuryCorner(ctx, s - 56, s - 56, 130, true, true);
+      for (const rad of [s * 0.28, s * 0.22, s * 0.16]) {
+        ctx.beginPath();
+        ctx.arc(mid, mid, rad, 0, Math.PI * 2);
+        strokeBrass(ctx, rad > s * 0.24 ? 6 : 3.5);
+      }
+      paintCeilingRose(ctx, mid, mid, s * 0.12);
+      paintCoveSpots(ctx, 8, 8, s - 16, s - 16, 36, 3, 3);
+      leafSpeckle(ctx, s, 60);
+      return;
+    }
     if (id === "roof-goldleaf") {
       noiseFill(ctx, s, "#f3ead8", 8);
       const n = 3;
@@ -2175,9 +3705,311 @@ function buildRoofTexture(id) {
           ctx.fillRect(x + tw - 24, y + 6, 18, tw - 12);
           ctx.fillStyle = "#f7f1e6";
           ctx.fillRect(x + 28, y + 28, tw - 56, tw - 56);
+          ctx.save();
+          ctx.translate(x + tw / 2, y + tw / 2);
+          ctx.rotate(Math.PI / 4);
+          ctx.strokeStyle = "rgba(198,165,106,0.78)";
+          ctx.lineWidth = 6;
+          ctx.strokeRect(-tw * 0.16, -tw * 0.16, tw * 0.32, tw * 0.32);
+          ctx.strokeRect(-tw * 0.09, -tw * 0.09, tw * 0.18, tw * 0.18);
+          ctx.restore();
+          paintStar(ctx, x + tw / 2, y + tw / 2, 22, 8);
+          ctx.fillStyle = "rgba(198,165,106,0.72)";
+          ctx.fill();
         }
       }
       leafSpeckle(ctx, s, 120);
+      return;
+    }
+    if (id === "roof-slatluxe" || id === "roof-showroom") {
+      ctx.fillStyle = "#141311";
+      ctx.fillRect(0, 0, s, s);
+      for (let i = 0; i < 14; i++) {
+        const x = 28 + i * 70;
+        paintWoodField(ctx, x, 20, 42, s - 40, "walnut", 8 + i);
+      }
+      return;
+    }
+    if (id === "roof-geofloat" || id === "roof-mallgold" || id === "roof-float") {
+      noiseFill(ctx, s, "#f4efe6", 8);
+      for (let y = 80; y < s - 80; y += 220) {
+        for (let x = 80; x < s - 80; x += 220) {
+          ctx.fillStyle = "#161412";
+          ctx.fillRect(x, y, 150, 150);
+          paintBrassBand(ctx, x - 6, y - 6, 162, 6, 40);
+          paintBrassBand(ctx, x - 6, y + 150, 162, 6, 41);
+          paintBrassBand(ctx, x - 6, y - 6, 6, 162, 42);
+          paintBrassBand(ctx, x + 150, y - 6, 6, 162, 43);
+        }
+      }
+      return;
+    }
+    if (id === "roof-industrial" || id === "roof-arch") {
+      paintConcreteField(ctx, 0, 0, s, s, 6);
+      paintWoodField(ctx, 90, 160, 320, 220, "walnut", 3);
+      paintWoodField(ctx, 620, 480, 280, 260, "walnut", 4);
+      ctx.fillStyle = "#1a1816";
+      ctx.fillRect(0, 250, s, 18);
+      ctx.fillRect(0, 720, s, 18);
+      ctx.fillRect(340, 0, 16, s);
+      return;
+    }
+    if (id === "roof-float") {
+      noiseFill(ctx, s, "#f6f1e8", 7);
+      paintWoodField(ctx, 90, 120, 420, 280, "walnut", 2);
+      ctx.fillStyle = "#161412";
+      ctx.fillRect(560, 380, 280, 320);
+      paintWoodField(ctx, 180, 620, 340, 200, "walnut", 5);
+      ctx.fillStyle = "rgba(255,220,150,0.55)";
+      ctx.fillRect(84, 114, 432, 8);
+      ctx.fillRect(554, 374, 292, 8);
+      ctx.fillRect(174, 614, 352, 8);
+      return;
+    }
+    if (id === "roof-wave") {
+      noiseFill(ctx, s, "#f3eadc", 7);
+      for (let i = 0; i < 10; i++) {
+        const y = 40 + i * 96 + Math.sin(i * 0.9) * 18;
+        const mat = i % 3 === 0 ? "walnut" : i % 3 === 1 ? null : "oak";
+        if (mat) paintWoodField(ctx, 30, y, s - 60, 54, mat, 12 + i);
+        else {
+          ctx.fillStyle = "#161412";
+          ctx.fillRect(30, y, s - 60, 54);
+        }
+      }
+      return;
+    }
+    if (id === "roof-star") {
+      ctx.fillStyle = "#0c1016";
+      ctx.fillRect(0, 0, s, s);
+      for (let i = 0; i < 80; i++) {
+        const x = hash(i * 3.1) * s;
+        const y = hash(i * 7.7) * s;
+        const r = 1.2 + hash(i) * 3.4;
+        ctx.fillStyle = i % 4 ? "rgba(180,220,255,0.9)" : "rgba(90,160,255,0.75)";
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      return;
+    }
+    if (id === "roof-marbleceil") {
+      paintMarble(ctx, 0, 0, s / 2 - 8, s / 2 - 8, "carrara", 11);
+      paintMarble(ctx, s / 2 + 8, 0, s / 2 - 8, s / 2 - 8, "noir", 12);
+      paintMarble(ctx, 0, s / 2 + 8, s / 2 - 8, s / 2 - 8, "noir", 13);
+      paintMarble(ctx, s / 2 + 8, s / 2 + 8, s / 2 - 8, s / 2 - 8, "ivory", 14);
+      paintBrassBand(ctx, s / 2 - 6, 0, 12, s, 20);
+      paintBrassBand(ctx, 0, s / 2 - 6, s, 12, 21);
+      return;
+    }
+    if (id === "roof-hex") {
+      ctx.fillStyle = "#141311";
+      ctx.fillRect(0, 0, s, s);
+      const r = 70;
+      for (let j = 0; j < 8; j++) {
+        for (let i = 0; i < 8; i++) {
+          const x = 80 + i * r * 1.7 + (j % 2 ? r * 0.85 : 0);
+          const y = 70 + j * r * 1.5;
+          ctx.beginPath();
+          for (let k = 0; k < 6; k++) {
+            const a = (Math.PI / 3) * k + Math.PI / 6;
+            const px = x + Math.cos(a) * r * 0.72;
+            const py = y + Math.sin(a) * r * 0.72;
+            if (k === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+          ctx.fillStyle = (i + j) % 2 ? "#3a3a3c" : "#1a1816";
+          ctx.fill();
+          ctx.strokeStyle = "rgba(255,220,150,0.35)";
+          ctx.lineWidth = 3;
+          ctx.stroke();
+        }
+      }
+      return;
+    }
+    if (id === "roof-minimal") {
+      noiseFill(ctx, s, "#f4efe6", 5);
+      ctx.fillStyle = "#e8d8c0";
+      ctx.fillRect(120, 120, s - 240, s - 240);
+      ctx.fillStyle = "#161412";
+      ctx.fillRect(160, 300, s - 320, 18);
+      ctx.fillRect(160, 700, s - 320, 18);
+      return;
+    }
+    if (id === "roof-ledline") {
+      ctx.fillStyle = "#141311";
+      ctx.fillRect(0, 0, s, s);
+      ctx.fillStyle = "#ffe8c4";
+      for (let i = 0; i < 7; i++) ctx.fillRect(40, 90 + i * 130, s - 80, 10);
+      return;
+    }
+    if (id === "roof-timber") {
+      noiseFill(ctx, s, "#f3eadc", 6);
+      for (let i = 0; i < 5; i++) paintWoodField(ctx, 40, 80 + i * 180, s - 80, 70, "oak", 20 + i);
+      return;
+    }
+    if (id === "roof-cofferlux") {
+      noiseFill(ctx, s, "#f7f2e8", 6);
+      paintWoodField(ctx, 0, 0, s, 70, "darkwalnut", 3);
+      paintWoodField(ctx, 0, s - 70, s, 70, "darkwalnut", 4);
+      paintWoodField(ctx, 0, 0, 70, s, "darkwalnut", 5);
+      paintBrassBand(ctx, 90, 90, s - 180, 10, 8);
+      return;
+    }
+    if (id === "roof-blackgrid") {
+      ctx.fillStyle = "#141311";
+      ctx.fillRect(0, 0, s, s);
+      ctx.strokeStyle = "#3a3a3c";
+      ctx.lineWidth = 10;
+      for (let i = 1; i < 6; i++) {
+        ctx.strokeRect(40, 40, s - 80, s - 80);
+        ctx.beginPath();
+        ctx.moveTo(40 + i * 160, 40);
+        ctx.lineTo(40 + i * 160, s - 40);
+        ctx.moveTo(40, 40 + i * 160);
+        ctx.lineTo(s - 40, 40 + i * 160);
+        ctx.stroke();
+      }
+      return;
+    }
+    if (id === "roof-glassglow") {
+      ctx.fillStyle = "#d8e6f0";
+      ctx.fillRect(0, 0, s, s);
+      ctx.fillStyle = "rgba(255,236,190,0.45)";
+      ctx.fillRect(80, 80, s - 160, s - 160);
+      return;
+    }
+    if (id === "roof-cloudwave") {
+      noiseFill(ctx, s, "#f6f1e8", 5);
+      ctx.fillStyle = "#fffaf4";
+      for (let i = 0; i < 6; i++) ctx.fillRect(50, 80 + i * 150 + Math.sin(i) * 16, s - 100, 70);
+      return;
+    }
+    if (id === "roof-diapanel") {
+      ctx.fillStyle = "#141311";
+      ctx.fillRect(0, 0, s, s);
+      for (let y = 80; y < s; y += 180) {
+        for (let x = 80; x < s; x += 180) {
+          strokeDiamond(ctx, x, y, 70);
+          paintBrassFill(ctx);
+          ctx.lineWidth = 6;
+          ctx.stroke();
+        }
+      }
+      return;
+    }
+    if (id === "roof-goldrings") {
+      noiseFill(ctx, s, "#f7f2e8", 6);
+      for (const r of [360, 260, 160, 70]) {
+        ctx.beginPath();
+        ctx.arc(mid, mid, r, 0, Math.PI * 2);
+        strokeBrass(ctx, r > 200 ? 14 : 8);
+      }
+      return;
+    }
+    if (id === "roof-woodmarble") {
+      paintMarble(ctx, 80, 80, s - 160, s - 160, "ivory", 9);
+      paintWoodField(ctx, 0, 0, s, 70, "walnut", 2);
+      paintWoodField(ctx, 0, s - 70, s, 70, "walnut", 3);
+      paintBrassBand(ctx, 70, 70, s - 140, 8, 4);
+      return;
+    }
+    if (id === "roof-rgbline") {
+      ctx.fillStyle = "#121214";
+      ctx.fillRect(0, 0, s, s);
+      const cols = ["#ff2450", "#14ff8a", "#1a7cff"];
+      for (let i = 0; i < 8; i++) {
+        ctx.fillStyle = cols[i % 3];
+        ctx.fillRect(40, 70 + i * 115, s - 80, 12);
+      }
+      return;
+    }
+    if (id === "roof-goldframe") {
+      noiseFill(ctx, s, "#f3eadc", 5);
+      paintBrassBand(ctx, 40, 40, s - 80, 16, 2);
+      paintBrassBand(ctx, 40, s - 56, s - 80, 16, 3);
+      paintBrassBand(ctx, 40, 40, 16, s - 80, 4);
+      paintBrassBand(ctx, s - 56, 40, 16, s - 80, 5);
+      return;
+    }
+    if (id === "roof-organic") {
+      noiseFill(ctx, s, "#f3eadc", 5);
+      for (let i = 0; i < 8; i++) paintWoodField(ctx, 40, 50 + i * 120 + Math.sin(i * 1.1) * 20, s - 80, 48, "walnut", 6 + i);
+      return;
+    }
+    if (id === "roof-nature") {
+      noiseFill(ctx, s, "#f3eadc", 6);
+      paintWoodField(ctx, 0, 0, s, s, "oak", 7);
+      ctx.globalAlpha = 0.35;
+      ctx.fillStyle = "#f3eadc";
+      ctx.fillRect(0, 0, s, 90);
+      ctx.globalAlpha = 1;
+      paintWoodField(ctx, 0, 180, s, 48, "walnut", 9);
+      paintWoodField(ctx, 0, 520, s, 48, "walnut", 10);
+      ctx.fillStyle = "#3f8a4c";
+      ctx.beginPath();
+      ctx.arc(220, 360, 36, 0, Math.PI * 2);
+      ctx.arc(780, 700, 32, 0, Math.PI * 2);
+      ctx.fill();
+      return;
+    }
+    if (id === "roof-contrast") {
+      noiseFill(ctx, s, "#efe6d6", 11);
+      paintMarble(ctx, 48, 48, s - 96, s - 96, "ivory", 188);
+      paintBrassBand(ctx, 16, 16, s - 32, 12, 21);
+      paintBrassBand(ctx, 16, s - 28, s - 32, 12, 22);
+      paintBrassBand(ctx, 16, 16, 12, s - 32, 23);
+      paintBrassBand(ctx, s - 28, 16, 12, s - 32, 24);
+      paintBrassBand(ctx, 40, 40, s - 80, 6, 25);
+      paintBrassBand(ctx, 40, s - 46, s - 80, 6, 26);
+      paintBrassBand(ctx, 40, 40, 6, s - 80, 27);
+      paintBrassBand(ctx, s - 46, 40, 6, s - 80, 28);
+      paintOctagon(ctx, mid, mid, 168);
+      strokeBrass(ctx, 5);
+      paintCompassRose(ctx, mid, mid, 92);
+      paintLuxuryCorner(ctx, 64, 64, 100, false, false);
+      paintLuxuryCorner(ctx, s - 64, 64, 100, true, false);
+      paintLuxuryCorner(ctx, 64, s - 64, 100, false, true);
+      paintLuxuryCorner(ctx, s - 64, s - 64, 100, true, true);
+      leafSpeckle(ctx, s, 80);
+      return;
+    }
+    if (id === "roof-medallion") {
+      noiseFill(ctx, s, "#f0e8d8", 10);
+      paintBrassBand(ctx, 20, 20, s - 40, 10, 31);
+      paintBrassBand(ctx, 20, s - 30, s - 40, 10, 32);
+      paintBrassBand(ctx, 20, 20, 10, s - 40, 33);
+      paintBrassBand(ctx, s - 30, 20, 10, s - 40, 34);
+      paintCompassRose(ctx, mid, mid, s * 0.28);
+      [[88, 88], [s - 88, 88], [88, s - 88], [s - 88, s - 88]].forEach(([x, y], i) => {
+        ctx.save();
+        paintStar(ctx, x, y, 28, 8);
+        ctx.clip();
+        paintMarble(ctx, x - 28, y - 28, 56, 56, i % 2 ? "cream" : "dark", 220 + i);
+        ctx.restore();
+      });
+      leafSpeckle(ctx, s, 80);
+      return;
+    }
+    if (id === "roof-lattice") {
+      noiseFill(ctx, s, "#ece4d4", 9);
+      const step = 80;
+      for (let y = -step; y < s + step; y += step) {
+        for (let x = -step; x < s + step; x += step) {
+          strokeDiamond(ctx, x + step / 2, y + step / 2, step * 0.4);
+          paintBrassFill(ctx);
+          ctx.lineWidth = 3.4;
+          ctx.globalAlpha = 0.78;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+      }
+      paintBrassBand(ctx, 12, 12, s - 24, 8, 35);
+      paintBrassBand(ctx, 12, s - 20, s - 24, 8, 36);
+      paintBrassBand(ctx, 12, 12, 8, s - 24, 37);
+      paintBrassBand(ctx, s - 20, 12, 8, s - 24, 38);
+      leafSpeckle(ctx, s, 50);
       return;
     }
     if (id === "roof-silk") {
@@ -2383,7 +4215,7 @@ export function makeNormalFromAlbedo(tex, strength = 2.4) {
   if (!img || !img.width) return null;
   const key = tex.uuid + "|" + strength;
   if (NORMAL_CACHE.has(key)) return NORMAL_CACHE.get(key);
-  const cap = QUALITY.low ? 96 : QUALITY.high ? 256 : 160;
+  const cap = QUALITY.phone ? 96 : 256;
   const w = Math.min(img.width, cap);
   const h = Math.min(img.height, cap);
   const c = document.createElement("canvas");
@@ -2444,12 +4276,12 @@ export function applySurface(material, surface, extraMap = null) {
     map.anisotropy = QUALITY.aniso;
     const tex = resolveWallId(surface.texture);
     const wall = isWallFinish(surface.texture);
-    if (QUALITY.normals && (wall || surface.texture === "wood" || surface.texture === "brick" || surface.texture === "herringbone" || surface.texture === "walnut" || surface.texture === "stone" || surface.texture === "mobileFloor" || isTileTexture(surface.texture) || isTerrazzo(surface.texture) || isRoofTexture(surface.texture))) {
+    if (QUALITY.normals && (wall || surface.texture === "wood" || surface.texture === "brick" || surface.texture === "herringbone" || surface.texture === "walnut" || surface.texture === "stone" || surface.texture === "mobileFloor" || isTileTexture(surface.texture) || isTerrazzo(surface.texture) || isDesignFloor(surface.texture) || isRoofTexture(surface.texture))) {
       const WALL_N = {
         drywall: { str: 1.12, sc: 0.34 },
-        silk: { str: 0.58, sc: 0.16 },
-        limewash: { str: 1.18, sc: 0.4 },
-        venetian: { str: 1.32, sc: 0.46 },
+        silk: { str: 1.35, sc: 0.42 },
+        limewash: { str: 1.45, sc: 0.52 },
+        venetian: { str: 1.72, sc: 0.62 },
         microcement: { str: 1.4, sc: 0.54 },
         clay: { str: 1.34, sc: 0.5 },
         travertine: { str: 1.62, sc: 0.64 },
@@ -2491,20 +4323,18 @@ export function applySurface(material, surface, extraMap = null) {
           ? wn.str
           : surface.texture === "herringbone"
             ? 0.7
-            : surface.texture === "walnut"
+            : surface.texture === "floor-oakplank"
+              ? 0.82
+              : surface.texture === "walnut"
               ? 0.9
               : surface.texture === "stone"
                 ? 0.65
                 : isTerrazzo(surface.texture)
                   ? 0.48
-                  : surface.texture === "mobileFloor" || isTileTexture(surface.texture)
-                    ? 0.42
+                  : surface.texture === "mobileFloor" || isTileTexture(surface.texture) || isDesignFloor(surface.texture)
+                    ? 1.55
                     : isRoofTexture(surface.texture)
-                      ? surface.texture === "roof-slats" || surface.texture === "roof-baffle" || surface.texture === "roof-perforated"
-                        ? 1.15
-                        : surface.texture === "roof-acoustic" || surface.texture === "roof-grid" || surface.texture === "roof-coffered"
-                          ? 0.72
-                          : 0.4
+                      ? 1.25
                       : surface.texture === "wood"
                         ? 1.35
                         : 2.1
@@ -2514,16 +4344,18 @@ export function applySurface(material, surface, extraMap = null) {
         material.normalMap = nrm;
         const sc = wn
           ? wn.sc
-          : surface.texture === "herringbone"
+          : surface.texture === "floor-oakplank"
+            ? 0.22
+            : surface.texture === "herringbone"
             ? 0.28
             : surface.texture === "stone"
               ? 0.26
-              : surface.texture === "mobileFloor" || isTileTexture(surface.texture)
-                ? 0.14
+              : surface.texture === "mobileFloor" || isTileTexture(surface.texture) || isDesignFloor(surface.texture)
+                ? 0.48
                 : isTerrazzo(surface.texture)
-                  ? 0.2
+                  ? 0.28
                   : isRoofTexture(surface.texture)
-                    ? 0.26
+                    ? 0.44
                     : 0.5;
         material.normalScale = new THREE.Vector2(sc, sc);
       }
@@ -2563,10 +4395,10 @@ export function applySurface(material, surface, extraMap = null) {
                 : 0.45;
   }
   const glossy = ["tiles", "luxury", "carrara", "espresso", "photo", "marble", "stone", "mobileFloor", "statuario", "calacatta", "zellige", "terrazzo-noir", "polished-concrete", "reeded-glass"];
-  const satin = ["herringbone", "walnut", "brushed-steel", "brushed-brass", "brushed-champagne", "leather-emboss"];
-  const polished = glossy.includes(surface.texture) || isTerrazzo(surface.texture) || isTileTexture(surface.texture);
+  const satin = ["herringbone", "walnut", "floor-oakplank", "brushed-steel", "brushed-brass", "brushed-champagne", "leather-emboss"];
+  const polished = glossy.includes(surface.texture) || isTerrazzo(surface.texture) || isTileTexture(surface.texture) || (isDesignFloor(surface.texture) && surface.texture !== "floor-oakplank");
   const flatFloor = [...glossy, ...satin, "terrazzo", "granite", "carpet", "checker"];
-  if (QUALITY.wear && !wall && !flatFloor.includes(surface.texture) && !isTerrazzo(surface.texture) && !isTileTexture(surface.texture) && !isRoofTexture(surface.texture)) {
+  if (QUALITY.wear && !wall && !flatFloor.includes(surface.texture) && !isTerrazzo(surface.texture) && !isTileTexture(surface.texture) && !isDesignFloor(surface.texture) && !isRoofTexture(surface.texture)) {
     const wear = makeWearMap();
     wear.repeat.set(2.4, 2.4);
     material.roughnessMap = wear;
@@ -2576,7 +4408,7 @@ export function applySurface(material, surface, extraMap = null) {
     material.sheenRoughness = tex === "velvet-teal" ? 0.35 : tex === "silk" ? 0.52 : 0.8;
     if (material.sheenColor && material.sheenColor.set) material.sheenColor.set(tex === "velvet-teal" ? "#7ec8c4" : "#f4efe6");
   }
-  if (surface.texture === "mobileFloor" || (isTileTexture(surface.texture) && surface.texture !== "tiles")) {
+  if (surface.texture === "mobileFloor" || isDesignFloor(surface.texture) || (isTileTexture(surface.texture) && surface.texture !== "tiles")) {
     const src = makePresetTexture(surface.texture);
     const rsrc = src && src.userData.roughnessMap;
     if (rsrc) {
@@ -2586,8 +4418,13 @@ export function applySurface(material, surface, extraMap = null) {
       rmap.needsUpdate = true;
       material.roughnessMap = rmap;
     }
-    if ("ior" in material) material.ior = 1.52;
-    if ("specularIntensity" in material) material.specularIntensity = 1.12;
+    if (surface.texture === "floor-oakplank") {
+      if ("ior" in material) material.ior = 1.42;
+      if ("specularIntensity" in material) material.specularIntensity = 0.78;
+    } else {
+      if ("ior" in material) material.ior = 1.52;
+      if ("specularIntensity" in material) material.specularIntensity = 1.12;
+    }
   }
   if (map && (surface.texture === "luxury" || surface.texture === "photo")) {
     map.center.set(0.5, 0.5);
@@ -2646,14 +4483,14 @@ export function applySurface(material, surface, extraMap = null) {
       ? 1.28
     : surface.texture === "herringbone"
       ? 0.95
-      : wall
-        ? WALL_ENV[tex] ?? 0.62
+        : wall
+          ? WALL_ENV[tex] ?? 0.82
       : satin.includes(surface.texture)
         ? 0.68
         : flatFloor.includes(surface.texture)
           ? 0.75
           : isRoofTexture(surface.texture)
-            ? 0.55
+            ? 0.92
             : 1.05;
   material.needsUpdate = true;
 }
@@ -2723,7 +4560,7 @@ export function makeFingerprintMap() {
 export function makeRoughnessFromAlbedo(tex) {
   const img = tex && tex.image;
   if (!img || !img.width) return null;
-  const cap = QUALITY.low ? 256 : 512;
+  const cap = QUALITY.phone ? 256 : 512;
   const w = Math.min(img.width, cap);
   const h = Math.min(img.height, cap);
   const c = document.createElement("canvas");
@@ -2754,7 +4591,7 @@ export function loadImageBitmap(fileOrUrl) {
       const c = document.createElement("canvas");
       c.width = img.width;
       c.height = img.height;
-      c.getContext("2d").drawImage(img, 0, 0);
+      c.getContext("2d", { willReadFrequently: true }).drawImage(img, 0, 0);
       const dataUrl = c.toDataURL("image/jpeg", 0.85);
       const tex = new THREE.Texture(img);
       tex.colorSpace = THREE.SRGBColorSpace;
