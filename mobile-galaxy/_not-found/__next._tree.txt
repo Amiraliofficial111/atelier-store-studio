@@ -1,2 +1,2 @@
-:HL["/atelier-store-studio/mobile-galaxy/_next/static/css/f8ee81d8f7e4dee8.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"_not-found","param":null,"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}},"staleTime":300,"buildId":"ZLGAmKFh9rmnMsWDdBs8x"}
+:HL["/atelier-store-studio/mobile-galaxy/_next/static/css/5145178ad88465af.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"_not-found","param":null,"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}},"staleTime":300,"buildId":"tddC0DPuf6DWjNJqsX6DC"}
