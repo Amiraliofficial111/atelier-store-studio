@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "store": {
+    "width": 5.6,
+    "depth": 6.4,
+    "height": 2.88,
+    "roofVisible": false,
+    "sign": {
+      "text": "MOBILE GALAXY F-69",
+      "fg": "#c52222",
+      "bg": "#f5f2eb"
+    },
+    "lighting": {
+      "exposure": 1.12,
+      "sun": 1.17,
+      "fill": 0.08,
+      "hemi": 1,
+      "warmth": 0.82
+    },
+    "surfaces": {
+      "floor": {
+        "color": "#ffffff",
+        "texture": "floor-oakplank",
+        "image": null,
+        "repeat": 3.8
+      },
+      "roof": {
+        "color": "#ffffff",
+        "texture": "roof-plain",
+        "image": null,
+        "repeat": 1
+      },
+      "wall-front": {
+        "color": "#1c1816",
+        "texture": "silk",
+        "image": null,
+        "repeat": 1.85,
+        "finish": "glass",
+        "opacity": 0.08
+      },
+      "wall-back": {
+        "color": "#2a221c",
+        "texture": "fluted-walnut",
+        "image": null,
+        "repeat": 1.6,
+        "finish": "solid",
+        "opacity": 0.05
+      },
+      "wall-left": {
+        "color": "#1c1816",
+        "texture": "silk",
+        "image": null,
+        "repeat": 1.85,
+        "finish": "solid",
+        "opacity": 0.05
+      },
+      "wall-right": {
+        "color": "#1c1816",
+        "texture": "silk",
+        "image": null,
+        "repeat": 1.85,
+        "finish": "solid",
+        "opacity": 0.05
+      }
+    },
+    "ceiling": {
+      "coveIntensity": 1,
+      "spotlightIntensity": 1,
+      "chandelierSize": 1,
+      "spotsPerTrack": 6,
+      "lightColor": "#ffe3b0"
+    },
+    "frontStyle": "galaxy",
+    "floorLookRev": "honey-oak-tex"
+  },
+  "doors": [
+    {
+      "id": "68597c96-90e8-4350-85c2-6444c8ae5e81",
+      "wall": "front",
+      "style": "double",
+      "color": "#c6a56a",
+      "glassType": "clear",
+      "glassColor": "#dce8f0",
+      "opacity": 0.1,
+      "pos": 50,
+      "width": 2.7,
+      "height": 3.28,
+      "open": true
+    }
+  ],
+  "windows": [],
+  "furniture": [],
+  "presetId": "galaxy",
+  "savedAt": 1790188770460
+}

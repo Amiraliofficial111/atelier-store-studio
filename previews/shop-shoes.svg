@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" preserveAspectRatio="xMidYMid slice">
+  <rect width="640" height="400" fill="#f3ebe0"/>
+  <rect y="255" width="640" height="145" fill="#c4a882"/>
+  <rect x="36" y="58" width="568" height="210" fill="#2a221c"/>
+  <g fill="#d8b48a">
+    <rect x="58" y="80" width="150" height="8"/><rect x="58" y="128" width="150" height="8"/><rect x="58" y="176" width="150" height="8"/>
+    <rect x="245" y="80" width="150" height="8"/><rect x="245" y="128" width="150" height="8"/><rect x="245" y="176" width="150" height="8"/>
+    <rect x="432" y="80" width="150" height="8"/><rect x="432" y="128" width="150" height="8"/><rect x="432" y="176" width="150" height="8"/>
+  </g>
+  <g fill="#1a1612">
+    <ellipse cx="95" cy="108" rx="22" ry="10"/><ellipse cx="155" cy="108" rx="22" ry="10"/>
+    <ellipse cx="95" cy="156" rx="22" ry="10"/><ellipse cx="155" cy="156" rx="22" ry="10"/>
+    <ellipse cx="282" cy="108" rx="22" ry="10"/><ellipse cx="342" cy="108" rx="22" ry="10"/>
+    <ellipse cx="282" cy="156" rx="22" ry="10"/><ellipse cx="342" cy="156" rx="22" ry="10"/>
+    <ellipse cx="470" cy="108" rx="22" ry="10"/><ellipse cx="528" cy="108" rx="22" ry="10"/>
+  </g>
+  <rect x="200" y="268" width="240" height="22" rx="3" fill="#5c4033"/>
+  <rect x="248" y="248" width="144" height="20" fill="#f7f3ec"/>
+</svg>
