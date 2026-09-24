@@ -3339,10 +3339,10 @@ function publishedCardHtml(row) {
       ${meta ? `<small>${escHtml(meta)}</small>` : ""}
       ${localOnly ? `<small class="published-warn">This link only opens on this computer.</small>` : ""}
     </div>
-    <label class="published-url">
+    <div class="published-url">
       <span>URL</span>
-      <input readonly value="${escHtml(row.link)}" />
-    </label>
+      <a href="${escHtml(row.link)}">${escHtml(row.link)}</a>
+    </div>
     <div class="published-actions">
       <button type="button" data-copy-published="${escHtml(row.id)}">Copy</button>
       <button type="button" class="published-open" data-open-published="${escHtml(row.id)}">Open</button>
