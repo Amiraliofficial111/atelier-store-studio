@@ -3096,6 +3096,7 @@ async function refreshShareOrigin() {
 const LIVE_SITE = "https://amiraliofficial111.github.io/atelier-store-studio/";
 
 function shopLink(id, view = true) {
+  if (id === "galaxy") return `${LIVE_SITE}mobile-galaxy/`;
   const url = new URL(LIVE_SITE);
   url.searchParams.set("shop", id);
   if (view) url.searchParams.set("view", "1");
