@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Atelier — Premium Store Studio</title>
+  <title>Atelier â€” Premium Store Studio</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="favicon.ico" sizes="any" />
   <link rel="stylesheet" href="css/style.css?v=pub16" />
@@ -11,6 +11,7 @@
   <link rel="modulepreload" href="./node_modules/three/build/three.module.js" />
 </head>
 <body>
+  <script>(function(){var q=new URLSearchParams(location.search);if(q.get('shop')==='galaxy'&&q.get('view')==='1')location.replace('./mobile-galaxy/');})();</script>
   <div class="shop-lobby" id="shop-lobby">
     <div class="shop-lobby-inner">
       <p class="shop-lobby-eye">Atelier</p>
@@ -146,7 +147,7 @@
             <div class="browse-pane" data-browse-pane="surfaces" hidden>
               <section class="panel-section">
                 <h2>Surfaces</h2>
-                <p class="muted">Select a surface — color and material open on the right.</p>
+                <p class="muted">Select a surface â€” color and material open on the right.</p>
                 <div class="surface-list">
                   <button type="button" class="surface-btn" data-select="floor" data-icon="floor">Floor</button>
                   <button type="button" class="surface-btn" data-select="roof" data-icon="roof">Roof</button>
@@ -210,7 +211,7 @@
         <div id="boot-loader" class="boot-loader" hidden>
           <div class="boot-loader-card">
             <span class="boot-spinner" aria-hidden="true"></span>
-            <p data-boot-text>Loading models…</p>
+            <p data-boot-text>Loading modelsâ€¦</p>
           </div>
         </div>
         <div class="viewport-fx" aria-hidden="true"></div>
@@ -231,7 +232,7 @@
           <span class="key-chip"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Walk</span>
           <span class="key-chip">Drag look</span>
           <span class="key-chip">Click floor</span>
-          <span class="key-chip"><kbd>←</kbd><kbd>→</kbd> Turn</span>
+          <span class="key-chip"><kbd>â†</kbd><kbd>â†’</kbd> Turn</span>
           <button type="button" class="key-chip key-sit" id="btn-walk-sit"><kbd>E</kbd> <span>Sit</span></button>
         </div>
         <div class="walk-stick" id="walk-stick" hidden>
@@ -247,9 +248,9 @@
           </div>
           <div class="walk-dock-row">
             <span class="walk-dock-label">Person</span>
-            <button type="button" data-walk-person="first" title="1st person — see through the eyes">1st</button>
-            <button type="button" data-walk-person="second" title="2nd person — face camera">2nd</button>
-            <button type="button" data-walk-person="third" title="3rd person — follow from behind">3rd</button>
+            <button type="button" data-walk-person="first" title="1st person â€” see through the eyes">1st</button>
+            <button type="button" data-walk-person="second" title="2nd person â€” face camera">2nd</button>
+            <button type="button" data-walk-person="third" title="3rd person â€” follow from behind">3rd</button>
           </div>
           <div class="walk-dock-row">
             <span class="walk-dock-label">Look</span>
@@ -264,7 +265,7 @@
         <button type="button" class="show-sides-chip" id="btn-show-sides" hidden>Show panels</button>
         <div class="viewport-legend">
           <span class="legend-chip">Click a wall, floor or fixture to edit</span>
-          <span class="legend-chip">1 Move · 2 Rotate · 3 Scale · Del</span>
+          <span class="legend-chip">1 Move Â· 2 Rotate Â· 3 Scale Â· Del</span>
         </div>
       </main>
 
@@ -293,7 +294,7 @@
             <span class="empty-mark" aria-hidden="true"></span>
             <div>
               <p class="empty-title">Nothing selected</p>
-              <p class="muted">Choose from the catalog, objects, or surfaces — or click in the store.</p>
+              <p class="muted">Choose from the catalog, objects, or surfaces â€” or click in the store.</p>
             </div>
           </div>
         </div>
@@ -524,7 +525,7 @@
             <label class="field">
               <span>Place on wall</span>
               <select id="logo-snap">
-                <option value="">Anywhere — move freely</option>
+                <option value="">Anywhere â€” move freely</option>
                 <option value="front">Front wall</option>
                 <option value="back">Back wall</option>
                 <option value="left">Left wall</option>
@@ -555,7 +556,7 @@
             <label class="field" id="banner-snap-field">
               <span>Place on wall</span>
               <select id="banner-snap">
-                <option value="">Anywhere — move freely</option>
+                <option value="">Anywhere â€” move freely</option>
                 <option value="front">Front wall</option>
                 <option value="back">Back wall</option>
                 <option value="left">Left wall</option>
@@ -566,7 +567,7 @@
               <span>Height from floor <em id="val-banner-lift">2.10 m</em></span>
               <input type="range" id="banner-lift" min="0.6" max="3.4" step="0.05" value="2.1" />
             </label>
-            <p class="muted">Wall banner snaps to a wall. Desk screen sits on a stand — raise it onto a counter.</p>
+            <p class="muted">Wall banner snaps to a wall. Desk screen sits on a stand â€” raise it onto a counter.</p>
           </div>
           <div id="light-fields" hidden>
             <label class="field check-row">
@@ -588,7 +589,7 @@
             <label class="field" id="light-snap-field">
               <span>Place on wall</span>
               <select id="light-snap">
-                <option value="">Anywhere — move freely</option>
+                <option value="">Anywhere â€” move freely</option>
                 <option value="front">Front wall</option>
                 <option value="back">Back wall</option>
                 <option value="left">Left wall</option>
@@ -614,16 +615,16 @@
             <input type="range" id="furn-h" min="0.4" max="2.6" step="0.05" value="0.75" />
           </label>
           <label class="field">
-            <span>Rotate <em id="val-furn-rot">0°</em></span>
+            <span>Rotate <em id="val-furn-rot">0Â°</em></span>
             <input type="range" id="furn-rot" min="0" max="360" step="1" value="0" />
           </label>
           <div class="rot-snaps" id="furn-rot-snaps">
-            <button type="button" data-rot="-90">-90°</button>
-            <button type="button" data-rot="0">0°</button>
-            <button type="button" data-rot="90">90°</button>
-            <button type="button" data-rot="180">180°</button>
-            <button type="button" data-rot="270">270°</button>
-            <button type="button" data-rot="+90">+90°</button>
+            <button type="button" data-rot="-90">-90Â°</button>
+            <button type="button" data-rot="0">0Â°</button>
+            <button type="button" data-rot="90">90Â°</button>
+            <button type="button" data-rot="180">180Â°</button>
+            <button type="button" data-rot="270">270Â°</button>
+            <button type="button" data-rot="+90">+90Â°</button>
           </div>
           <div class="btn-row">
             <button type="button" class="tool-btn" id="btn-duplicate" data-icon="duplicate"><span class="btn-label">Duplicate</span></button>
@@ -673,3 +674,4 @@
   <script type="module" src="js/main.js?v=pub40"></script>
 </body>
 </html>
+

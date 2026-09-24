@@ -1,0 +1,89 @@
+{
+  "_help": "Product catalog + shelf rows. To add a phone box: add a SKU in catalog, then put { sku, count } in a row. Refresh the page after upload.",
+  "catalog": {
+    "redmi-15c": { "label": "15C", "brand": "Redmi", "color": "#c62828", "w": 0.155, "h": 0.215, "d": 0.068 },
+    "redmi-15": { "label": "15", "brand": "Redmi", "color": "#d32f2f", "w": 0.155, "h": 0.215, "d": 0.068 },
+    "redmi-16": { "label": "16", "brand": "Redmi", "color": "#b71c1c", "w": 0.155, "h": 0.215, "d": 0.068 },
+    "phone-red": { "label": "Note", "brand": "Redmi", "color": "#e53935", "w": 0.15, "h": 0.21, "d": 0.06 },
+    "phone-green": { "label": "Hot", "brand": "Infinix", "color": "#43a047", "w": 0.155, "h": 0.215, "d": 0.068 },
+    "phone-lime": { "label": "Spark", "brand": "Tecno", "color": "#7cb342", "w": 0.155, "h": 0.215, "d": 0.068 },
+    "c71": { "label": "C71", "brand": "Tecno", "color": "#f4c430", "w": 0.155, "h": 0.215, "d": 0.068 },
+    "c60x": { "label": "60x", "brand": "Infinix", "color": "#f9d449", "w": 0.155, "h": 0.215, "d": 0.068 },
+    "c85": { "label": "C85", "brand": "Tecno", "color": "#f6c90e", "w": 0.155, "h": 0.215, "d": 0.068 },
+    "case-purple": { "label": "Case", "brand": "Cover", "color": "#7e57c2", "w": 0.14, "h": 0.2, "d": 0.045 },
+    "acc-white": { "label": "Kit", "brand": "LOGIN", "color": "#f5f5f5", "w": 0.13, "h": 0.13, "d": 0.055, "textColor": "#222222" },
+    "acc-white-tall": { "label": "Adapter", "brand": "LOGIN", "color": "#eeeeee", "w": 0.12, "h": 0.16, "d": 0.05, "textColor": "#222222" },
+    "case-black": { "label": "Case", "brand": "Cover", "color": "#1a1a1a", "w": 0.11, "h": 0.2, "d": 0.018, "kind": "hang" },
+    "earbuds": { "label": "Buds", "brand": "Air", "color": "#111111", "w": 0.1, "h": 0.18, "d": 0.018, "kind": "hang" },
+    "cable": { "label": "Cable", "brand": "Type-C", "color": "#1565c0", "w": 0.09, "h": 0.19, "d": 0.016, "kind": "hang" },
+    "charger": { "label": "33W", "brand": "Charge", "color": "#263238", "w": 0.1, "h": 0.17, "d": 0.018, "kind": "hang" },
+    "powerbank": { "label": "10K", "brand": "Power", "color": "#37474f", "w": 0.11, "h": 0.2, "d": 0.02, "kind": "hang" }
+  },
+  "backRows": [
+    {
+      "items": [
+        { "sku": "redmi-15c", "count": 8 },
+        { "sku": "redmi-15", "count": 8 },
+        { "sku": "redmi-16", "count": 8 }
+      ]
+    },
+    {
+      "items": [
+        { "sku": "acc-white", "count": 22 }
+      ]
+    },
+    {
+      "items": [
+        { "sku": "phone-red", "count": 16 }
+      ]
+    },
+    {
+      "items": [
+        { "sku": "phone-green", "count": 10 },
+        { "sku": "phone-lime", "count": 10 }
+      ]
+    },
+    {
+      "items": [
+        { "sku": "c71", "count": 8 },
+        { "sku": "c60x", "count": 8 },
+        { "sku": "c85", "count": 8 }
+      ]
+    },
+    {
+      "items": [
+        { "sku": "case-purple", "count": 18 }
+      ]
+    },
+    {
+      "items": [
+        { "sku": "acc-white-tall", "count": 20 }
+      ]
+    }
+  ],
+  "goldShelfBoxes": {
+    "sku": "acc-white",
+    "perShelf": 5
+  },
+  "hanging": {
+    "origin": [-2.76, 0.88, -1.55],
+    "cols": 6,
+    "rows": 6,
+    "colGap": 0.28,
+    "rowGap": 0.24,
+    "skus": [
+      "case-black", "earbuds", "cable", "charger", "powerbank", "case-black",
+      "cable", "earbuds", "case-black", "charger", "earbuds", "cable",
+      "powerbank", "case-black", "cable", "earbuds", "charger", "powerbank",
+      "case-black", "charger", "earbuds", "powerbank", "cable", "case-black",
+      "earbuds", "cable", "charger", "case-black", "powerbank", "earbuds",
+      "charger", "case-black", "cable", "earbuds", "case-black", "charger"
+    ]
+  },
+  "counterPhones": [
+    "#111111", "#2c2c2c", "#f2f2f2", "#1a237e", "#4a148c",
+    "#b71c1c", "#e0e0e0", "#212121", "#0d47a1", "#37474f",
+    "#fafafa", "#6d4c41", "#263238", "#cfd8dc", "#000000",
+    "#eceff1"
+  ]
+}
